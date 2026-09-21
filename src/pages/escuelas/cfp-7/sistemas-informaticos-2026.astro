@@ -10,21 +10,24 @@ const recorrido = requireRecorrido("cfp7-si-2026");
 
 <Layout
   title={`${recorrido.nombre} · Aula`}
-  description="Pizarrones del recorrido de Sistemas Informáticos en CFP 7 durante 2026."
+  description="Materiales del recorrido de Sistemas Informáticos en CFP 7 durante 2026."
   current="escuelas"
 >
   <p class="ubicacion-recorrido">Escuelas · CFP 7</p>
   <h1 class="page-title">{recorrido.nombre}</h1>
   <p class="lede">
-    Pizarrones vistos en esta escuela durante este período.
+    Materiales de este recorrido de enseñanza.
   </p>
 
   <ol class="lista-pizarrones">
-    {recorrido.pizarrones.map((pizarron) => (
+    {recorrido.materiales.map((material) => (
       <li>
-        <a href={hrefConRecorrido(pizarron.href, recorrido.id)}>
-          {pizarron.title}
+        <a href={hrefConRecorrido(material.href, recorrido.id)}>
+          {material.title}
         </a>
+        {material.tipo && (
+          <span class="tipo-material">{material.tipo}</span>
+        )}
       </li>
     ))}
   </ol>
@@ -47,5 +50,14 @@ const recorrido = requireRecorrido("cfp7-si-2026");
   .lista-pizarrones li::marker {
     color: var(--muted);
     font-weight: 700;
+  }
+
+  .tipo-material {
+    margin-left: 0.45rem;
+    color: var(--muted);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
   }
 </style>

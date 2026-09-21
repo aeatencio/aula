@@ -1,0 +1,423 @@
+---
+import { serieSistemaOperativo } from "../../data/serie-sistema-operativo";
+import MaterialLayout from "../../layouts/MaterialLayout.astro";
+---
+
+<MaterialLayout
+  title="El sistema operativo"
+  description="Recursos para estudiar y practicar el sistema operativo: síntesis visual, guía paso a paso, actividades escritas, práctica interactiva y explicaciones relacionadas."
+  tipo="Recursos de estudio"
+  bajada="Elegí una forma de repasar o practicar"
+  serie={serieSistemaOperativo}
+  mostrarPie={false}
+>
+  <p class="entrada">
+    No hace falta hacer todo ni seguir un único orden. Podés empezar por el
+    recurso que más te ayude y volver a otro cuando necesites una explicación,
+    un esquema o más práctica.
+  </p>
+
+  <section class="grupo grupo--relaciones" aria-labelledby="explicaciones">
+    <div class="grupo-cabeza">
+      <p class="paso">Referencia principal</p>
+      <h2 id="explicaciones">Pizarrones para estudiar y relacionar ideas</h2>
+    </div>
+    <p class="relaciones-intro">
+      El pizarrón <a href="/pizarrones/el-sistema-operativo/">El sistema operativo</a>
+      presenta la idea central. Estos pizarrones permiten volver a los conceptos
+      que la ficha, la guía y las actividades ponen en relación.
+    </p>
+    <ul class="relaciones">
+      <li>
+        <a href="/pizarrones/preguntas-y-conceptos-principales/">
+          Preguntas y conceptos principales
+        </a>
+        <span>preguntas que organizan el recorrido conceptual</span>
+      </li>
+      <li>
+        <a href="/pizarrones/hardware-software-y-tarea/">
+          Sistemas digitales: hardware y software
+        </a>
+        <span>qué hace el programa y qué componentes físicos necesita</span>
+      </li>
+      <li>
+        <a href="/pizarrones/instrucciones-datos-operaciones-y-resultados/">
+          Instrucciones, datos, operaciones y resultados
+        </a>
+        <span>qué papel cumple cada elemento dentro de una tarea</span>
+      </li>
+      <li>
+        <a href="/pizarrones/entrada-procesamiento-y-salida/">
+          Entrada, procesamiento y salida
+        </a>
+        <span>por dónde entra la información y cómo aparece un resultado</span>
+      </li>
+      <li>
+        <a href="/pizarrones/procesador-y-memoria-durante-la-ejecucion/">
+          Procesador y memoria durante la ejecución
+        </a>
+        <span>cómo se relacionan la CPU y la memoria mientras un programa funciona</span>
+      </li>
+      <li>
+        <a href="/pizarrones/el-estado-de-un-sistema/">
+          El estado de un sistema
+        </a>
+        <span>qué información permite continuar una ejecución</span>
+      </li>
+      <li>
+        <a href="/pizarrones/arquitectura-de-von-neumann/">
+          Arquitectura de Von Neumann
+        </a>
+        <span>la relación entre entrada, CPU, memoria y salida</span>
+      </li>
+      <li>
+        <a href="/pizarrones/el-sistema-operativo/">El sistema operativo</a>
+        <span>idea central y recorrido desde el almacenamiento hasta el resultado</span>
+      </li>
+      <li>
+        <a href="/pizarrones/tres-miradas-sobre-una-situacion/">
+          Tres miradas sobre una misma situación
+        </a>
+        <span>cómo elegir una representación según la pregunta</span>
+      </li>
+    </ul>
+  </section>
+
+  <section class="grupo" aria-labelledby="estudiar">
+    <div class="grupo-cabeza">
+      <p class="paso">Para volver a las ideas</p>
+      <h2 id="estudiar">Estudiar y repasar</h2>
+    </div>
+
+    <div class="tarjetas">
+      <article class="tarjeta">
+        <p class="tipo">Síntesis visual · 2 caras</p>
+        <h3>Repasar de un vistazo</h3>
+        <p>
+          La ficha reúne la idea central, el recorrido al abrir un programa y
+          esquemas sobre recursos, memoria, arranque y multitarea. La segunda
+          cara permite ir más lejos.
+        </p>
+        <div class="acciones" aria-label="Archivos de la ficha de dos caras">
+          <a
+            class="accion accion--principal"
+            href="/materiales/sistema-operativo/el-sistema-operativo-ficha.pdf"
+          >Abrir PDF</a>
+          <a
+            class="accion"
+            href="/materiales/sistema-operativo/el-sistema-operativo-ficha.pdf"
+            download
+          >Descargar PDF</a>
+          <a
+            class="accion accion--editable"
+            href="/materiales/sistema-operativo/el-sistema-operativo-ficha.docx"
+            download
+          >DOCX editable</a>
+        </div>
+      </article>
+
+      <article class="tarjeta">
+        <p class="tipo">Guía de estudio · 13 páginas</p>
+        <h3>Estudiar paso a paso</h3>
+        <p>
+          Seis partes cortas combinan explicación, esquemas y actividades. Al
+          final incluye palabras clave y respuestas para comprobar las
+          actividades 1 a 7 después de resolverlas.
+        </p>
+        <div class="acciones" aria-label="Archivos de la guía de trabajo">
+          <a
+            class="accion accion--principal"
+            href="/materiales/sistema-operativo/el-sistema-operativo-guia-de-trabajo.pdf"
+          >Abrir PDF</a>
+          <a
+            class="accion"
+            href="/materiales/sistema-operativo/el-sistema-operativo-guia-de-trabajo.pdf"
+            download
+          >Descargar PDF</a>
+          <a
+            class="accion accion--editable"
+            href="/materiales/sistema-operativo/el-sistema-operativo-guia-de-trabajo.docx"
+            download
+          >DOCX editable</a>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="grupo" aria-labelledby="practicar">
+    <div class="grupo-cabeza">
+      <p class="paso">Para poner las ideas en juego</p>
+      <h2 id="practicar">Practicar</h2>
+    </div>
+
+    <div class="tarjetas">
+      <article class="tarjeta">
+        <p class="tipo">Práctica escrita · 21 consignas</p>
+        <h3>Resolver actividades integradoras</h3>
+        <p>
+          Completar, elegir y ordenar para relacionar entrada y salida, CPU,
+          memoria, almacenamiento, drivers, arranque, multitarea y tres formas
+          de mirar un sistema. Esta hoja no incluye las respuestas.
+        </p>
+        <div class="acciones" aria-label="Archivos de las actividades">
+          <a
+            class="accion accion--principal"
+            href="/materiales/sistema-operativo/el-sistema-operativo-actividades.pdf"
+          >Abrir PDF</a>
+          <a
+            class="accion"
+            href="/materiales/sistema-operativo/el-sistema-operativo-actividades.pdf"
+            download
+          >Descargar PDF</a>
+          <a
+            class="accion accion--editable"
+            href="/materiales/sistema-operativo/el-sistema-operativo-actividades.docx"
+            download
+          >DOCX editable</a>
+        </div>
+      </article>
+
+      <article class="tarjeta tarjeta--web">
+        <p class="tipo">Práctica interactiva</p>
+        <h3>Reconstruir qué pasa al abrir un programa</h3>
+        <p>
+          Completá el recorrido desde el clic hasta el resultado. Podés revisar
+          una parte sin terminar todo y recibir pistas para volver a pensarla.
+        </p>
+        <div class="acciones">
+          <a class="accion accion--principal" href="/cuando-se-abre-un-programa/">
+            Practicar en pantalla
+          </a>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <details id="docentes" class="docentes">
+    <summary>Recursos para docentes</summary>
+    <div class="docentes-contenido">
+      <p>
+        Estas orientaciones están separadas de la práctica de estudiantes.
+      </p>
+      <ul>
+        <li>
+          <a href="/cuando-se-abre-un-programa/guia/">
+            Orientaciones para la actividad interactiva
+          </a>
+          <span>pregunta inicial, verbos, confusiones frecuentes y clave</span>
+        </li>
+      </ul>
+    </div>
+  </details>
+</MaterialLayout>
+
+<style>
+  .entrada {
+    max-width: 46rem;
+    margin: 0;
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  .grupo {
+    margin-top: 2.8rem;
+  }
+
+  .grupo-cabeza {
+    margin-bottom: 1rem;
+  }
+
+  .paso,
+  .tipo {
+    margin: 0 0 0.25rem;
+    color: var(--accent);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+  }
+
+  .grupo h2 {
+    margin: 0;
+    font-size: clamp(1.3rem, 0.5vw + 1.18rem, 1.65rem);
+    line-height: 1.2;
+  }
+
+  .tarjetas {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .tarjeta {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    padding: clamp(1rem, 2vw, 1.35rem);
+    border: 2px solid var(--line);
+    background: var(--board);
+  }
+
+  .tarjeta h3 {
+    margin: 0 0 0.7rem;
+    font-size: clamp(1.1rem, 0.35vw + 1.02rem, 1.35rem);
+    line-height: 1.25;
+  }
+
+  .tarjeta > p:not(.tipo) {
+    margin: 0 0 1.15rem;
+  }
+
+  .acciones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+    margin-top: auto;
+  }
+
+  .accion {
+    display: inline-flex;
+    min-height: 2.75rem;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 0.75rem;
+    border: 2px solid var(--line);
+    color: var(--ink);
+    font-size: 0.92rem;
+    font-weight: 700;
+    line-height: 1.2;
+    text-decoration: none;
+  }
+
+  .accion:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .accion--principal {
+    background: var(--ink);
+    color: var(--board);
+  }
+
+  .accion--principal:hover {
+    background: var(--accent);
+    color: var(--board);
+  }
+
+  .accion--editable {
+    border-color: var(--hairline);
+  }
+
+  .grupo--relaciones {
+    max-width: 50rem;
+  }
+
+  .relaciones-intro {
+    margin: 0 0 0.75rem;
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  .relaciones-intro a {
+    color: var(--ink);
+    font-weight: 700;
+    text-decoration: none;
+    border-bottom: 2px solid var(--accent);
+  }
+
+  .relaciones-intro a:hover {
+    color: var(--accent);
+  }
+
+  .relaciones,
+  .docentes ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .relaciones li,
+  .docentes li {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 0.8rem 0;
+    border-top: 1px solid var(--hairline);
+  }
+
+  .relaciones a,
+  .docentes a {
+    width: fit-content;
+    color: var(--ink);
+    font-weight: 700;
+    text-decoration: none;
+    border-bottom: 2px solid var(--accent);
+  }
+
+  .relaciones a:hover,
+  .docentes a:hover {
+    color: var(--accent);
+  }
+
+  .relaciones span,
+  .docentes li span {
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+
+  .docentes {
+    max-width: 50rem;
+    margin-top: 3rem;
+    padding-top: 1rem;
+    border-top: 2px solid var(--line);
+  }
+
+  .docentes summary {
+    width: fit-content;
+    min-height: 2.75rem;
+    color: var(--ink);
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .docentes summary:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 3px;
+  }
+
+  .docentes-contenido {
+    padding: 0.25rem 0 0 1.25rem;
+  }
+
+  .docentes-contenido > p {
+    margin: 0 0 0.75rem;
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+
+  @media (max-width: 48rem) {
+    .tarjetas {
+      grid-template-columns: 1fr;
+    }
+
+    .accion {
+      flex: 1 1 8.5rem;
+    }
+  }
+
+  @media print {
+    .acciones,
+    .docentes {
+      display: none;
+    }
+
+    .tarjetas {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .tarjeta {
+      break-inside: avoid;
+    }
+  }
+</style>

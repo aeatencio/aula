@@ -118,6 +118,20 @@ import Layout from "../layouts/Layout.astro";
 
       <li class="fila">
         <p class="fila-nombre">
+          <a href="/sistema-operativo/">
+            Estudiar y practicar el sistema operativo
+          </a>
+          <span class="tipo">Recursos</span>
+          <span class="uso">para elegir un recorrido propio</span>
+        </p>
+        <p class="fila-idea">
+          Síntesis visual, guía paso a paso, actividades escritas, práctica
+          interactiva y explicaciones relacionadas.
+        </p>
+      </li>
+
+      <li class="fila">
+        <p class="fila-nombre">
           <a href="/pizarrones/tres-miradas-sobre-una-situacion/">
             Tres miradas sobre una misma situación
           </a>
@@ -163,6 +177,13 @@ import Layout from "../layouts/Layout.astro";
         — para conducir <em>Un sistema, distintas miradas</em>: propósito,
         preguntas, errores productivos y criterios para reconocer
         comprensión.
+      </p>
+      <p>
+        <a href="/cuando-se-abre-un-programa/guia/">
+          Orientaciones para la actividad interactiva
+        </a>
+        — pregunta inicial, verbos, confusiones frecuentes y clave del
+        ejercicio.
       </p>
     </div>
   </section>
@@ -230,7 +251,7 @@ import Layout from "../layouts/Layout.astro";
     <ul class="contexto-lista">
       <li>
         <a href="/escuelas/gabriela-mistral/2-cuatrimestre-2026/">
-          Gabriela Mistral · 2.º cuatrimestre 2026
+          Gabriela Mistral · 3.º año · 3.er bimestre 2026
         </a>
       </li>
       <li>
@@ -368,6 +389,10 @@ import Layout from "../layouts/Layout.astro";
     color: var(--muted);
     font-size: 0.92rem;
     line-height: 1.5;
+  }
+
+  .secundario p + p {
+    margin-top: 0.7rem;
   }
 
   .secundario a {

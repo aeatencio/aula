@@ -1,0 +1,282 @@
+---
+import MaterialLayout from "../../layouts/MaterialLayout.astro";
+import { serieSistemaOperativo } from "../../data/serie-sistema-operativo";
+---
+
+<MaterialLayout
+  title="Apoyo para la clase"
+  description="Apoyo docente para trabajar el sistema operativo: idea central, saberes previos, pregunta inicial, verbos, confusiones frecuentes y clave del ejercicio."
+  tipo="Guía docente"
+  bajada="Para preparar y conducir la clase"
+  serie={serieSistemaOperativo}
+  tituloPizarrones="Pizarrones relacionados"
+>
+  <section class="bloque" aria-labelledby="idea">
+    <h2 id="idea">Idea que tiene que quedar</h2>
+    <p>
+      El sistema operativo administra los recursos de la computadora y permite
+      que los programas usen el hardware. No trabaja separado de la CPU, la
+      RAM, el almacenamiento y los periféricos: los coordina.
+    </p>
+    <p>
+      La actividad no es sólo vocabulario. Sirve para reconstruir relaciones:
+      dónde estaba el programa, qué entra, qué se carga, qué se ejecuta y cómo
+      aparece un resultado.
+    </p>
+  </section>
+
+  <section class="bloque" aria-labelledby="antes">
+    <h2 id="antes">Qué conviene haber visto antes</h2>
+    <p>
+      No hace falta haber trabajado todos estos pizarrones. Sí ayuda haber
+      nombrado hardware y software, entrada y salida, y que la CPU usa lo que
+      está en memoria mientras un programa corre.
+    </p>
+    <ul class="lista">
+      <li>
+        <a href="/pizarrones/el-sistema-operativo/">El sistema operativo</a>
+        {" — "}
+        conviene tenerlo a la vista mientras se completa el texto.
+      </li>
+      <li>
+        <a href="/pizarrones/hardware-software-y-tarea/">
+          Sistemas digitales: hardware y software
+        </a>
+      </li>
+      <li>
+        <a href="/pizarrones/entrada-procesamiento-y-salida/">
+          Entrada, procesamiento y salida
+        </a>
+      </li>
+      <li>
+        <a href="/pizarrones/procesador-y-memoria-durante-la-ejecucion/">
+          Procesador y memoria durante la ejecución
+        </a>
+      </li>
+      <li>
+        <a href="/pizarrones/arquitectura-de-von-neumann/">
+          Arquitectura de Von Neumann
+        </a>
+      </li>
+    </ul>
+  </section>
+
+  <section class="bloque" aria-labelledby="entrada">
+    <h2 id="entrada">Entrada posible</h2>
+    <p>
+      Mostrar el pizarrón sin explicar todavía cada término. Pedir que nombren
+      qué partes reconocen y recuperar oralmente lo ya trabajado: hardware,
+      software, CPU, RAM, almacenamiento, entrada y salida.
+    </p>
+    <p>
+      Pregunta inicial: «Cuando hacemos clic para abrir un programa, ¿el
+      programa pasa directamente del disco a la pantalla?». No hace falta buscar
+      una respuesta completa. Sirve para que aparezcan ideas sobre CPU,
+      memoria, programas y dispositivos.
+    </p>
+  </section>
+
+  <section class="bloque" aria-labelledby="verbos">
+    <h2 id="verbos">Verbos para detenerse</h2>
+    <p>
+      En el pizarrón y en el texto conviene detenerse en estos verbos: localizar,
+      cargar, ejecutar, administrar, coordinar y guardar. Muestran acciones, no
+      sólo nombres de componentes.
+    </p>
+    <p>
+      Si la lectura sostenida cuesta, se puede distribuir: una persona lee un
+      tramo, otra señala el componente en el pizarrón y otra vuelve a decir la
+      idea con sus palabras. Evitar convertir eso en una prueba de lectura en
+      voz alta.
+    </p>
+  </section>
+
+  <section class="bloque" aria-labelledby="actividad">
+    <h2 id="actividad">La actividad en clase</h2>
+    <p>
+      Se puede proyectar y resolver en común, trabajarla en computadora o
+      celular, o imprimir la hoja. En pantalla, Revisar confirma los espacios
+      que ya están en su lugar y deja un comentario para pensar los demás,
+      sin entregar de entrada toda la clave.
+    </p>
+    <p>
+      Para imprimir la hoja del estudiante, usar esta misma actividad: al
+      imprimir aparecen el banco, el texto y los espacios, sin la clave. Si se
+      imprimió después de completar en pantalla, Vaciar espacios antes, o
+      imprimir igual: la hoja sale vacía a propósito.
+    </p>
+    <p>
+      La clave está sólo acá abajo, no en la página de la actividad.
+    </p>
+  </section>
+
+  <section class="bloque" aria-labelledby="preguntas">
+    <h2 id="preguntas">Preguntas para conversar</h2>
+    <ul class="lista lista--citas">
+      <li>
+        ¿Dónde estaba un programa antes de que lo abriéramos? ¿Dónde queda
+        mientras lo usamos?
+      </li>
+      <li>
+        ¿Por qué tener almacenamiento libre no significa necesariamente tener
+        RAM suficiente?
+      </li>
+      <li>
+        ¿Qué componentes participan cuando escribimos una palabra y la vemos en
+        pantalla?
+      </li>
+      <li>
+        ¿Qué podría pasar si conectamos un dispositivo y el sistema no tiene el
+        driver adecuado?
+      </li>
+      <li>
+        ¿Qué diferencias hay entre guardar un archivo y mantener datos
+        temporalmente en la RAM?
+      </li>
+    </ul>
+  </section>
+
+  <section class="bloque" aria-labelledby="confusiones">
+    <h2 id="confusiones">Confusiones frecuentes</h2>
+    <ul class="casos">
+      <li>
+        <p class="caso-dicho">«La CPU guarda todo.»</p>
+        <p>
+          Distinguir procesamiento, memoria temporal y almacenamiento
+          persistente. La CPU ejecuta; la RAM mantiene lo que está en uso; el
+          almacenamiento conserva lo que debe quedar cuando se apaga.
+        </p>
+      </li>
+      <li>
+        <p class="caso-dicho">«RAM y disco son lo mismo porque ambos guardan.»</p>
+        <p>
+          Preguntar qué sucede al apagar el equipo y cuál usa la CPU mientras se
+          ejecuta un programa.
+        </p>
+      </li>
+      <li>
+        <p class="caso-dicho">
+          «El sistema operativo es sólo la pantalla de inicio.»
+        </p>
+        <p>
+          La interfaz es visible, pero el sistema operativo también administra
+          recursos y se comunica con dispositivos mediante drivers.
+        </p>
+      </li>
+    </ul>
+  </section>
+
+  <section class="bloque clave" aria-labelledby="clave">
+    <h2 id="clave">Clave del ejercicio</h2>
+    <p>
+      programa · entrada · sistema operativo · almacenamiento · RAM ·
+      instrucciones · datos · temporal · CPU · salida · hardware · driver
+    </p>
+    <p>
+      Después del texto, conviene pedir que lo digan con sus palabras. No hay
+      una única redacción: importan dos ideas, administrar recursos y permitir
+      la relación entre programas y hardware.
+    </p>
+  </section>
+</MaterialLayout>
+
+<style>
+  .bloque {
+    margin-top: 2.5rem;
+  }
+
+  .bloque h2 {
+    margin: 0 0 0.9rem;
+    padding-bottom: 0.7rem;
+    border-bottom: 2px solid var(--line);
+    font-size: clamp(1.2rem, 0.35vw + 1.1rem, 1.45rem);
+    font-weight: 700;
+    line-height: 1.25;
+  }
+
+  .bloque > p {
+    margin: 0;
+  }
+
+  .bloque > p + p {
+    margin-top: 0.9rem;
+  }
+
+  .lista {
+    margin: 1rem 0 0;
+    padding-left: 1.3rem;
+  }
+
+  .lista li + li {
+    margin-top: 0.5rem;
+  }
+
+  .lista--citas {
+    margin-top: 0;
+    padding-left: 0;
+    list-style: none;
+  }
+
+  .lista--citas li {
+    padding: 0.45rem 0 0.45rem 0.9rem;
+    border-left: 3px solid var(--accent);
+    font-weight: 600;
+  }
+
+  .lista a,
+  .casos a {
+    color: var(--ink);
+    font-weight: 700;
+    text-decoration: none;
+    border-bottom: 2px solid var(--accent);
+  }
+
+  .lista a:hover,
+  .casos a:hover {
+    color: var(--accent);
+  }
+
+  .casos {
+    margin: 1.2rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .casos > li {
+    padding: 1rem 1.05rem;
+    border: 2px solid var(--line);
+    background: var(--board);
+  }
+
+  .casos > li + li {
+    margin-top: 0.85rem;
+  }
+
+  .casos p {
+    margin: 0;
+  }
+
+  .caso-dicho {
+    margin-bottom: 0.5rem !important;
+    color: var(--emphasis);
+    font-size: clamp(1.05rem, 0.25vw + 1rem, 1.2rem);
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  .clave {
+    padding: 1.05rem 1.15rem 1.2rem;
+    border: 2px solid var(--emphasis);
+    background: color-mix(in srgb, var(--emphasis) 8%, var(--board));
+  }
+
+  .clave h2 {
+    border-bottom-color: color-mix(in srgb, var(--emphasis) 35%, var(--line));
+    color: var(--emphasis);
+  }
+
+  .clave p {
+    color: var(--emphasis);
+    font-weight: 700;
+  }
+</style>

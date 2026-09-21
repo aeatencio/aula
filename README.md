@@ -26,6 +26,7 @@ Los materiales pueden encontrarse de tres maneras:
 - El estado de un sistema
 - Arquitectura de Von Neumann
 - El sistema operativo
+- Estudiar y practicar el sistema operativo
 - Sistemas digitales: hardware y software
 - Instrucciones, datos, operaciones y resultados
 - Entrada, procesamiento y salida
@@ -43,16 +44,17 @@ Los materiales pueden encontrarse de tres maneras:
 Un tema reúne varios materiales que se usan juntos.
 
 - [Un sistema, distintas miradas](/un-sistema-distintas-miradas/) · Sistemas Informáticos. Lectura, actividad imprimible y guía docente alrededor del pizarrón *Tres miradas sobre una misma situación*, que reutiliza *Entrada, procesamiento y salida*, *El estado de un sistema* e *Instrucciones, datos, operaciones y resultados*.
+- [El sistema operativo](/sistema-operativo/) · Sistemas Informáticos. Ficha de síntesis, guía gradual, práctica escrita e interactiva, pizarrones relacionados y recursos docentes.
 - [Hilos, agentes y arneses](/hilos-agentes-y-arneses/) · Pensamiento Computacional. Lectura breve que combina los pizarrones *Hilos y agentes* y *Agentes y arneses*.
 
 La relación entre los materiales de un tema se declara en `src/data/`, junto a los recorridos. No hay un sistema general de formatos ni un índice de tipos: cada tema describe su propio conjunto.
 
 ### Recorridos por escuela
 
-- **Gabriela Mistral · 2.º cuatrimestre 2026**
+- **Gabriela Mistral · 3.º año · 3.er bimestre 2026**
 - **Sistemas Informáticos · CFP 7 · 2026**
 
-Cada pizarrón tiene una única página. Un mismo pizarrón puede formar parte de más de un recorrido; los recorridos lo referencian sin duplicar el contenido.
+Cada material tiene una única página. Un mismo material puede formar parte de más de un recorrido; los recorridos lo referencian sin duplicar el contenido.
 
 ## Implementación
 

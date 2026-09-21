@@ -7,12 +7,7 @@
   serie concreta.
 */
 
-export type MaterialSerie = {
-  href: string;
-  title: string;
-  tipo: string;
-  para: string;
-};
+import type { MaterialSerie, Serie } from "./serie";
 
 export const serieMiradas = {
   titulo: "Un sistema, distintas miradas",
@@ -58,16 +53,4 @@ export const serieMiradas = {
       title: "Instrucciones, datos, operaciones y resultados",
     },
   ],
-};
-
-export function otrosMateriales(pathname: string): MaterialSerie[] {
-  const actual = normalizar(pathname);
-  return serieMiradas.materiales.filter(
-    (material) => normalizar(material.href) !== actual,
-  );
-}
-
-function normalizar(pathname: string): string {
-  const sinQuery = pathname.split("?")[0] ?? pathname;
-  return sinQuery.endsWith("/") ? sinQuery : `${sinQuery}/`;
-}
+} satisfies Serie;

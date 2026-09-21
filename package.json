@@ -8,7 +8,7 @@
     "build": "astro build",
     "preview": "astro preview",
     "check": "astro check",
-    "test": "node --test tests/social-identity.test.mjs"
+    "test": "node --test tests/social-identity.test.mjs tests/sistema-operativo.test.mjs"
   },
   "dependencies": {
     "astro": "^7.2.10"

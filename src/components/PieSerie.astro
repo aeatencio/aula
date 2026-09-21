@@ -1,16 +1,37 @@
 ---
-import { otrosMateriales, serieMiradas } from "../data/serie-miradas";
+import type { Serie } from "../data/serie";
 
 interface Props {
   pathname: string;
+  serie: Serie;
   mostrarPizarrones?: boolean;
+  tituloPizarrones?: string;
+  imprimir?: boolean;
 }
 
-const { pathname, mostrarPizarrones = true } = Astro.props;
-const materiales = otrosMateriales(pathname);
+const {
+  pathname,
+  serie,
+  mostrarPizarrones = true,
+  tituloPizarrones = "Pizarrones que usa",
+  imprimir = true,
+} = Astro.props;
+
+const actual = normalizar(pathname);
+const materiales = serie.materiales.filter(
+  (material) => normalizar(material.href) !== actual,
+);
+
+function normalizar(valor: string): string {
+  const sinQuery = valor.split("?")[0] ?? valor;
+  return sinQuery.endsWith("/") ? sinQuery : `${sinQuery}/`;
+}
 ---
 
-<nav class="pie-serie" aria-labelledby="pie-serie-titulo">
+<nav
+  class:list={["pie-serie", !imprimir && "pie-serie--sin-impresion"]}
+  aria-labelledby="pie-serie-titulo"
+>
   <p id="pie-serie-titulo" class="pie-serie-titulo">Materiales de esta serie</p>
   <ul class="pie-serie-lista">
     {materiales.map((material) => (
@@ -22,13 +43,13 @@ const materiales = otrosMateriales(pathname);
       </li>
     ))}
   </ul>
-  {mostrarPizarrones && (
+  {mostrarPizarrones && serie.pizarrones.length > 0 && (
     <>
       <p class="pie-serie-titulo pie-serie-titulo--segundo">
-        Pizarrones que usa
+        {tituloPizarrones}
       </p>
       <ul class="pie-serie-lista pie-serie-lista--simple">
-        {serieMiradas.pizarrones.map((pizarron) => (
+        {serie.pizarrones.map((pizarron) => (
           <li>
             <a href={pizarron.href}>{pizarron.title}</a>
           </li>
@@ -86,5 +107,11 @@ const materiales = otrosMateriales(pathname);
     color: var(--muted);
     font-size: 0.95rem;
     font-weight: 600;
+  }
+
+  @media print {
+    .pie-serie--sin-impresion {
+      display: none;
+    }
   }
 </style>

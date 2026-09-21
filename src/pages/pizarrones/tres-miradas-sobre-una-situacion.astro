@@ -1,5 +1,6 @@
 ---
 import PieSerie from "../../components/PieSerie.astro";
+import { serieMiradas } from "../../data/serie-miradas";
 import PizarronLayout from "../../layouts/PizarronLayout.astro";
 ---
 
@@ -136,6 +137,7 @@ import PizarronLayout from "../../layouts/PizarronLayout.astro";
 
   <PieSerie
     pathname="/pizarrones/tres-miradas-sobre-una-situacion/"
+    serie={serieMiradas}
     mostrarPizarrones={false}
   />
 </PizarronLayout>

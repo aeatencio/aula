@@ -1,4 +1,6 @@
 ---
+import PieSerie from "../../components/PieSerie.astro";
+import { serieSistemaOperativo } from "../../data/serie-sistema-operativo";
 import PizarronLayout from "../../layouts/PizarronLayout.astro";
 ---
 
@@ -81,7 +83,15 @@ import PizarronLayout from "../../layouts/PizarronLayout.astro";
         en la memoria RAM las instrucciones y los datos necesarios, y organiza
         el trabajo de la CPU para que los ejecute.
       </p>
-      <p>También coordina la entrada y la salida de información.</p>
+      <p>
+        También coordina la entrada y la salida de información. Si un periférico
+        necesita un controlador específico, utiliza un driver.
+      </p>
+      <p class="cadena-apertura">
+        Almacenamiento <span aria-hidden="true">→</span> RAM
+        <span aria-hidden="true">→</span> CPU
+        <span aria-hidden="true">→</span> resultado
+      </p>
     </section>
 
     <section class="nota nota-definicion" aria-labelledby="que-es-so">
@@ -93,6 +103,12 @@ import PizarronLayout from "../../layouts/PizarronLayout.astro";
       </p>
     </section>
   </div>
+
+  <PieSerie
+    pathname="/pizarrones/el-sistema-operativo/"
+    serie={serieSistemaOperativo}
+    mostrarPizarrones={false}
+  />
 </PizarronLayout>
 
 <style>
@@ -268,6 +284,18 @@ import PizarronLayout from "../../layouts/PizarronLayout.astro";
 
   .nota p + p {
     margin-top: 0.7rem;
+  }
+
+  .cadena-apertura {
+    margin-top: 0.85rem;
+    font-size: clamp(1rem, 0.3vw + 0.95rem, 1.15rem);
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  .cadena-apertura span {
+    margin: 0 0.35rem;
+    color: var(--accent);
   }
 
   .nota-definicion {

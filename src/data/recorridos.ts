@@ -1,13 +1,14 @@
-export type PizarronRef = {
+export type MaterialRef = {
   href: string;
   title: string;
+  tipo?: string;
 };
 
 export type Recorrido = {
   id: string;
   nombre: string;
   href: string;
-  pizarrones: PizarronRef[];
+  materiales: MaterialRef[];
 };
 
 export type VecinoRecorrido = {
@@ -28,9 +29,9 @@ export type NavegacionRecorrido = {
 export const recorridos: Recorrido[] = [
   {
     id: "gm-2026-2",
-    nombre: "Gabriela Mistral · 2.º cuatrimestre 2026",
+    nombre: "Gabriela Mistral · 3.º año · 3.er bimestre 2026",
     href: "/escuelas/gabriela-mistral/2-cuatrimestre-2026/",
-    pizarrones: [
+    materiales: [
       {
         href: "/pizarrones/preguntas-y-conceptos-principales/",
         title: "Preguntas y conceptos principales",
@@ -64,6 +65,11 @@ export const recorridos: Recorrido[] = [
         title: "El sistema operativo",
       },
       {
+        href: "/sistema-operativo/",
+        title: "Estudiar y practicar el sistema operativo",
+        tipo: "Recursos",
+      },
+      {
         href: "/pizarrones/tres-miradas-sobre-una-situacion/",
         title: "Tres miradas sobre una misma situación",
       },
@@ -73,7 +79,7 @@ export const recorridos: Recorrido[] = [
     id: "cfp7-si-2026",
     nombre: "Sistemas Informáticos · CFP 7 · 2026",
     href: "/escuelas/cfp-7/sistemas-informaticos-2026/",
-    pizarrones: [
+    materiales: [
       {
         href: "/pizarrones/hardware-software-y-tarea/",
         title: "Sistemas digitales: hardware y software",
@@ -89,6 +95,11 @@ export const recorridos: Recorrido[] = [
       {
         href: "/pizarrones/el-sistema-operativo/",
         title: "El sistema operativo",
+      },
+      {
+        href: "/sistema-operativo/",
+        title: "Estudiar y practicar el sistema operativo",
+        tipo: "Recursos",
       },
     ],
   },
@@ -106,22 +117,22 @@ export function requireRecorrido(id: string): Recorrido {
   return recorrido;
 }
 
-export function navegacionesParaPizarron(
+export function navegacionesParaMaterial(
   pathname: string,
 ): NavegacionRecorrido[] {
   const actual = normalizarPathname(pathname);
 
   return recorridos.flatMap((recorrido) => {
-    const indice = recorrido.pizarrones.findIndex(
-      (pizarron) => normalizarPathname(pizarron.href) === actual,
+    const indice = recorrido.materiales.findIndex(
+      (material) => normalizarPathname(material.href) === actual,
     );
     if (indice === -1) {
       return [];
     }
 
-    const total = recorrido.pizarrones.length;
-    const anterior = recorrido.pizarrones[indice - 1];
-    const siguiente = recorrido.pizarrones[indice + 1];
+    const total = recorrido.materiales.length;
+    const anterior = recorrido.materiales[indice - 1];
+    const siguiente = recorrido.materiales[indice + 1];
 
     return [
       {

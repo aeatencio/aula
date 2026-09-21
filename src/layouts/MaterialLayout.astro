@@ -1,19 +1,37 @@
 ---
+import NavegacionRecorrido from "../components/NavegacionRecorrido.astro";
 import PieSerie from "../components/PieSerie.astro";
-import { serieMiradas } from "../data/serie-miradas";
+import { navegacionesParaMaterial } from "../data/recorridos";
+import type { Serie } from "../data/serie";
 import Layout from "./Layout.astro";
 
 interface Props {
   title: string;
   description: string;
   tipo: string;
+  serie: Serie;
   bajada?: string;
+  tituloPizarrones?: string;
+  mostrarPizarrones?: boolean;
+  imprimirPie?: boolean;
+  mostrarPie?: boolean;
 }
 
-const { title, description, tipo, bajada } = Astro.props;
+const {
+  title,
+  description,
+  tipo,
+  serie,
+  bajada,
+  tituloPizarrones,
+  mostrarPizarrones,
+  imprimirPie,
+  mostrarPie = true,
+} = Astro.props;
 
 const pathname = Astro.url.pathname;
-const esPortada = pathname.replace(/\/?$/, "/") === serieMiradas.href;
+const esPortada = pathname.replace(/\/?$/, "/") === serie.href;
+const navegaciones = navegacionesParaMaterial(pathname);
 ---
 
 <Layout title={`${title} · Aula`} description={description}>
@@ -21,20 +39,29 @@ const esPortada = pathname.replace(/\/?$/, "/") === serieMiradas.href;
     <header class="apertura">
       <p class="ubicacion">
         {esPortada ? (
-          <>{serieMiradas.categoria}</>
+          <>{serie.categoria}</>
         ) : (
-          <a href={serieMiradas.href}>{serieMiradas.titulo}</a>
+          <a href={serie.href}>{serie.titulo}</a>
         )}
         {" · "}
         {tipo}
       </p>
       <h1 class="page-title">{title}</h1>
       {bajada && <p class="bajada">{bajada}</p>}
+      <NavegacionRecorrido navegaciones={navegaciones} />
     </header>
 
     <slot />
 
-    <PieSerie pathname={pathname} />
+    {mostrarPie && (
+      <PieSerie
+        pathname={pathname}
+        serie={serie}
+        tituloPizarrones={tituloPizarrones}
+        mostrarPizarrones={mostrarPizarrones}
+        imprimir={imprimirPie}
+      />
+    )}
   </article>
 </Layout>
 

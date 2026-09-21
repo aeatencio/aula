@@ -1,0 +1,460 @@
+---
+import MaterialLayout from "../../layouts/MaterialLayout.astro";
+import {
+  bancoPalabras,
+  huecoPorId,
+  relato,
+} from "../../data/actividad-abrir-programa";
+import { serieSistemaOperativo } from "../../data/serie-sistema-operativo";
+---
+
+<MaterialLayout
+  title="Cuando se abre un programa"
+  description="Actividad: reconstruir qué ocurre desde el clic hasta que aparece un resultado, y cómo el sistema operativo administra el hardware."
+  tipo="Actividad"
+  bajada="Reconstruir el recorrido desde el clic hasta la pantalla"
+  serie={serieSistemaOperativo}
+  tituloPizarrones="Pizarrones relacionados"
+  imprimirPie={false}
+>
+  <p class="entrada-texto">
+    Vas a reconstruir lo que ocurre cuando alguien abre un programa. Tené a la
+    vista el pizarrón{" "}
+    <a href="/pizarrones/el-sistema-operativo/">El sistema operativo</a>
+    {". "}
+    Cada palabra del banco se usa una sola vez.
+  </p>
+
+  <div class="actividad" data-actividad-abrir-programa>
+    <p class="como-usar" id="como-usar">
+      Elegí una palabra y después el espacio donde va. También podés elegir
+      primero el espacio, o arrastrar la palabra. Para sacar una palabra, pulsá
+      el espacio. Con teclado: Tab para moverte, Enter o espacio para elegir o
+      colocar, Escape para cancelar. Cuando quieras, usá Revisar: no hace falta
+      llenar todo antes.
+    </p>
+    <p class="como-imprimir">
+      Completá el texto con las palabras del banco. Cada palabra se usa una sola
+      vez.
+    </p>
+
+    <div class="banco" data-banco>
+      <h2 id="banco-titulo" class="banco-titulo">Banco de palabras</h2>
+      <ul class="fichas" aria-labelledby="banco-titulo">
+        {bancoPalabras.map((palabra) => (
+          <li>
+            <button
+              type="button"
+              class="ficha"
+              data-palabra={palabra}
+              aria-pressed="false"
+            >
+              {palabra}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+
+    <div class="texto-bloque">
+      <h2 id="texto-titulo" class="texto-titulo">El recorrido</h2>
+      <p class="texto" aria-labelledby="texto-titulo">
+        {relato.map((parte) =>
+          parte.tipo === "texto" ? (
+            parte.valor
+          ) : (
+            <button
+              type="button"
+              class="hueco"
+              data-hueco={parte.id}
+              aria-label={`Espacio: ${huecoPorId(parte.id).contexto}. Vacío.`}
+            >
+              <span class="hueco-palabra"></span>
+            </button>
+          ),
+        )}
+      </p>
+    </div>
+
+    <div class="acciones">
+      <button type="button" class="accion accion--revisar" data-revisar>
+        Revisar
+      </button>
+      <button type="button" class="accion accion--vaciar" data-vaciar>
+        Vaciar espacios
+      </button>
+    </div>
+
+    <p class="estado" data-estado role="status" aria-live="polite"></p>
+
+    <noscript>
+      <p class="sin-script">
+        Para completar en pantalla hace falta JavaScript. Esta página se puede
+        imprimir y completar en papel.
+      </p>
+    </noscript>
+
+    <section class="comentarios" data-comentarios hidden aria-labelledby="comentarios-titulo">
+      <h2 id="comentarios-titulo" class="comentarios-titulo" tabindex="-1">Para pensar</h2>
+      <ol class="lista-comentarios" data-lista-comentarios></ol>
+    </section>
+  </div>
+
+  <p class="cierre">
+    Cuando el texto esté completo, mirá el recorrido entero: dónde estaba el
+    programa, qué entra, qué se carga, qué se ejecuta y cómo aparece un
+    resultado.
+  </p>
+</MaterialLayout>
+
+<script>
+  import { iniciarActividadAbrirPrograma } from "../../scripts/actividad-abrir-programa";
+
+  iniciarActividadAbrirPrograma();
+</script>
+
+<style>
+  .entrada-texto {
+    margin: 0;
+    font-weight: 600;
+  }
+
+  .entrada-texto a {
+    color: var(--ink);
+    font-weight: 700;
+    text-decoration: none;
+    border-bottom: 2px solid var(--accent);
+  }
+
+  .entrada-texto a:hover {
+    color: var(--accent);
+  }
+
+  .actividad {
+    margin-top: 1.75rem;
+  }
+
+  .como-usar,
+  .como-imprimir {
+    margin: 0 0 1.5rem;
+    color: var(--muted);
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.45;
+  }
+
+  .como-imprimir {
+    display: none;
+  }
+
+  .banco {
+    margin: 0 0 1.6rem;
+    padding: 1rem 1rem 1.1rem;
+    background: var(--board);
+    border: 2px solid var(--line);
+  }
+
+  .banco-titulo,
+  .texto-titulo,
+  .comentarios-titulo {
+    margin: 0 0 0.75rem;
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .comentarios-titulo:focus {
+    outline: 3px solid var(--accent);
+    outline-offset: 3px;
+  }
+
+  .sin-script {
+    margin: 0 0 1rem;
+    font-weight: 600;
+  }
+
+  .fichas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .ficha {
+    appearance: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.85rem;
+    padding: 0.45rem 0.85rem;
+    border: 2px solid var(--line);
+    background: var(--board);
+    color: var(--ink);
+    font: inherit;
+    font-weight: 700;
+    line-height: 1.2;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+
+  .ficha:hover:not(:disabled) {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .ficha.is-elegida {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--board);
+  }
+
+  .ficha.is-usada,
+  .ficha:disabled {
+    opacity: 0.42;
+    cursor: default;
+  }
+
+  .texto-bloque {
+    margin: 0 0 1.35rem;
+    padding: 1.1rem 1.15rem 1.25rem;
+    background: var(--board);
+    border: 2px solid var(--line);
+  }
+
+  .texto {
+    margin: 0;
+    font-size: clamp(1.12rem, 0.55vw + 1.05rem, 1.42rem);
+    font-weight: 600;
+    line-height: 2.15;
+  }
+
+  .hueco {
+    appearance: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: baseline;
+    min-width: 8.5rem;
+    min-height: 2.55rem;
+    margin: 0.15rem 0.15rem;
+    padding: 0.2rem 0.55rem;
+    border: 2px dashed var(--accent);
+    background: color-mix(in srgb, var(--accent) 8%, var(--board));
+    color: var(--ink);
+    font: inherit;
+    font-weight: 700;
+    line-height: 1.2;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+
+  .hueco.is-lleno {
+    border-style: solid;
+    background: var(--board);
+  }
+
+  .hueco.is-elegido {
+    outline: 3px solid var(--accent);
+    outline-offset: 3px;
+  }
+
+  .hueco.is-bien {
+    border-style: solid;
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 12%, var(--board));
+    cursor: default;
+  }
+
+  .hueco.is-revisar {
+    border-style: solid;
+    border-color: var(--emphasis);
+    background: color-mix(in srgb, var(--emphasis) 10%, var(--board));
+  }
+
+  .hueco-palabra:empty::before {
+    content: "\00a0";
+  }
+
+  .acciones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+    margin: 0 0 1rem;
+  }
+
+  .accion {
+    appearance: none;
+    min-height: 2.85rem;
+    padding: 0.55rem 1.15rem;
+    border: 2px solid var(--line);
+    background: var(--board);
+    color: var(--ink);
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+
+  .accion--revisar {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--board);
+  }
+
+  .accion--revisar:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--board);
+  }
+
+  .accion--vaciar:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .estado {
+    min-height: 1.5em;
+    margin: 0;
+    font-weight: 700;
+    line-height: 1.45;
+  }
+
+  .comentarios {
+    margin-top: 1.35rem;
+    padding: 1rem 1.1rem 1.15rem;
+    border: 2px solid var(--line);
+    background: var(--board);
+  }
+
+  .lista-comentarios {
+    margin: 0;
+    padding-left: 1.3rem;
+  }
+
+  .lista-comentarios li + li {
+    margin-top: 0.9rem;
+  }
+
+  .lista-comentarios p {
+    margin: 0;
+  }
+
+  :global(.comentario-espacio) {
+    margin-bottom: 0.25rem;
+    color: var(--emphasis);
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .cierre {
+    margin: 2rem 0 0;
+    padding: 1.05rem 1.15rem;
+    border: 2px solid var(--emphasis);
+    background: color-mix(in srgb, var(--emphasis) 8%, var(--board));
+    color: var(--emphasis);
+    font-weight: 700;
+    line-height: 1.4;
+  }
+
+  @media (min-width: 48rem) {
+    .banco {
+      position: sticky;
+      top: 0.5rem;
+      z-index: 1;
+    }
+  }
+
+  @media print {
+    .como-usar,
+    .acciones,
+    .estado,
+    .comentarios,
+    .sin-script {
+      display: none;
+    }
+
+    .como-imprimir {
+      display: block;
+      color: var(--ink);
+      margin-bottom: 1rem;
+    }
+
+    .banco {
+      position: static;
+      break-inside: avoid;
+      padding: 0.6rem 0.7rem 0.7rem;
+    }
+
+    .fichas {
+      gap: 0.35rem 0.7rem;
+    }
+
+    .ficha,
+    .ficha:disabled,
+    .ficha.is-usada,
+    .ficha.is-elegida {
+      min-height: 0;
+      padding: 0.15rem 0.35rem;
+      opacity: 1;
+      background: transparent;
+      color: var(--ink);
+      border-color: var(--line);
+    }
+
+    .texto-bloque {
+      padding: 0.4rem 0 0;
+      border: 0;
+      background: transparent;
+    }
+
+    .texto {
+      font-size: 12pt;
+      line-height: 2.4;
+    }
+
+    .hueco,
+    .hueco.is-lleno,
+    .hueco.is-bien,
+    .hueco.is-revisar,
+    .hueco.is-elegido {
+      min-width: 9.5rem;
+      min-height: 1.15rem;
+      margin: 0 0.1rem;
+      padding: 0 0.2rem;
+      border: 0;
+      border-bottom: 1.5pt solid var(--ink);
+      background: transparent;
+      border-radius: 0;
+      outline: none;
+      vertical-align: baseline;
+    }
+
+    .hueco-palabra {
+      visibility: hidden;
+    }
+
+    .cierre {
+      break-inside: avoid;
+      margin-top: 1.2rem;
+    }
+
+    .cierre::after {
+      content: "";
+      display: block;
+      height: 2.4cm;
+      margin-top: 0.45rem;
+      background-image: repeating-linear-gradient(
+        to bottom,
+        transparent,
+        transparent calc(0.8cm - 1px),
+        var(--muted) calc(0.8cm - 1px),
+        var(--muted) 0.8cm
+      );
+    }
+  }
+</style>
