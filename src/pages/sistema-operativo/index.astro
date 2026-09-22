@@ -23,7 +23,7 @@ import MaterialLayout from "../../layouts/MaterialLayout.astro";
       <h2 id="explicaciones">Pizarrones para estudiar y relacionar ideas</h2>
     </div>
     <p class="relaciones-intro">
-      El pizarrón <a href="/pizarrones/el-sistema-operativo/">El sistema operativo</a>
+      El pizarrón <a href="/pizarrones/el-sistema-operativo/">El sistema operativo</a>{" "}
       presenta la idea central. Estos pizarrones permiten volver a los conceptos
       que la ficha, la guía y las actividades ponen en relación.
     </p>
@@ -112,7 +112,7 @@ import MaterialLayout from "../../layouts/MaterialLayout.astro";
             class="accion accion--editable"
             href="/materiales/sistema-operativo/el-sistema-operativo-ficha.docx"
             download
-          >DOCX editable</a>
+          >Descargar DOCX editable</a>
         </div>
       </article>
 
@@ -138,7 +138,7 @@ import MaterialLayout from "../../layouts/MaterialLayout.astro";
             class="accion accion--editable"
             href="/materiales/sistema-operativo/el-sistema-operativo-guia-de-trabajo.docx"
             download
-          >DOCX editable</a>
+          >Descargar DOCX editable</a>
         </div>
       </article>
     </div>
@@ -173,7 +173,7 @@ import MaterialLayout from "../../layouts/MaterialLayout.astro";
             class="accion accion--editable"
             href="/materiales/sistema-operativo/el-sistema-operativo-actividades.docx"
             download
-          >DOCX editable</a>
+          >Descargar DOCX editable</a>
         </div>
       </article>
 
@@ -305,7 +305,15 @@ import MaterialLayout from "../../layouts/MaterialLayout.astro";
   }
 
   .accion--editable {
-    border-color: var(--hairline);
+    min-height: auto;
+    padding: 0.25rem 0.1rem;
+    border: 0;
+    color: var(--muted);
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-decoration: underline;
+    text-decoration-color: var(--hairline);
+    text-underline-offset: 0.2em;
   }
 
   .grupo--relaciones {
@@ -403,6 +411,11 @@ import MaterialLayout from "../../layouts/MaterialLayout.astro";
 
     .accion {
       flex: 1 1 8.5rem;
+    }
+
+    .accion--editable {
+      flex: 0 0 100%;
+      justify-content: flex-start;
     }
   }
 

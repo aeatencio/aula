@@ -16,7 +16,10 @@ const recorrido = requireRecorrido("gm-2026-2");
   <p class="ubicacion-recorrido">Escuelas · Gabriela Mistral</p>
   <h1 class="page-title">{recorrido.nombre}</h1>
   <p class="lede">
-    Materiales de este recorrido de enseñanza.
+    Los pizarrones son la referencia principal de lo trabajado. La familia{" "}
+    <a href="/sistema-operativo/">El sistema operativo</a>{" "}
+    integra y relaciona varios conceptos anteriores; su ficha, guía y
+    actividades ofrecen distintas maneras de repasar o practicar.
   </p>
 
   <ol class="lista-pizarrones">
@@ -45,6 +48,17 @@ const recorrido = requireRecorrido("gm-2026-2");
   .lista-pizarrones {
     list-style: decimal;
     padding-left: 1.7rem;
+  }
+
+  .lede a {
+    color: var(--ink);
+    font-weight: 700;
+    text-decoration: none;
+    border-bottom: 2px solid var(--accent);
+  }
+
+  .lede a:hover {
+    color: var(--accent);
   }
 
   .lista-pizarrones li::marker {

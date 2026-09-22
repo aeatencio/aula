@@ -28,17 +28,17 @@ const BANCO = [
 
 const ARCHIVOS = {
   "el-sistema-operativo-actividades.docx":
-    "0d62817b15d69dccd9a1fd0e745c1e9de51502951c641ad8cea91796a125b13e",
+    "c765657213a4a71f628b84c9d4df939db40e6dfe4309f12d32aa7b8517986a5d",
   "el-sistema-operativo-actividades.pdf":
-    "ddc51273d306bc6fefe6ab25d0de0a27a15381f69ada8fa6f5e5df34f410bb3c",
+    "4df18174cdeea644588afeaf42645729531d8d8ea4ae229ad690adee34636d20",
   "el-sistema-operativo-ficha.docx":
-    "e58a12a0f24049d10f36ea46fa21343b16b3a1022c82d05a0ab96ce27847430c",
+    "257eec3b265bbb8b436f2e8416f7d34f5b9c355dcada530a5aa39c49ccbd945a",
   "el-sistema-operativo-ficha.pdf":
-    "52dd9620aa61257d64bf708908064757a1ea142a9fd1ad665514bfcd6497ae40",
+    "00cea4c9e06206f921ef8e37c72fdc161c05d0ab5a5074013b90821b384cd16e",
   "el-sistema-operativo-guia-de-trabajo.docx":
-    "a2f0f8c06da0bacfb90d98423d7fd50343f006949efff99ecfe843997ac0d076",
+    "51401fd925ea44823d38bfcc046ddb197065455328d678b362612872457cf475",
   "el-sistema-operativo-guia-de-trabajo.pdf":
-    "5b68bf8cb0850904bd5eb80a83607bb7720dbe6305382e35968a47dbd46a1d7e",
+    "a12e14f18a38e9f6525ad64679bc700b7dc35c1a0ec884c546ab80eb33dc2955",
 };
 
 const PIZARRONES = [
@@ -100,6 +100,8 @@ describe("unidad Sistema operativo", () => {
     assert.match(visible, /Resolver actividades integradoras/);
     assert.match(visible, /Practicar en pantalla/);
     assert.match(visible, /Pizarrones para estudiar y relacionar ideas/);
+    assert.match(visible, /Descargar DOCX editable/);
+    assert.doesNotMatch(visible, /El sistema operativopresenta/);
     assert.match(visible, /<details[^>]+id="docentes"[^>]+class="docentes"/);
     assert.doesNotMatch(visible, /Clave de corrección de las 21 actividades/);
     assert.doesNotMatch(visible, /el-sistema-operativo-clave-de-correccion/);
@@ -190,6 +192,10 @@ describe("unidad Sistema operativo", () => {
     assert.match(cfp, /sistema-operativo\/\?recorrido=cfp7-si-2026/);
     assert.match(gm, /Recursos/);
     assert.match(cfp, /Recursos/);
+    assert.match(gm, /Los pizarrones son la referencia principal/);
+    assert.match(gm, /integra y relaciona varios conceptos anteriores/);
+    assert.match(gm, /distintas maneras de repasar o practicar/);
+    assert.doesNotMatch(gm, /familia<a/);
     assert.match(gm, /Gabriela Mistral · 3.º año · 3.er bimestre 2026/);
     assert.doesNotMatch(gm, /2.º cuatrimestre 2026/);
 
@@ -206,6 +212,16 @@ describe("unidad Sistema operativo", () => {
     const html = readDist("index.html");
     assert.match(html, /href="\/sistema-operativo\/"/);
     assert.match(html, /href="\/cuando-se-abre-un-programa\/guia\/"/);
+    assert.doesNotMatch(html, /Guía para la clase— para conducir/);
+    assert.doesNotMatch(
+      html,
+      /Orientaciones para la actividad interactiva— pregunta inicial/,
+    );
+  });
+
+  it("no imprime el pie de serie en el pizarrón de Sistema operativo", () => {
+    const html = readDist("pizarrones", "el-sistema-operativo", "index.html");
+    assert.match(html, /pie-serie--sin-impresion/);
   });
 
   it("nombra correctamente el recorrido de Gabriela Mistral", () => {
