@@ -10,7 +10,7 @@ const { navegaciones } = Astro.props;
 
 {
   navegaciones.length > 0 && (
-    <div class="navegacion-recorrido">
+    <div class="navegacion-recorrido" data-navegacion-recorrido>
       {navegaciones.map((navegacion) => (
         <nav
           class="recorrido"
@@ -49,21 +49,10 @@ const { navegaciones } = Astro.props;
           )}
         </nav>
       ))}
-      <script is:inline>
-        (function () {
-          var script = document.currentScript;
-          var root = script && script.parentElement;
-          if (!root) return;
-          var id = new URLSearchParams(window.location.search).get("recorrido");
-          if (!id) return;
-          var navs = root.querySelectorAll("nav.recorrido[data-recorrido-id]");
-          for (var i = 0; i < navs.length; i++) {
-            if (navs[i].getAttribute("data-recorrido-id") === id) {
-              navs[i].removeAttribute("hidden");
-              return;
-            }
-          }
-        })();
+      <script>
+        import { iniciarNavegacionRecorrido } from "../scripts/navegacion-recorrido";
+
+        iniciarNavegacionRecorrido();
       </script>
     </div>
   )
