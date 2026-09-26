@@ -51,6 +51,11 @@ export interface MovimientoSwipe {
   seleccionActiva?: boolean;
 }
 
+export type ResolucionEnlaceRecorrido =
+  | { tipo: "dentro"; href: string }
+  | { tipo: "fuera" }
+  | { tipo: "ignorar" };
+
 interface GestoTactil {
   identificador: number;
   inicioX: number;
@@ -134,6 +139,103 @@ export function mostrarNavegacionActiva(
   return null;
 }
 
+function normalizarPathname(pathname: string): string {
+  return pathname.endsWith("/") ? pathname : `${pathname}/`;
+}
+
+export function resolverEnlaceRecorrido(
+  href: string,
+  baseHref: string,
+  recorridoId: string,
+  materiales: readonly string[],
+): ResolucionEnlaceRecorrido {
+  let base: URL;
+  let destino: URL;
+
+  try {
+    base = new URL(baseHref);
+    destino = new URL(href, base);
+  } catch {
+    return { tipo: "ignorar" };
+  }
+
+  if (
+    (destino.protocol !== "http:" && destino.protocol !== "https:") ||
+    destino.origin !== base.origin
+  ) {
+    return { tipo: "ignorar" };
+  }
+
+  const pertenece = materiales.some(
+    (material) =>
+      normalizarPathname(new URL(material, base).pathname) ===
+      normalizarPathname(destino.pathname),
+  );
+  if (!pertenece) return { tipo: "fuera" };
+
+  destino.searchParams.set("recorrido", recorridoId);
+  return {
+    tipo: "dentro",
+    href: `${destino.pathname}${destino.search}${destino.hash}`,
+  };
+}
+
+export function prepararEnlacesDelRecorrido(
+  raiz: ParentNode,
+  navegacion: HTMLElement,
+  baseHref: string,
+  recorridoId: string,
+): void {
+  const materialesSerializados = navegacion.dataset.recorridoMateriales;
+  if (!materialesSerializados) return;
+
+  let materiales: string[];
+  try {
+    const valor = JSON.parse(materialesSerializados);
+    if (
+      !Array.isArray(valor) ||
+      !valor.every((item) => typeof item === "string")
+    ) {
+      return;
+    }
+    materiales = valor;
+  } catch {
+    return;
+  }
+
+  const enlaces = raiz.querySelectorAll<HTMLAnchorElement>("a[href]");
+  for (const enlace of enlaces) {
+    if (
+      enlace.closest("[data-navegacion-recorrido]") ||
+      enlace.hasAttribute("download")
+    ) {
+      continue;
+    }
+
+    const href = enlace.getAttribute("href");
+    if (!href) continue;
+
+    const resolucion = resolverEnlaceRecorrido(
+      href,
+      baseHref,
+      recorridoId,
+      materiales,
+    );
+    if (resolucion.tipo === "dentro") {
+      enlace.setAttribute("href", resolucion.href);
+      continue;
+    }
+    if (resolucion.tipo !== "fuera") continue;
+    if (enlace.hasAttribute("data-recorrido-salida")) continue;
+
+    enlace.setAttribute("data-recorrido-salida", "");
+    const nombre = enlace.getAttribute("aria-label") || enlace.textContent?.trim();
+    if (nombre) {
+      enlace.setAttribute("aria-label", `${nombre} (fuera del recorrido)`);
+    }
+  }
+}
+
 function navegacionEsVisible(navegacion: HTMLElement): boolean {
   if (!navegacion.isConnected || navegacion.hidden || navegacion.closest("[hidden]")) {
     return false;
@@ -174,8 +276,19 @@ export function iniciarNavegacionRecorrido(): void {
   const recorridoId = new URLSearchParams(window.location.search).get(
     "recorrido",
   );
+  if (!recorridoId) return;
   const navegacion = mostrarNavegacionActiva(raiz, recorridoId);
   if (!navegacion) return;
+
+  const contenido = document.querySelector("main");
+  if (contenido) {
+    prepararEnlacesDelRecorrido(
+      contenido,
+      navegacion,
+      window.location.href,
+      recorridoId,
+    );
+  }
 
   const enlaces: Record<DireccionRecorrido, HTMLAnchorElement | null> = {
     prev: navegacion.querySelector<HTMLAnchorElement>("a[rel~='prev']"),

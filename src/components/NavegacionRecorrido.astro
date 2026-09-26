@@ -16,12 +16,21 @@ const { navegaciones } = Astro.props;
           class="recorrido"
           hidden
           data-recorrido-id={navegacion.id}
+          data-recorrido-materiales={JSON.stringify(navegacion.materiales)}
           aria-label={`Recorrido ${navegacion.nombre}`}
         >
           <p class="recorrido-contexto">
             Paso {navegacion.paso} de {navegacion.total}
             {" · "}
             <a href={navegacion.href}>{navegacion.nombre}</a>
+            {" · "}
+            <a
+              class="recorrido-salir"
+              href={navegacion.salirHref}
+              data-recorrido-salir
+            >
+              Salir del recorrido
+            </a>
           </p>
           {(navegacion.anterior || navegacion.siguiente) && (
             <div class="recorrido-vecinos">
@@ -99,6 +108,12 @@ const { navegaciones } = Astro.props;
     color: var(--accent);
   }
 
+  .recorrido .recorrido-salir {
+    color: var(--muted);
+    font-weight: 600;
+    border-bottom-color: var(--line);
+  }
+
   .recorrido-vecino {
     display: inline-flex;
     align-items: center;
@@ -113,6 +128,25 @@ const { navegaciones } = Astro.props;
   @media print {
     .navegacion-recorrido {
       display: none;
+    }
+  }
+</style>
+
+<style is:global>
+  a[data-recorrido-salida]::after {
+    content: " · fuera del recorrido";
+    color: var(--muted);
+    font-size: 0.8em;
+    font-weight: 600;
+  }
+
+  a.accion--principal[data-recorrido-salida]::after {
+    color: inherit;
+  }
+
+  @media print {
+    a[data-recorrido-salida]::after {
+      content: none;
     }
   }
 </style>

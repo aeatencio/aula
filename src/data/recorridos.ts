@@ -20,6 +20,8 @@ export type NavegacionRecorrido = {
   id: string;
   nombre: string;
   href: string;
+  materiales: string[];
+  salirHref: string;
   paso: number;
   total: number;
   anterior?: VecinoRecorrido;
@@ -139,6 +141,8 @@ export function navegacionesParaMaterial(
         id: recorrido.id,
         nombre: recorrido.nombre,
         href: recorrido.href,
+        materiales: recorrido.materiales.map((material) => material.href),
+        salirHref: actual,
         paso: indice + 1,
         total,
         anterior: anterior
