@@ -1,4 +1,4 @@
-# Análisis de ítems · Evaluación del 3.er bimestre 2026
+# Análisis de ítems · Evaluación A · Sistemas Informáticos
 
 Este análisis sirve para interpretar respuestas y diseñar futuras evaluaciones. El criterio de corrección está en `clave-docente.md`.
 

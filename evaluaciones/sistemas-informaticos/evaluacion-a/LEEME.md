@@ -1,6 +1,8 @@
-# Evaluación del 3.er bimestre 2026 · Gabriela Mistral · 3.º año
+# Evaluación A · Sistemas Informáticos
 
-Instrumento individual, escrito, a libro cerrado y de opción múltiple sobre Sistemas Informáticos. Se usó el 29/09/2026 y se conserva como instrumento histórico: la fuente del examen y los PDF quedan congelados.
+Instrumento individual, escrito, a libro cerrado y de opción múltiple sobre Sistemas Informáticos. La fuente del examen y los PDF quedan congelados. La [Evaluación B](../evaluacion-b/) es una versión paralela, comparable en estructura, ejes y exigencia.
+
+Uso registrado: se tomó el 29/09/2026 como evaluación de cierre del 3.er bimestre en 3.º año de la escuela Gabriela Mistral.
 
 Tiene 30 ítems en cuatro partes —Reconocer (1–8), Relacionar (9–16), Interpretar (17–24) y Usar lo que sabés (25–30)—, una por cara. Los resultados se registran por parte (sobre 8, 8, 8 y 6).
 

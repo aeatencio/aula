@@ -1,0 +1,896 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Evaluación B · Sistemas Informáticos</title>
+<!-- Fuente de la Evaluación B; generar-pdf.mjs produce las dos variantes oficio. -->
+<style>
+  @page { size: 216mm 356mm; margin: 0; }
+
+  :root {
+    --ancho-pagina: 216mm;
+    --alto-pagina: 356mm;
+    --margen-v: 13mm;
+    --margen-inferior: 14mm;
+    --margen-h: 16mm;
+    --tinta: #000;
+    --gris: #444;
+    --gris-claro: #8a8a8a;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: #fff;
+    color: var(--tinta);
+    font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  @media screen {
+    body { background: #9a9a9a; padding: 10mm 0; }
+    .pagina { margin: 0 auto 10mm; box-shadow: 0 0 0 1px #666; }
+  }
+
+  .pagina {
+    position: relative;
+    width: var(--ancho-pagina);
+    height: var(--alto-pagina);
+    padding: var(--margen-v) var(--margen-h) var(--margen-inferior);
+    background: #fff;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    break-after: page;
+    page-break-after: always;
+  }
+  .pagina:last-child { break-after: auto; page-break-after: auto; }
+
+  .contenido { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; }
+
+  /* ---------- Encabezado ---------- */
+
+  .encabezado {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 6mm;
+    padding-bottom: 2.5mm;
+    border-bottom: 0.5mm solid var(--tinta);
+  }
+  .titulo { margin: 0; font-size: 16pt; font-weight: 700; }
+  .institucion { margin: 0; font-size: 11pt; color: var(--gris); white-space: nowrap; }
+
+  .campos { display: flex; gap: 6mm; margin: 4.5mm 0 0; font-size: 11.5pt; }
+  .campo { display: flex; align-items: flex-end; gap: 2mm; }
+  .campo span { white-space: nowrap; }
+  .campo i { display: block; height: 6mm; border-bottom: 0.3mm solid var(--tinta); }
+  .campo-nombre { flex: 1 1 auto; }
+  .campo-nombre i { flex: 1 1 auto; }
+  .campo-curso i { width: 18mm; }
+  .campo-fecha i { width: 24mm; }
+
+  .indicaciones { margin: 4mm 0 0; font-size: 11.5pt; line-height: 1.4; }
+  .indicaciones p { margin: 0; }
+
+  .nombre-hoja2 {
+    display: flex;
+    gap: 6mm;
+    margin: 0 0 4mm;
+    padding-bottom: 2mm;
+    border-bottom: 0.3mm solid #999;
+    font-size: 11pt;
+  }
+
+  /* ---------- Partes ---------- */
+
+  .parte-titulo {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding-bottom: 1.5mm;
+    border-bottom: 0.5mm solid var(--tinta);
+  }
+  .parte-titulo h2 { margin: 0; font-size: 14pt; font-weight: 700; }
+  .parte-titulo .puntaje { font-size: 11pt; color: var(--gris); white-space: nowrap; }
+  .parte-nota { margin: 1.5mm 0 0; font-size: 10.5pt; color: var(--gris); }
+
+  .p1 .parte-titulo { margin-top: 6mm; }
+
+  /* El aire sobrante se reparte entre los ítems, no al pie. */
+  .items {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding-top: var(--aire-inicial);
+    font-size: var(--cuerpo);
+    line-height: 1.32;
+  }
+  .items > * + * { margin-top: var(--entre-items); }
+
+  .p1 { --cuerpo: 14pt; --entre-items: 3mm; --aire-inicial: 3mm; }
+  .p2 { --cuerpo: 12pt; --entre-items: 4mm; --aire-inicial: 2mm; }
+  .p3 { --cuerpo: 11.5pt; --entre-items: 2.6mm; --aire-inicial: 2mm; }
+  .p4 { --cuerpo: 11.5pt; --entre-items: 3.5mm; --aire-inicial: 2mm; }
+
+  .item {
+    display: grid;
+    grid-template-columns: 11mm 1fr;
+    column-gap: 4mm;
+    break-inside: avoid;
+  }
+  .bloque > .item { margin-top: 2.8mm; }
+
+  .casillero {
+    width: 11mm;
+    height: 11mm;
+    border: 0.45mm solid var(--tinta);
+    margin-top: -0.6mm;
+  }
+  .p1 .casillero { width: 12mm; height: 12mm; margin-top: -1mm; }
+  .p1 .item { grid-template-columns: 12mm 1fr; column-gap: 5mm; }
+
+  .enunciado { margin: 0; }
+  .enunciado .num { font-weight: 700; margin-right: 1.6mm; }
+  .enunciado.segunda { margin-top: 2mm; }
+
+  .opciones { list-style: none; margin: 1.6mm 0 0; padding: 0; }
+  .opciones li { display: flex; gap: 2mm; align-items: baseline; }
+  .letra { flex: 0 0 auto; display: inline-block; min-width: 4.2mm; font-weight: 700; }
+  .opciones.fila { display: flex; flex-wrap: wrap; gap: 1.2mm 12mm; }
+  .opciones.lista { display: grid; gap: 0.9mm; }
+  .opciones.dos { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9mm 6mm; }
+
+  /* ---------- Parte 1: imágenes que forman parte del ítem ---------- */
+
+  svg.icono {
+    width: 14mm;
+    height: 14mm;
+    fill: none;
+    stroke: #000;
+    stroke-width: 2;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+    overflow: visible;
+  }
+
+  /* Opciones que son imágenes: una fila de tres tarjetas. */
+  .tarjetas {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4mm;
+    margin: 2.2mm 0 0;
+    padding: 0;
+  }
+  .tarjetas li {
+    display: flex;
+    align-items: center;
+    gap: 2mm;
+    padding: 1.4mm 2mm;
+    border: 0.3mm solid var(--gris-claro);
+    border-radius: 1.5mm;
+    font-size: 12.5pt;
+    line-height: 1.2;
+    hyphens: none;
+  }
+  .tarjetas li .letra { font-size: 13.5pt; align-self: center; }
+  .tarjetas.dobles li { align-items: center; }
+  .tarjetas.dobles li > div { flex: 1 1 auto; display: flex; flex-direction: column; align-items: center; gap: 0.8mm; }
+  .tarjetas.dobles .iconos { display: flex; gap: 3mm; }
+  .tarjetas.dobles svg.icono { width: 9mm; height: 9mm; }
+  .tarjetas svg.icono { width: 9mm; height: 9mm; flex: 0 0 auto; }
+
+  /* Imagen de contexto a la izquierda, opciones de texto a la derecha. */
+  .con-figura {
+    display: grid;
+    grid-template-columns: 78mm 1fr;
+    gap: 7mm;
+    align-items: center;
+    margin: 2.2mm 0 0;
+  }
+  .con-figura .opciones { margin: 0; font-size: 13pt; }
+  .con-figura .opciones.lista { gap: 1.4mm; }
+  .con-figura .tarjetas { margin: 0; grid-template-columns: 1fr; gap: 0.8mm; }
+  .con-figura .tarjetas li { padding: 0.3mm 0; border: 0; font-size: 13pt; }
+  .con-figura .tarjetas svg.icono { width: 7.5mm; height: 7.5mm; }
+
+  .figura {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3mm;
+    padding: 1mm 2mm;
+    font-size: 11pt;
+  }
+  .figura-ancha { margin: 2.2mm 0 0; }
+  .figura-ancha + .opciones { margin-top: 2.4mm; font-size: 13pt; }
+  .figura-ancha + .tarjetas { margin-top: 2.4mm; }
+  .rotulo { font-size: 10pt; color: var(--gris); text-align: center; line-height: 1.2; }
+
+  .tareas { display: flex; align-items: flex-end; gap: 2.5mm; }
+  .tareas .compu { margin-left: 3mm; padding-left: 4mm; border-left: 0.3mm solid var(--gris-claro); }
+  .tareas .tarea { display: flex; flex-direction: column; align-items: center; gap: 0.6mm; }
+  .tareas .tarea svg.icono { width: 10mm; height: 10mm; }
+  .tareas .compu { display: flex; flex-direction: column; align-items: center; }
+  .tareas .compu svg.icono { width: 14mm; height: 14mm; }
+  .tareas .compu .rotulo { white-space: nowrap; }
+  .tareas .enlace { width: 5mm; border-top: 0.35mm solid #000; }
+
+  .cuenta { display: flex; align-items: center; gap: 1.8mm; font-size: 17pt; font-weight: 700; }
+  .cuenta span { display: inline-flex; align-items: center; justify-content: center; min-width: 11mm; height: 11mm; border: 0.35mm solid #000; padding: 0 1.5mm; }
+  .cuenta span.op { border: 0; min-width: 5mm; padding: 0; }
+  .cuenta span.marcado { border-width: 0.9mm; background: #e4e4e4; }
+
+  .documento { display: flex; align-items: center; gap: 4mm; }
+  .ventana { width: 52mm; border: 0.35mm solid #000; border-radius: 1mm; font-size: 10pt; }
+  .ventana .barra { display: flex; align-items: center; gap: 1.5mm; padding: 0.8mm 1.5mm 0.8mm 2mm; border-bottom: 0.35mm solid #000; font-weight: 700; }
+  .ventana .boton { margin-left: auto; padding: 0.2mm 1.6mm; border: 0.3mm solid #000; border-radius: 0.8mm; font-weight: 400; font-size: 9pt; }
+  .ventana .barra small { font-weight: 400; }
+  .ventana .lineas { padding: 1.6mm 2mm; }
+  .ventana .lineas i { display: block; height: 0; border-top: 0.3mm solid #666; margin: 1.3mm 0; }
+  .ventana .lineas i:nth-child(2) { width: 85%; }
+  .ventana .lineas i:nth-child(3) { width: 60%; }
+
+  .capas { display: flex; align-items: center; gap: 1.5mm; width: 100%; justify-content: center; }
+  .capa { padding: 1.4mm 3mm; border: 0.35mm solid #000; text-align: center; font-weight: 700; font-size: 11.5pt; line-height: 1.25; }
+  .capa small { display: block; font-weight: 400; font-size: 9.5pt; color: var(--gris); }
+  .capa.vacia { border-style: dashed; border-width: 0.55mm; font-size: 15pt; min-width: 34mm; padding: 2.2mm 3mm; }
+  .conector { display: flex; flex-direction: column; align-items: center; font-size: 9pt; color: var(--gris); line-height: 1.1; }
+  .conector svg.flecha { width: 11mm; }
+
+  /* ---------- Parte 3: representaciones para interpretar ---------- */
+
+  .bloque { break-inside: avoid; }
+  .p3 .items, .p4 .items { justify-content: flex-start; }
+  .p3 .items > .bloque, .p4 .items > .bloque {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    flex: var(--n, 1) 1 auto;
+  }
+
+  .material {
+    margin: 0;
+    padding: 2.8mm 4mm 3.2mm;
+    border: 0.45mm solid var(--tinta);
+  }
+  .material-titulo { margin: 0 0 2mm; font-size: 10.5pt; font-weight: 700; }
+  .material p { margin: 0; }
+  .material p + p { margin-top: 1.4mm; }
+
+  table.cambio { border-collapse: collapse; font-size: 11pt; margin: 0 auto; }
+  table.cambio th, table.cambio td { border: 0.3mm solid #000; padding: 0.9mm 4.5mm; text-align: center; }
+  table.cambio thead th { font-weight: 700; }
+  table.cambio thead td { border: 0; }
+  table.cambio tbody th { text-align: left; font-weight: 600; }
+
+  .modelo, .flujo { display: flex; align-items: center; justify-content: center; gap: 2.5mm; font-size: 11pt; }
+  .caja { border: 0.35mm solid #000; padding: 2mm 3.5mm; text-align: center; line-height: 1.25; }
+  .caja small { display: block; font-size: 9.5pt; color: var(--gris); }
+  .nucleo { display: flex; align-items: center; gap: 1.5mm; padding: 2mm; border: 0.35mm dashed #666; }
+  .flecha { width: 9mm; height: 4mm; flex: 0 0 auto; }
+  .flecha-doble { width: 11mm; height: 8mm; flex: 0 0 auto; }
+  svg.flecha path, svg.flecha-doble path { fill: none; stroke: #000; stroke-width: 1.6; stroke-linecap: square; }
+
+  .flujo { gap: 1.8mm; }
+  .flujo .caja { padding: 1.4mm 2.4mm; }
+  .flujo .caja b { display: block; font-size: 12pt; }
+  .flujo .op { font-size: 14pt; font-weight: 700; }
+  .flujo .flecha { width: 7mm; }
+
+  /* ---------- Parte 4: casos ---------- */
+
+  .cadena { display: flex; align-items: center; gap: 2mm; margin: 2mm 0 0; font-size: 10.5pt; }
+  .cadena .caja { padding: 1.4mm 2.6mm; }
+
+  .estado-caso { display: flex; gap: 3mm; align-items: baseline; margin-top: 2mm !important; font-size: 10.5pt; }
+  .estado-caso span { border: 0.3mm solid #000; padding: 0.6mm 2.4mm; white-space: nowrap; }
+
+  /* ---------- Recursos propios de la Evaluación B ---------- */
+
+  /* Secuencia de estados: los datos van en cajas; lo que llega, sobre las flechas. */
+  .estados { display: flex; align-items: center; justify-content: center; gap: 1.5mm; }
+  .estado-caja { border: 0.35mm solid #000; padding: 1mm 3mm 1.2mm; text-align: center; font-size: 10.5pt; line-height: 1.3; }
+  .estado-caja small { display: block; margin-bottom: 0.4mm; font-size: 9pt; color: var(--gris); }
+  .evento { display: flex; flex-direction: column; align-items: center; font-size: 9.5pt; color: var(--gris); line-height: 1.1; text-align: center; }
+  .evento svg.flecha { width: 13mm; }
+
+  .material-texto { margin: 0 0 2mm !important; font-size: 10.5pt; }
+  .material .nota { margin-top: 1.6mm; font-size: 10pt; text-align: center; }
+  .cadena .caja b { display: block; font-size: 11pt; }
+  .cadena.centrada { justify-content: center; }
+  .modelo .caja b { display: block; }
+
+  .p3 { --entre-items: 2mm; }
+  .p3 .bloque > .item { margin-top: 1.6mm; }
+  .p3 .material { padding: 2mm 3.5mm 2.4mm; }
+  .p3 .opciones { margin-top: 1.1mm; }
+  .p3 .opciones.lista, .p3 .opciones.dos { gap: 0.5mm 6mm; }
+  .p3 .cadena { margin: 1.4mm 0 0; }
+</style>
+</head>
+<body>
+
+<!-- Pictogramas propios, lineales, para impresión en blanco y negro.
+     Los primeros vienen de la Evaluación A; los últimos son de esta evaluación. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-navegador" viewBox="0 0 48 48"><rect x="4" y="7" width="40" height="34" rx="2"/><path d="M4 15h40"/><circle cx="8.5" cy="11" r="1" fill="#000"/><circle cx="12.5" cy="11" r="1" fill="#000"/><rect x="17" y="9" width="23" height="4" rx="2"/><path d="M10 22h20M10 27h28M10 32h24"/></symbol>
+    <symbol id="i-parlante" viewBox="0 0 48 48"><path d="M6 18h8l11-9v30l-11-9H6z"/><path d="M31 18a8 8 0 0 1 0 12M35 13a15 15 0 0 1 0 22"/></symbol>
+    <symbol id="i-camara" viewBox="0 0 48 48"><circle cx="24" cy="19" r="13"/><circle cx="24" cy="19" r="5"/><path d="M24 32v6M14 42h20"/></symbol>
+    <symbol id="i-cpu" viewBox="0 0 48 48"><rect x="12" y="12" width="24" height="24" rx="2"/><rect x="18" y="18" width="12" height="12"/><path d="M18 12V6M24 12V6M30 12V6M18 42v-6M24 42v-6M30 42v-6M12 18H6M12 24H6M12 30H6M42 18h-6M42 24h-6M42 30h-6"/></symbol>
+    <symbol id="i-ram" viewBox="0 0 48 48"><rect x="3" y="13" width="42" height="20" rx="1"/><rect x="7" y="17" width="7" height="8"/><rect x="17" y="17" width="7" height="8"/><rect x="27" y="17" width="7" height="8"/><rect x="37" y="17" width="5" height="8"/><path d="M7 29v4M11 29v4M15 29v4M19 29v4M29 29v4M33 29v4M37 29v4M41 29v4"/></symbol>
+    <symbol id="i-disco" viewBox="0 0 48 48"><rect x="7" y="5" width="34" height="38" rx="3"/><circle cx="24" cy="21" r="10"/><circle cx="24" cy="21" r="2" fill="#000"/><path d="M34 37l-9-14"/><circle cx="11.5" cy="9.5" r="1" fill="#000"/><circle cx="36.5" cy="9.5" r="1" fill="#000"/></symbol>
+    <symbol id="i-doc" viewBox="0 0 48 48"><path d="M11 4h18l9 9v31H11z"/><path d="M29 4v9h9M16 21h16M16 27h16M16 33h11"/></symbol>
+    <symbol id="i-calc" viewBox="0 0 48 48"><rect x="11" y="4" width="26" height="40" rx="2"/><rect x="15" y="8" width="18" height="8"/><path d="M16 23h2M23 23h2M30 23h2M16 30h2M23 30h2M30 30h2M16 37h2M23 37h2M30 37h2"/></symbol>
+    <symbol id="i-musica" viewBox="0 0 48 48"><path d="M19 36V12l18-5v24"/><ellipse cx="14.5" cy="36" rx="5" ry="4"/><ellipse cx="32.5" cy="31" rx="5" ry="4"/></symbol>
+    <symbol id="i-auriculares" viewBox="0 0 48 48"><path d="M9 31v-7a15 15 0 0 1 30 0v7"/><rect x="5" y="29" width="9" height="13" rx="2.5"/><rect x="34" y="29" width="9" height="13" rx="2.5"/></symbol>
+    <symbol id="i-android" viewBox="0 0 48 48"><path d="M7 35a17 17 0 0 1 34 0z"/><path d="M14 12l4.5 7.5M34 12l-4.5 7.5"/><circle cx="17.5" cy="28" r="2" fill="#000" stroke="none"/><circle cx="30.5" cy="28" r="2" fill="#000" stroke="none"/></symbol>
+    <symbol id="i-dibujo" viewBox="0 0 48 48"><rect x="4" y="7" width="40" height="34" rx="2"/><path d="M4 15h40"/><path d="M10 33c4-9 8 1 13-6s8-5 12-12"/><circle cx="37" cy="31" r="3"/></symbol>
+    <symbol id="i-bateria" viewBox="0 0 48 48"><rect x="4" y="14" width="36" height="20" rx="2.5"/><path d="M40 20h4v8h-4"/><path d="M24 18l-6 7h7l-4 6"/></symbol>
+    <symbol id="i-proyector" viewBox="0 0 48 48"><rect x="3" y="17" width="32" height="15" rx="3"/><circle cx="25" cy="24.5" r="4.5"/><path d="M8 22h8M8 27h6M35 21l9-5M35 28l9 5M9 32v4M29 32v4"/></symbol>
+    <symbol id="i-celular" viewBox="0 0 48 48"><rect x="14" y="4" width="20" height="40" rx="3"/><path d="M21 8h6M21 39h6"/></symbol>
+    <symbol id="i-foto" viewBox="0 0 48 48"><rect x="5" y="14" width="38" height="26" rx="3"/><path d="M16 14l3-5h10l3 5"/><circle cx="24" cy="27" r="7"/></symbol>
+  </defs>
+</svg>
+
+<!-- ======================================================= CARA 1 -->
+<section class="pagina p1" id="cara-1">
+  <div class="contenido">
+    <header>
+      <div class="encabezado">
+        <h1 class="titulo">Evaluación</h1>
+      </div>
+      <div class="campos">
+        <div class="campo campo-nombre"><span>Nombre y apellido:</span><i></i></div>
+        <div class="campo campo-curso"><span>Curso:</span><i></i></div>
+        <div class="campo campo-fecha"><span>Fecha:</span><i></i></div>
+      </div>
+      <div class="indicaciones">
+        <p>Escribí en el casillero la letra de la respuesta correcta. Cada pregunta tiene una sola respuesta correcta.</p>
+        <p>Si querés cambiar una respuesta, tachá la letra y escribí la nueva al lado del casillero.</p>
+      </div>
+    </header>
+
+    <div class="parte-titulo">
+      <h2>Parte 1 · Reconocer</h2>
+      <span class="puntaje">___ / 8</span>
+    </div>
+
+    <div class="items">
+      <!-- 1 · software frente a hardware -->
+      <div class="item">
+        <div class="casillero"></div>
+        <div>
+          <p class="enunciado"><span class="num">1.</span>¿Cuál de estos es software?</p>
+          <ul class="tarjetas">
+            <li><span class="letra">A</span><svg class="icono" aria-hidden="true"><use href="#i-parlante"/></svg><span>El parlante</span></li>
+            <li><span class="letra">B</span><svg class="icono" aria-hidden="true"><use href="#i-dibujo"/></svg><span>Una app de dibujo</span></li>
+            <li><span class="letra">C</span><svg class="icono" aria-hidden="true"><use href="#i-bateria"/></svg><span>La batería</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 2 · los programas cambian la tarea -->
+      <div class="item">
+        <div class="casillero"></div>
+        <div>
+          <p class="enunciado"><span class="num">2.</span>¿Qué permite que el mismo celular realice tareas tan distintas?</p>
+          <div class="con-figura">
+            <div class="figura">
+              <div class="tareas">
+                <div class="tarea"><svg class="icono" aria-hidden="true"><use href="#i-foto"/></svg><span class="rotulo">fotos</span></div>
+                <div class="tarea"><svg class="icono" aria-hidden="true"><use href="#i-calc"/></svg><span class="rotulo">calcular</span></div>
+                <div class="tarea"><svg class="icono" aria-hidden="true"><use href="#i-musica"/></svg><span class="rotulo">música</span></div>
+                <div class="compu"><svg class="icono" aria-hidden="true"><use href="#i-celular"/></svg><span class="rotulo">mismo celular</span></div>
+              </div>
+            </div>
+            <ul class="opciones lista">
+              <li><span class="letra">A</span>La pantalla táctil</li>
+              <li><span class="letra">B</span>La cámara</li>
+              <li><span class="letra">C</span>Los programas</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3 · papel de un dato -->
+      <div class="item">
+        <div class="casillero"></div>
+        <div>
+          <p class="enunciado"><span class="num">3.</span>En esta cuenta, ¿qué papel cumple el 4?</p>
+          <div class="con-figura">
+            <div class="figura">
+              <div class="cuenta"><span>9</span><span class="op">−</span><span class="marcado">4</span><span class="op">=</span><span>5</span></div>
+            </div>
+            <ul class="opciones lista">
+              <li><span class="letra">A</span>Es un dato</li>
+              <li><span class="letra">B</span>Es una operación</li>
+              <li><span class="letra">C</span>Es el resultado</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4 · entrada -->
+      <div class="item">
+        <div class="casillero"></div>
+        <div>
+          <p class="enunciado"><span class="num">4.</span>¿Cuál es un dispositivo de entrada?</p>
+          <ul class="tarjetas">
+            <li><span class="letra">A</span><svg class="icono" aria-hidden="true"><use href="#i-proyector"/></svg><span>El proyector</span></li>
+            <li><span class="letra">B</span><svg class="icono" aria-hidden="true"><use href="#i-camara"/></svg><span>La cámara web</span></li>
+            <li><span class="letra">C</span><svg class="icono" aria-hidden="true"><use href="#i-auriculares"/></svg><span>Los auriculares</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 5 · salida como acción -->
+      <div class="item">
+        <div class="casillero"></div>
+        <div>
+          <p class="enunciado"><span class="num">5.</span>Un lavarropas enciende una luz para avisar que terminó el lavado. En ese caso, la luz es…</p>
+          <ul class="opciones fila">
+            <li><span class="letra">A</span>una entrada</li>
+            <li><span class="letra">B</span>una operación</li>
+            <li><span class="letra">C</span>una salida</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 6 · CPU -->
+      <div class="item">
+        <div class="casillero"></div>
+        <div>
+          <p class="enunciado"><span class="num">6.</span>Mientras un programa funciona, ¿qué parte ejecuta sus instrucciones?</p>
+          <ul class="tarjetas">
+            <li><span class="letra">A</span><svg class="icono" aria-hidden="true"><use href="#i-ram"/></svg><span>La memoria RAM</span></li>
+            <li><span class="letra">B</span><svg class="icono" aria-hidden="true"><use href="#i-disco"/></svg><span>El almacenamiento</span></li>
+            <li><span class="letra">C</span><svg class="icono" aria-hidden="true"><use href="#i-cpu"/></svg><span>La CPU</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 7 · RAM y lo no guardado -->
+      <div class="item">
+        <div class="casillero"></div>
+        <div>
+          <p class="enunciado"><span class="num">7.</span>Estás escribiendo una nota que todavía no guardaste. ¿Dónde se mantiene mientras escribís?</p>
+          <div class="con-figura">
+            <div class="figura">
+              <div class="documento">
+                <div class="ventana"><div class="barra">Nota <small>· sin guardar</small><span class="boton">Guardar</span></div><div class="lineas"><i></i><i></i><i></i></div></div>
+              </div>
+            </div>
+            <ul class="tarjetas">
+              <li><span class="letra">A</span><svg class="icono" aria-hidden="true"><use href="#i-ram"/></svg><span>En la memoria RAM</span></li>
+              <li><span class="letra">B</span><svg class="icono" aria-hidden="true"><use href="#i-disco"/></svg><span>En el almacenamiento</span></li>
+              <li><span class="letra">C</span><svg class="icono" aria-hidden="true"><use href="#i-cpu"/></svg><span>En la CPU</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- 8 · reconocer un sistema operativo -->
+      <div class="item">
+        <div class="casillero"></div>
+        <div>
+          <p class="enunciado"><span class="num">8.</span>¿Cuál de estos es un sistema operativo?</p>
+          <ul class="tarjetas">
+            <li><span class="letra">A</span><svg class="icono" aria-hidden="true"><use href="#i-navegador"/></svg><span>Un navegador</span></li>
+            <li><span class="letra">B</span><svg class="icono" aria-hidden="true"><use href="#i-android"/></svg><span>Android</span></li>
+            <li><span class="letra">C</span><svg class="icono" aria-hidden="true"><use href="#i-doc"/></svg><span>Un archivo de texto</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================================================= CARA 2 -->
+<section class="pagina p2" id="cara-2">
+  <div class="contenido">
+    <div class="parte-titulo">
+      <h2>Parte 2 · Relacionar</h2>
+      <span class="puntaje">___ / 8</span>
+    </div>
+
+    <div class="items">
+      <div class="item">
+        <div class="casillero"></div>
+        <div>
+          <p class="enunciado"><span class="num">9.</span>Para guiar un viaje, un celular usa la pantalla, la memoria RAM, una aplicación de mapas y un archivo con la ruta guardada. ¿Cómo se agrupan en hardware y software?</p>
+          <ul class="opciones lista">
+            <li><span class="letra">A</span>Hardware: la aplicación y el archivo. Software: la pantalla y la RAM.</li>
+            <li><span class="letra">B</span>Hardware: la pantalla, la RAM y el archivo. Software: la aplicación.</li>
+            <li><span class="letra">C</span>Hardware: la pantalla y la aplicación. Software: la RAM y el archivo.</li>
+            <li><span class="letra">D</span>Hardware: la pantalla y la RAM. Software: la aplicación y el archivo.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="item">
+        <div class="casillero"></div>
+        <div>
+          <p class="enunciado"><span class="num">10.</span>Una app recibe el texto «luna» y muestra «LUNA». ¿Cuál es la operación?</p>
+          <ul class="opciones dos">
+            <li><span class="letra">A</span>Recibir la palabra «luna»</li>
+            <li><span class="letra">B</span>Pasar las letras a mayúsculas</li>
+            <li><span class="letra">C</span>Mostrar la palabra «LUNA»</li>
+            <li><span class="letra">D</span>Abrir la aplicación</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="item">
+        <div class="casillero"></div>
+        <div>
+          <p class="enunciado"><span class="num">11.</span>Un juego calcula los puntos: 30&nbsp;+&nbsp;20&nbsp;=&nbsp;50. Después calcula 50&nbsp;+&nbsp;15&nbsp;=&nbsp;65. En esta segunda cuenta, ¿qué papel cumple el 50?</p>
+          <ul class="opciones lista">
+            <li><span class="letra">A</span>Es un resultado, porque salió de la cuenta anterior.</li>
+            <li><span class="letra">B</span>Es una operación, porque se le suma el 15.</li>
+            <li><span class="letra">C</span>Es un dato, porque esta cuenta trabaja con él.</li>
+            <li><span class="letra">D</span>Es una instrucción, porque indica qué sumar.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="item">
+        <div class="casillero"></div>
+        <div>
+          <p class="enunciado"><span class="num">12.</span>Alguien quiere saber cómo se dice «mesa» en inglés. Escribe «mesa» en un traductor, que busca la palabra y muestra «table». ¿Qué entra al traductor desde la persona?</p>
+          <ul class="opciones dos">
+            <li><span class="letra">A</span>El texto «mesa» que escribió</li>
+            <li><span class="letra">B</span>La intención de conocer la traducción</li>
+            <li><span class="letra">C</span>La búsqueda que hace el traductor</li>
+            <li><span class="letra">D</span>La palabra «table» que aparece</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="item">
+        <div class="casillero"></div>
+        <div>
+          <p class="enunciado"><span class="num">13.</span>Un programa está guardado y alguien hace clic para abrirlo. Según el recorrido trabajado, ¿qué pasa con sus instrucciones antes de que la CPU las ejecute?</p>
+          <ul class="opciones lista">
+            <li><span class="letra">A</span>Pasan del almacenamiento directamente a la CPU, sin usar la RAM.</li>
+            <li><span class="letra">B</span>Se cargan desde el almacenamiento en la memoria RAM.</li>
+            <li><span class="letra">C</span>Se copian desde la memoria RAM al almacenamiento.</li>
+            <li><span class="letra">D</span>Se muestran en la pantalla para que la CPU las lea.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="item">
+        <div class="casillero"></div>
+        <div>
+          <p class="enunciado"><span class="num">14.</span>Un ascensor funciona con un programa. ¿Qué forma parte del estado del ascensor?</p>
+          <ul class="opciones lista">
+            <li><span class="letra">A</span>El piso actual y si la puerta está abierta</li>
+            <li><span class="letra">B</span>El motor y los botones de cada piso</li>
+            <li><span class="letra">C</span>El programa que controla el ascensor</li>
+            <li><span class="letra">D</span>La pantalla que muestra el número de piso</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="item">
+        <div class="casillero"></div>
+        <div>
+          <p class="enunciado"><span class="num">15.</span>En una computadora, dos programas abiertos quieren imprimir al mismo tiempo en la misma impresora. Según lo que trabajamos, ¿qué pasa con esos pedidos?</p>
+          <ul class="opciones lista">
+            <li><span class="letra">A</span>Cada programa le da órdenes a la impresora por su cuenta.</li>
+            <li><span class="letra">B</span>La impresora decide sola cuál de los dos imprime primero.</li>
+            <li><span class="letra">C</span>Uno de los programas tiene que cerrarse para que el otro imprima.</li>
+            <li><span class="letra">D</span>El sistema operativo recibe los pedidos y los organiza.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="item">
+        <div class="casillero"></div>
+        <div>
+          <p class="enunciado"><span class="num">16.</span>Querés explicar cómo una máquina expendedora se entera de qué bebida elegiste y de qué manera te la entrega. ¿Qué representación te sirve más?</p>
+          <ul class="opciones lista">
+            <li><span class="letra">A</span>Una tabla con los datos de la máquina antes y después de la compra.</li>
+            <li><span class="letra">B</span>Una lista que diga qué es dato, qué es operación y qué es resultado.</li>
+            <li><span class="letra">C</span>Un esquema de por dónde entra la información, qué se hace y qué sale.</li>
+            <li><span class="letra">D</span>Cualquiera de las tres, porque todas muestran lo mismo.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================================================= CARA 3 -->
+<section class="pagina p3" id="cara-3">
+  <div class="contenido">
+    <div class="nombre-hoja2">
+      <div class="campo campo-nombre"><span>Nombre y apellido:</span><i></i></div>
+      <div class="campo campo-curso"><span>Curso:</span><i></i></div>
+    </div>
+
+    <div class="parte-titulo">
+      <h2>Parte 3 · Interpretar</h2>
+      <span class="puntaje">___ / 8</span>
+    </div>
+
+    <div class="items">
+      <div class="bloque" style="--n:3">
+        <figure class="material">
+          <p class="material-titulo">Preguntas 17 a 19 · El sistema de un estacionamiento</p>
+          <p class="material-texto">Una barrera le avisa al sistema cada vez que entra o sale un auto.</p>
+          <div class="estados">
+            <div class="estado-caja">Ocupados: <b>4</b><br>Capacidad: <b>8</b></div>
+            <div class="evento"><span>entraron 2</span><svg class="flecha" viewBox="0 0 36 16" aria-hidden="true"><path d="M1 8h30M24 2l8 6-8 6"/></svg></div>
+            <div class="estado-caja">Ocupados: <b>6</b><br>Capacidad: <b>8</b></div>
+            <div class="evento"><span>salió 1</span><svg class="flecha" viewBox="0 0 36 16" aria-hidden="true"><path d="M1 8h30M24 2l8 6-8 6"/></svg></div>
+            <div class="estado-caja">Ocupados: <b>5</b><br>Capacidad: <b>8</b></div>
+          </div>
+        </figure>
+
+        <div class="item">
+          <div class="casillero"></div>
+          <div>
+            <p class="enunciado"><span class="num">17.</span>Del primer cuadro al último, ¿qué datos del estado cambiaron?</p>
+            <ul class="opciones fila">
+              <li><span class="letra">A</span>Los dos</li>
+              <li><span class="letra">B</span>Sólo la capacidad</li>
+              <li><span class="letra">C</span>Sólo la ocupación</li>
+              <li><span class="letra">D</span>Ninguno</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="item">
+          <div class="casillero"></div>
+          <div>
+            <p class="enunciado"><span class="num">18.</span>En el paso de 6 a 5 ocupados, ¿qué le llega al sistema y qué hace el sistema?</p>
+            <ul class="opciones lista">
+              <li><span class="letra">A</span>Le llega la orden de restar 1. Hace: avisar que salió un auto.</li>
+              <li><span class="letra">B</span>Le llega el aviso de que salió un auto. Hace: restar 1 a los ocupados.</li>
+              <li><span class="letra">C</span>Le llega la capacidad de 8 lugares. Hace: mostrar los 5 ocupados.</li>
+              <li><span class="letra">D</span>Le llega el dato de 5 ocupados. Hace: cambiar la capacidad.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="item">
+          <div class="casillero"></div>
+          <div>
+            <p class="enunciado"><span class="num">19.</span>¿Qué pregunta <b>no</b> se puede responder con esta representación?</p>
+            <ul class="opciones dos">
+              <li><span class="letra">A</span>¿Cuántos autos había al principio?</li>
+              <li><span class="letra">B</span>¿Cuántos lugares libres quedaron?</li>
+              <li><span class="letra">C</span>¿Cuántos autos salieron?</li>
+              <li><span class="letra">D</span>¿Cuánto tiempo se quedó cada auto?</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="bloque" style="--n:2">
+        <figure class="material">
+          <p class="material-titulo">Preguntas 20 y 21 · Un robot aspiradora, según el modelo de Von Neumann</p>
+          <div class="modelo">
+            <div class="caja">Sensores<small>entrada</small></div>
+            <svg class="flecha" viewBox="0 0 36 16" aria-hidden="true"><path d="M1 8h30M24 2l8 6-8 6"/></svg>
+            <div class="nucleo">
+              <div class="caja">CPU</div>
+              <svg class="flecha-doble" viewBox="0 0 44 32" aria-hidden="true"><path d="M3 10h36M32 4l8 6-8 6"/><path d="M41 22H5M12 16l-8 6 8 6"/></svg>
+              <div class="caja">Memoria</div>
+            </div>
+            <svg class="flecha" viewBox="0 0 36 16" aria-hidden="true"><path d="M1 8h30M24 2l8 6-8 6"/></svg>
+            <div class="caja">Ruedas y cepillos<small>salida</small></div>
+          </div>
+        </figure>
+
+        <div class="item">
+          <div class="casillero"></div>
+          <div>
+            <p class="enunciado"><span class="num">20.</span>El robot usa y actualiza un mapa de lo que ya limpió. Según el modelo, ¿qué pasa con él?</p>
+            <ul class="opciones lista">
+              <li><span class="letra">A</span>Queda en la memoria: la CPU lo usa y lo devuelve actualizado a la memoria.</li>
+              <li><span class="letra">B</span>Se mantiene en los sensores: la CPU les pide que lo midan de nuevo cada vez.</li>
+              <li><span class="letra">C</span>Se mantiene dentro de la CPU: la memoria sólo se usa cuando el robot se apaga.</li>
+              <li><span class="letra">D</span>Pasa de la memoria a las ruedas, que lo siguen sin que intervenga la CPU.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="item">
+          <div class="casillero"></div>
+          <div>
+            <p class="enunciado"><span class="num">21.</span>Al terminar, el robot le avisa a un celular. ¿Qué papel cumple ese aviso para cada uno?</p>
+            <ul class="opciones dos">
+              <li><span class="letra">A</span>Robot: entrada · Celular: salida</li>
+              <li><span class="letra">B</span>Robot: salida · Celular: entrada</li>
+              <li><span class="letra">C</span>Robot: salida · Celular: salida</li>
+              <li><span class="letra">D</span>Robot: operación · Celular: estado</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="bloque" style="--n:1">
+        <div class="item">
+          <div class="casillero"></div>
+          <div>
+            <p class="enunciado"><span class="num">22.</span>Una computadora tiene <b>200 GB libres</b> de almacenamiento y <b>1 GB libre</b> de memoria RAM. Para tener más programas abiertos a la vez, según el modelo trabajado, ¿qué dato importa?</p>
+            <ul class="opciones dos">
+              <li><span class="letra">A</span>Los dos: son el mismo espacio</li>
+              <li><span class="letra">B</span>Los 200 GB del almacenamiento</li>
+              <li><span class="letra">C</span>El 1 GB libre de la memoria RAM</li>
+              <li><span class="letra">D</span>Ninguno: sólo importa la CPU</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="bloque" style="--n:1">
+        <div class="item">
+          <div class="casillero"></div>
+          <div>
+            <p class="enunciado"><span class="num">23.</span>Alguien representa así un pago con una billetera virtual y dice: «Con este esquema ya sé cuánto dinero quedó en la cuenta». ¿Tiene razón?</p>
+            <div class="cadena centrada">
+              <div class="caja"><small>entrada</small>«pagar $500»</div>
+              <svg class="flecha" viewBox="0 0 36 16" aria-hidden="true"><path d="M1 8h30M24 2l8 6-8 6"/></svg>
+              <div class="caja"><small>procesamiento</small>descontar del saldo</div>
+              <svg class="flecha" viewBox="0 0 36 16" aria-hidden="true"><path d="M1 8h30M24 2l8 6-8 6"/></svg>
+              <div class="caja"><small>salida</small>comprobante en pantalla</div>
+            </div>
+            <ul class="opciones dos">
+              <li><span class="letra">A</span>No: muestra el recorrido, no el saldo.</li>
+              <li><span class="letra">B</span>Sí: si se descontaron $500, ya se sabe.</li>
+              <li><span class="letra">C</span>No: le faltan la CPU y la RAM.</li>
+              <li><span class="letra">D</span>Sí: lo indica el procesamiento.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="bloque" style="--n:1">
+        <figure class="material">
+          <p class="material-titulo">Pregunta 24 · Un programa da un aviso de calor si el promedio supera el límite</p>
+          <div class="cadena centrada">
+            <div class="caja">Mediciones<b>24 °C y 28 °C</b></div>
+            <svg class="flecha" viewBox="0 0 36 16" aria-hidden="true"><path d="M1 8h30M24 2l8 6-8 6"/></svg>
+            <div class="caja">Promedio<b>26 °C</b></div>
+            <svg class="flecha" viewBox="0 0 36 16" aria-hidden="true"><path d="M1 8h30M24 2l8 6-8 6"/></svg>
+            <div class="caja">Comparar con el límite<b>27 °C</b></div>
+            <svg class="flecha" viewBox="0 0 36 16" aria-hidden="true"><path d="M1 8h30M24 2l8 6-8 6"/></svg>
+            <div class="caja">Aviso<b>no</b></div>
+          </div>
+        </figure>
+
+        <div class="item">
+          <div class="casillero"></div>
+          <div>
+            <p class="enunciado"><span class="num">24.</span>Si sólo cambia el límite, de 27 °C a 25 °C, ¿qué otros valores del esquema cambian?</p>
+            <ul class="opciones dos">
+              <li><span class="letra">A</span>El promedio y el aviso.</li>
+              <li><span class="letra">B</span>Sólo el promedio.</li>
+              <li><span class="letra">C</span>Ninguno de los dos.</li>
+              <li><span class="letra">D</span>Sólo el aviso.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================================================= CARA 4 -->
+<section class="pagina p4" id="cara-4">
+  <div class="contenido">
+    <div class="parte-titulo">
+      <h2>Parte 4 · Usar lo que sabés</h2>
+      <span class="puntaje">___ / 6</span>
+    </div>
+    <p class="parte-nota">Dos situaciones nuevas. Cada una tiene tres preguntas.</p>
+
+    <div class="items">
+      <div class="bloque" style="--n:3">
+        <div class="material">
+          <p class="material-titulo">Situación A · Autopréstamo en una biblioteca</p>
+          <p>Para llevarse un libro, una persona escanea su credencial y el código del libro. Si el libro está disponible <b>y</b> la credencial tiene menos de 2 préstamos, el programa registra el préstamo e imprime un comprobante. Si no, muestra «Préstamo rechazado».</p>
+          <p class="estado-caso">El estado del sistema tiene dos datos: <span>Libro: disponible o prestado</span> <span>Préstamos de la credencial</span></p>
+        </div>
+
+        <div class="item">
+          <div class="casillero"></div>
+          <div>
+            <p class="enunciado"><span class="num">25.</span>Una persona escanea su credencial y el código de un libro. En ese momento, ¿cuál es la entrada del sistema?</p>
+            <ul class="opciones lista">
+              <li><span class="letra">A</span>Los códigos escaneados de la credencial y del libro.</li>
+              <li><span class="letra">B</span>La cantidad de préstamos que ya tenía la credencial.</li>
+              <li><span class="letra">C</span>La revisión de si el libro está disponible.</li>
+              <li><span class="letra">D</span>El comprobante que se imprime al final.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="item">
+          <div class="casillero"></div>
+          <div>
+            <p class="enunciado"><span class="num">26.</span>El libro está disponible, pero la credencial ya tiene 2 préstamos. Después de ese intento, ¿cómo queda el estado?</p>
+            <ul class="opciones dos">
+              <li><span class="letra">A</span>Libro: prestado · Préstamos: 3</li>
+              <li><span class="letra">B</span>Libro: disponible · Préstamos: 0</li>
+              <li><span class="letra">C</span>Libro: prestado · Préstamos: 2</li>
+              <li><span class="letra">D</span>Libro: disponible · Préstamos: 2</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="item">
+          <div class="casillero"></div>
+          <div>
+            <p class="enunciado"><span class="num">27.</span>Otra persona sí se lleva un libro y recibe su comprobante. Al salir, lo pierde. ¿Qué pasa con ese préstamo en el sistema?</p>
+            <ul class="opciones lista">
+              <li><span class="letra">A</span>Se borra, porque el préstamo quedaba anotado sólo en el comprobante.</li>
+              <li><span class="letra">B</span>Sigue registrado en el estado: el comprobante era una salida.</li>
+              <li><span class="letra">C</span>Queda sin registrar hasta que la persona vuelva a escanear el comprobante.</li>
+              <li><span class="letra">D</span>Se anula, y los préstamos de esa credencial vuelven a 0.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="bloque" style="--n:3">
+        <div class="material">
+          <p class="material-titulo">Situación B · Una notebook con varios programas</p>
+          <p>Pensá en una notebook con una CPU que atiende un proceso (un programa en ejecución) por vez.</p>
+        </div>
+
+        <div class="item">
+          <div class="casillero"></div>
+          <div>
+            <p class="enunciado"><span class="num">28.</span>Se guardó en el almacenamiento una versión nueva del sistema operativo, pero la notebook sigue funcionando con la anterior hasta que se reinicia. ¿Por qué?</p>
+            <ul class="opciones lista">
+              <li><span class="letra">A</span>Porque la CPU conserva adentro suyo la versión anterior hasta apagarse.</li>
+              <li><span class="letra">B</span>Porque la versión nueva primero tiene que mostrarse en la pantalla.</li>
+              <li><span class="letra">C</span>Porque la versión que funciona es la que se cargó en la RAM al encender.</li>
+              <li><span class="letra">D</span>Porque la versión nueva sólo funciona si se descarga otra vez al encender.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="item">
+          <div class="casillero"></div>
+          <div>
+            <p class="enunciado"><span class="num">29.</span>Un programa procesa un video largo mientras alguien escribe en el procesador de textos, y todo responde. ¿Cómo es posible, si la CPU atiende un proceso por vez?</p>
+            <ul class="opciones lista">
+              <li><span class="letra">A</span>El sistema operativo alterna entre ellos, guardando y restaurando su estado.</li>
+              <li><span class="letra">B</span>La CPU termina primero con el video y recién después atiende lo que se escribe.</li>
+              <li><span class="letra">C</span>La memoria RAM ejecuta el procesador de textos mientras la CPU procesa el video.</li>
+              <li><span class="letra">D</span>El procesador de textos no necesita la CPU para mostrar lo que se escribe.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="item">
+          <div class="casillero"></div>
+          <div>
+            <p class="enunciado"><span class="num">30.</span>Se conecta un joystick nuevo. Aparece «Dispositivo detectado», pero la notebook no recibe lo que se aprieta. El teclado y los programas andan bien. ¿Qué lo explica mejor?</p>
+            <ul class="opciones lista">
+              <li><span class="letra">A</span>La CPU dejó de ejecutar las instrucciones de todos los programas abiertos.</li>
+              <li><span class="letra">B</span>Falta memoria RAM, así que ningún programa llegó a abrirse.</li>
+              <li><span class="letra">C</span>El joystick es software y hay que descargarlo de internet antes de usarlo.</li>
+              <li><span class="letra">D</span>Falta el driver que permite al sistema operativo comunicarse con el joystick.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>

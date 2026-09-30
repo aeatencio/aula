@@ -1,4 +1,4 @@
-# Clave docente · Evaluación del 3.er bimestre 2026
+# Clave docente · Evaluación A · Sistemas Informáticos
 
 Corresponde al instrumento y a los dos PDF de esta carpeta. Usarla por separado del examen.
 

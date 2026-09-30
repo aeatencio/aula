@@ -26,4 +26,4 @@ Thumbs.db
 tmp/
 
 # regenerated evaluation PDFs
-evaluaciones/*/fuente/regenerado/
+evaluaciones/**/fuente/regenerado/
