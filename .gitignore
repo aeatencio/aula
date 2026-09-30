@@ -24,3 +24,6 @@ Thumbs.db
 
 # local transients
 tmp/
+
+# regenerated evaluation PDFs
+evaluaciones/*/fuente/regenerado/

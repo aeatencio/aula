@@ -12,6 +12,8 @@ Los pizarrones fueron su punto de partida y siguen siendo el material predominan
 
 Este repositorio contiene material público. El material didáctico legítimamente publicable puede incorporarse directamente; quedan fuera los datos personales de estudiantes, los secretos, la documentación privada y cualquier otro contenido sensible. Los materiales externos deben respetar su autoría, procedencia y condiciones de licencia.
 
+Las evaluaciones se conservan y versionan en `evaluaciones/`; sólo aparecen en el sitio Aula si se decide integrarlas explícitamente.
+
 ## Contenido
 
 Los materiales pueden encontrarse de tres maneras:

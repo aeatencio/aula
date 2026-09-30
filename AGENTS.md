@@ -21,6 +21,12 @@
 - Usar Drive, Classroom u otras fuentes privadas sólo dentro del alcance autorizado y minimizando el acceso. Un material procedente de una fuente privada puede publicarse si es publicable y está limpio de información sensible.
 - No crear por anticipado una capa privado/público, repositorio fuente separado ni pipeline editorial adicional.
 
+## Evaluaciones
+
+- Conservar cada evaluación real en su propia carpeta de `evaluaciones/`; Git/GitHub es la fuente de verdad. Usar `tmp/` sólo para trabajo transitorio.
+- El repositorio es público: aplicar a las evaluaciones las mismas reglas de publicación que al resto del material, incluida la clave docente.
+- Una evaluación puede estar en `main` sin aparecer en el sitio Aula. Integrarla al sitio requiere una decisión explícita.
+
 ## Recursos de terceros
 
 - Se pueden incorporar materiales externos por valor pedagógico.
