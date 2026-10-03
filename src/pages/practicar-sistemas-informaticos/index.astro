@@ -1,0 +1,636 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { paraLlevarte, sistema, unidades } from "../../data/practica-microondas";
+
+const title = "Qué llega, qué hace, qué conserva y qué comunica";
+---
+
+<Layout
+  title={`${title} · Aula`}
+  description="Práctica de Sistemas Informáticos: entrada, operación, estado y salida en un microondas, con revisión, ayuda y explicaciones."
+>
+  <article class="material">
+    <header class="apertura">
+      <p class="ubicacion">Sistemas Informáticos · Práctica</p>
+      <h1 class="page-title">{title}</h1>
+    </header>
+
+    <div class="practica" data-practica-microondas data-navegacion-recorrido-excluir>
+      <p class="como-usar" data-con-script hidden>
+        Pulsá Revisar cuando quieras y cambiá cualquier respuesta después. Sin
+        puntaje; nada se guarda al recargar.
+      </p>
+
+      <noscript>
+        <p class="sin-script">
+          Para revisar en pantalla hace falta JavaScript. Igual podés leer los
+          casos, pensar tus respuestas, abrir la ayuda y leer «Para llevarte».
+        </p>
+      </noscript>
+
+      {
+        unidades.map((unidad, indice) => {
+          const [primeraAyuda, ...otrasAyudas] = unidad.ayudas;
+          return (
+            <>
+              <section
+                class:list={["unidad", indice > 0 && "unidad--optativa"]}
+                data-unidad={unidad.id}
+                aria-labelledby={`titulo-${unidad.id}`}
+              >
+                <h2 id={`titulo-${unidad.id}`} class="unidad-titulo" tabindex="-1">
+                  {unidad.titulo}
+                </h2>
+
+                <div class="caso">
+                  {unidad.caso.map((parrafo) => (
+                    <p>{parrafo}</p>
+                  ))}
+                  {indice === 0 && (
+                    <p class="sistema">
+                      <strong>Para esta práctica:</strong> {sistema}
+                    </p>
+                  )}
+                </div>
+
+                <p class="consigna">{unidad.consigna}</p>
+
+                {primeraAyuda && (
+                  <details class="ayuda">
+                    <summary>{primeraAyuda.titulo}</summary>
+                    <div class="ayuda-cuerpo">
+                      {primeraAyuda.parrafos.map((parrafo) => (
+                        <p>{parrafo}</p>
+                      ))}
+                      {primeraAyuda.preguntas && (
+                        <ul>
+                          {primeraAyuda.preguntas.map((pregunta) => (
+                            <li>{pregunta}</li>
+                          ))}
+                        </ul>
+                      )}
+                      {primeraAyuda.referencias && (
+                        <>
+                          <p class="volver">Volver a mirar:</p>
+                          <ul class="referencias">
+                            {primeraAyuda.referencias.map((referencia) => (
+                              <li>
+                                <a href={referencia.href}>{referencia.titulo}</a>
+                                {": "}
+                                {referencia.donde}
+                              </li>
+                            ))}
+                          </ul>
+                        </>
+                      )}
+                      {otrasAyudas.map((ayuda) => (
+                        <details class="ayuda ayuda--interna">
+                          <summary>{ayuda.titulo}</summary>
+                          <div class="ayuda-cuerpo">
+                            {ayuda.parrafos.map((parrafo) => (
+                              <p>{parrafo}</p>
+                            ))}
+                          </div>
+                        </details>
+                      ))}
+                    </div>
+                  </details>
+                )}
+
+                {unidad.decisiones.map((decision, numero) => (
+                  <fieldset
+                    class="decision"
+                    id={`decision-${decision.id}`}
+                    data-decision={decision.id}
+                    tabindex="-1"
+                  >
+                    <legend class="decision-enunciado">
+                      <span class="decision-numero">{numero + 1}</span>{" "}
+                      {decision.enunciado}
+                    </legend>
+                    <div
+                      class:list={[
+                        "opciones",
+                        decision.opciones.every((opcion) => opcion.texto.length <= 12) &&
+                          "opciones--cortas",
+                      ]}
+                    >
+                      {decision.opciones.map((opcion) => (
+                        <label class="opcion">
+                          <input
+                            type="radio"
+                            name={`${unidad.id}-${decision.id}`}
+                            value={opcion.id}
+                            data-decision={decision.id}
+                            autocomplete="off"
+                          />
+                          <span>{opcion.texto}</span>
+                        </label>
+                      ))}
+                    </div>
+                    <p
+                      class="devolucion"
+                      id={`devolucion-${decision.id}`}
+                      data-devolucion
+                      hidden
+                    />
+                    <details class="explicacion" data-explicacion hidden>
+                      <summary>Explicación</summary>
+                      <p>{decision.explicacion}</p>
+                    </details>
+                  </fieldset>
+                ))}
+
+                <div class="acciones" data-con-script hidden>
+                  <button
+                    type="button"
+                    class="accion accion--revisar"
+                    id={`revisar-${unidad.id}`}
+                    data-revisar={unidad.id}
+                  >
+                    Revisar
+                  </button>
+                </div>
+
+                <p class="estado" data-estado role="status" aria-live="polite" />
+                <p class="vigencia" data-vigencia hidden />
+                <p class="atajos" data-atajos hidden />
+              </section>
+
+              {indice === 0 && (
+                <details class="para-llevarte">
+                  <summary><h2>Para llevarte</h2></summary>
+                  <ul>
+                    {paraLlevarte.map((idea) => (
+                      <li>{idea}</li>
+                    ))}
+                  </ul>
+                </details>
+              )}
+            </>
+          );
+        })
+      }
+
+      <div class="reinicio" data-con-script hidden>
+        <button type="button" class="accion" data-reiniciar>Empezar de nuevo</button>
+      </div>
+    </div>
+  </article>
+</Layout>
+
+<script>
+  import { iniciarPracticaMicroondas } from "../../scripts/practica-microondas";
+
+  iniciarPracticaMicroondas();
+</script>
+
+<style>
+  .material {
+    max-width: 50rem;
+  }
+
+  .apertura {
+    margin: 0 0 1rem;
+    padding-bottom: 0.9rem;
+    border-bottom: 2px solid var(--line);
+  }
+
+  .ubicacion {
+    margin: 0 0 0.35rem;
+    color: var(--muted);
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  .practica {
+    overflow-wrap: break-word;
+  }
+
+  .como-usar,
+  .sin-script {
+    margin: 0 0 1.1rem;
+    color: var(--muted);
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.45;
+  }
+
+  .como-usar[hidden] {
+    display: none;
+  }
+
+  .unidad {
+    margin: 0 0 1.5rem;
+  }
+
+  .unidad--optativa {
+    padding-top: 1.5rem;
+    border-top: 2px dashed var(--hairline);
+  }
+
+  .unidad-titulo {
+    margin: 0 0 0.75rem;
+    font-size: clamp(1.3rem, 0.6vw + 1.15rem, 1.6rem);
+    line-height: 1.25;
+  }
+
+  .unidad-titulo:focus {
+    outline: 3px solid var(--accent);
+    outline-offset: 3px;
+  }
+
+  .caso {
+    margin: 0 0 1rem;
+    padding: 0.9rem 1rem;
+    border: 2px solid var(--line);
+    background: var(--board);
+  }
+
+  .caso p {
+    margin: 0;
+  }
+
+  .caso p + p {
+    margin-top: 0.6rem;
+  }
+
+  .caso .sistema {
+    margin-top: 0.8rem;
+    padding-top: 0.7rem;
+    border-top: 1px solid var(--hairline);
+    font-size: 0.95rem;
+    line-height: 1.45;
+  }
+
+  .consigna {
+    margin: 0 0 0.75rem;
+    font-weight: 700;
+  }
+
+  .decision {
+    min-width: 0;
+    margin: 0 0 1rem;
+    padding: 0.8rem 0.8rem 0.9rem;
+    border: 2px solid var(--hairline);
+    border-left-width: 6px;
+    background: var(--board);
+    scroll-margin-top: 1rem;
+  }
+
+  .decision:focus {
+    outline: none;
+  }
+
+  .decision:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .decision[data-resultado="encaja"] {
+    border-color: var(--accent);
+  }
+
+  .decision[data-resultado="revisar"] {
+    border-color: var(--emphasis);
+  }
+
+  .decision[data-resultado="cambiada"] {
+    border-style: dashed;
+    border-color: var(--muted);
+  }
+
+  .decision-enunciado {
+    display: flex;
+    gap: 0.6rem;
+    float: left;
+    width: 100%;
+    margin: 0 0 0.7rem;
+    padding: 0;
+    font-weight: 700;
+    line-height: 1.4;
+  }
+
+  .decision-enunciado + * {
+    clear: both;
+  }
+
+  .decision-numero {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.7rem;
+    height: 1.7rem;
+    border: 2px solid var(--line);
+    font-size: 0.9rem;
+  }
+
+  .opciones {
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  /* Las opciones cortas se acomodan de a dos o de a cuatro, pero pasan a una
+     columna cuando su texto no entra, por ejemplo con letra ampliada. */
+  .opciones--cortas {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  .opciones--cortas .opcion {
+    flex: 1 1 8em;
+  }
+
+  .opcion {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    min-width: 0;
+    min-height: 2.85rem;
+    padding: 0.4rem 0.7rem;
+    border: 2px solid var(--hairline);
+    background: var(--paper);
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.3;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+
+  .opcion span {
+    min-width: 0;
+  }
+
+  .opcion:hover {
+    border-color: var(--accent);
+  }
+
+  .opcion:has(input:checked) {
+    border-color: var(--ink);
+    background: color-mix(in srgb, var(--accent) 10%, var(--board));
+    font-weight: 700;
+  }
+
+  .opcion:has(input:focus-visible) {
+    outline: 3px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .opcion input {
+    flex: none;
+    width: 1.2rem;
+    height: 1.2rem;
+    margin: 0;
+    accent-color: var(--ink);
+  }
+
+  .devolucion {
+    margin: 0.8rem 0 0;
+    font-size: 1rem;
+    line-height: 1.45;
+  }
+
+  .devolucion[hidden] {
+    display: none;
+  }
+
+  :global(.devolucion-icono) {
+    display: inline-block;
+    min-width: 1.2em;
+    font-weight: 700;
+  }
+
+  .decision[data-resultado="encaja"] :global(.devolucion-marca),
+  .decision[data-resultado="encaja"] :global(.devolucion-icono) {
+    color: var(--accent);
+  }
+
+  .decision[data-resultado="revisar"] :global(.devolucion-marca),
+  .decision[data-resultado="revisar"] :global(.devolucion-icono) {
+    color: var(--emphasis);
+  }
+
+  .decision[data-resultado="cambiada"] .devolucion {
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  .devolucion :global(a) {
+    white-space: nowrap;
+  }
+
+  .devolucion :global(a),
+  .atajos :global(a) {
+    color: var(--ink);
+    font-weight: 700;
+    text-decoration: none;
+    border-bottom: 2px solid var(--accent);
+  }
+
+  details > summary {
+    display: flex;
+    align-items: center;
+    min-height: 2.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+
+  details > summary:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  details > summary::before {
+    content: "▸";
+    display: inline-block;
+    width: 1.1em;
+    flex: none;
+  }
+
+  details[open] > summary::before {
+    content: "▾";
+  }
+
+  details > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .explicacion {
+    margin-top: 0.6rem;
+    font-size: 1rem;
+  }
+
+  .explicacion[hidden] {
+    display: none;
+  }
+
+  .explicacion > summary {
+    color: var(--accent);
+  }
+
+  .explicacion p {
+    margin: 0.2rem 0 0;
+    line-height: 1.5;
+  }
+
+  .acciones,
+  .reinicio {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+    margin: 0 0 0.75rem;
+  }
+
+  .acciones[hidden],
+  .reinicio[hidden] {
+    display: none;
+  }
+
+  .accion {
+    appearance: none;
+    min-height: 2.85rem;
+    padding: 0.55rem 1.15rem;
+    border: 2px solid var(--line);
+    background: var(--board);
+    color: var(--ink);
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+
+  .accion:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .accion--revisar {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--board);
+  }
+
+  .accion--revisar:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--board);
+  }
+
+  .estado {
+    min-height: 1.5em;
+    margin: 0 0 0.5rem;
+    font-weight: 700;
+    line-height: 1.45;
+  }
+
+  .vigencia,
+  .atajos {
+    margin: 0 0 0.75rem;
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+
+  .vigencia {
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  .vigencia[hidden],
+  .atajos[hidden] {
+    display: none;
+  }
+
+  .ayuda {
+    margin: 0 0 1rem;
+    padding: 0.1rem 0.9rem 0.3rem;
+    border: 2px solid var(--hairline);
+    background: var(--board);
+    font-size: 1rem;
+  }
+
+  .ayuda--interna {
+    margin: 0.8rem 0 0;
+    padding: 0.1rem 0.7rem 0.3rem;
+  }
+
+  .ayuda-cuerpo {
+    padding-bottom: 0.5rem;
+    line-height: 1.5;
+  }
+
+  .ayuda-cuerpo p {
+    margin: 0.3rem 0;
+  }
+
+  .ayuda-cuerpo ul {
+    margin: 0.3rem 0;
+    padding-left: 1.2rem;
+  }
+
+  .ayuda-cuerpo li + li {
+    margin-top: 0.35rem;
+  }
+
+  .volver {
+    font-weight: 700;
+  }
+
+  .referencias a {
+    color: var(--ink);
+    font-weight: 700;
+    text-decoration: none;
+    border-bottom: 2px solid var(--accent);
+  }
+
+  .referencias a:hover {
+    color: var(--accent);
+  }
+
+  .para-llevarte {
+    margin: 0 0 1.5rem;
+    padding: 0.3rem 1rem 0.5rem;
+    border: 2px solid var(--emphasis);
+    background: color-mix(in srgb, var(--emphasis) 6%, var(--board));
+  }
+
+  .para-llevarte > summary h2 {
+    margin: 0;
+    color: var(--emphasis);
+    font-size: 1.15rem;
+  }
+
+  .para-llevarte > summary::before {
+    color: var(--emphasis);
+  }
+
+  .para-llevarte ul {
+    margin: 0.3rem 0 0.4rem;
+    padding-left: 1.2rem;
+    line-height: 1.5;
+  }
+
+  .para-llevarte li + li {
+    margin-top: 0.5rem;
+  }
+
+  @media print {
+    .como-usar,
+    .acciones,
+    .estado,
+    .vigencia,
+    .atajos,
+    .reinicio,
+    .devolucion,
+    .explicacion {
+      display: none;
+    }
+
+    .decision,
+    .caso {
+      break-inside: avoid;
+    }
+  }
+</style>
