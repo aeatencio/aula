@@ -59,7 +59,7 @@ const instruccionesDatosOperaciones = {
 
 /** Recorte funcional del sistema, sin electrónica. */
 export const sistema =
-  "El sistema es el microondas. Su control recibe información por el teclado y la puerta, y comunica por el visor y el parlante. La persona y la comida quedan afuera: tocar una tecla es una acción de la persona; al control le llega la señal de esa tecla.";
+  "El sistema es el microondas: teclado, puerta, control, visor y parlante son partes de él. La persona y la comida quedan afuera. Para distinguir entrada, operación, estado y salida miramos el procesamiento desde el control: qué información le llega por el teclado o la puerta, qué hace con ella, qué conserva y qué comunica por el visor o el parlante. Tocar una tecla es una acción de la persona; al control le llega la señal de esa tecla.";
 
 export const toque: Unidad = {
   id: "toque",
@@ -82,7 +82,7 @@ export const toque: Unidad = {
         estado:
           "¿Esta señal es información que el control mantiene para saber cómo está y seguir, o información que le llega en el instante del toque? Mirá de dónde viene.",
         salida:
-          "La señal va del teclado hacia el control, no del microondas hacia afuera. ¿En qué dirección viaja?",
+          "La señal va del teclado hacia el control; no es algo que el control comunica. ¿En qué dirección viaja?",
       },
       explicacion:
         "Tocar la tecla es una acción de la persona. Lo que llega al control es la señal de esa tecla, que indica que se tocó «+30 s»: es la entrada de este momento. La señal no trae el nuevo tiempo; con ella, el control ejecuta lo que su programa indica para esa tecla.",
@@ -99,7 +99,7 @@ export const toque: Unidad = {
         { id: "nueva", texto: "Empezó una cuenta nueva de 30 segundos." },
         {
           id: "visor",
-          texto: "Sumó 30 segundos a los 0:40 que mostraba el visor.",
+          texto: "Leyó en el visor los 0:40 y les sumó 30 segundos.",
         },
       ],
       respuesta: "guardado",
@@ -109,10 +109,10 @@ export const toque: Unidad = {
         nueva:
           "Si hubiera empezado una cuenta nueva de 30 segundos, ¿qué tiempo restante habría quedado? Compará con lo que muestra el visor en el caso.",
         visor:
-          "En el caso, el visor muestra un tiempo que el microondas ya tiene. ¿De dónde sale el número que aparece en el visor?",
+          "Es cierto que el visor mostraba 0:40. Pero ese número aparece en el visor porque el control ya lo tenía. ¿Dónde estaba el 0:40 antes de mostrarse?",
       },
       explicacion:
-        "El control usa dos informaciones: la señal que recibe (se tocó «+30 s») y el tiempo restante que ya tenía en la cuenta (0:40). Con ellas ejecuta la suma que su programa indica para esa tecla y obtiene 1:10: esa suma es la operación, porque usa información para obtener otra. La tecla no trae el resultado: si faltaran 2:00, la misma señal llevaría a 2:30. Y el visor no es la fuente: muestra el tiempo que el control ya tiene.",
+        "El control usa dos informaciones: la señal que recibe (se tocó «+30 s») y el tiempo restante que ya tenía en la cuenta (0:40). Con ellas ejecuta la suma que su programa indica para esa tecla y obtiene 1:10: esa suma es la operación, porque usa información para obtener otra. La tecla no trae el resultado: si faltaran 2:00, la misma señal llevaría a 2:30. Y el control no lee el visor: el visor muestra el tiempo que el control ya tiene en la cuenta.",
     },
     {
       id: "tiempo",
@@ -252,7 +252,7 @@ export const puerta: Unidad = {
           "Eso muestra que llegó la señal de «Iniciar», más tarde. ¿Qué pasó en el instante en que se abrió la puerta?",
       },
       explicacion:
-        "El cambio de comportamiento justo en ese instante, sin ninguna tecla, es la evidencia: al control le llegó la información de que la puerta se abrió. En este modelo simple, la puerta funciona como un sensor que indica si está abierta o cerrada. Es una entrada aunque nadie haya querido dar una orden: una entrada puede venir de una persona, de un sensor o de otro sistema. Para qué se abrió la puerta no le llega al control; le llega que se abrió.",
+        "El cambio de comportamiento justo en ese instante, sin ninguna tecla, es la evidencia: al control le llegó la información de que la puerta se abrió. En este modelo simple, el microondas detecta si la puerta está abierta o cerrada, y esa información llega al control. Es una entrada aunque nadie haya querido dar una orden: una entrada puede venir de una persona, de un sensor o de otro sistema. Para qué se abrió la puerta no le llega al control; le llega que se abrió.",
     },
     {
       id: "pausa",

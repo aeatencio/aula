@@ -10,6 +10,7 @@ import {
   iniciarPracticaMicroondas,
   resumirRevision,
 } from "../src/scripts/practica-microondas.ts";
+import { iniciarNavegacionRecorrido } from "../src/scripts/navegacion-recorrido.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const dist = join(root, "dist");
@@ -143,7 +144,10 @@ describe("práctica de Sistemas Informáticos: página", () => {
       (html.match(/<fieldset\b/g) ?? []).length,
       (practica.match(/<fieldset\b/g) ?? []).length,
     );
-    assert.doesNotMatch(html, /draggable/);
+    assert.doesNotMatch(
+      html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, ""),
+      /\sdraggable=/,
+    );
   });
 
   it("tiene grupos con legend, radios con label y sin descripciones fijas", () => {
@@ -407,28 +411,35 @@ describe("práctica de Sistemas Informáticos: modelo", () => {
   });
 });
 
+const GLOBALES = [
+  "window",
+  "document",
+  "Element",
+  "Node",
+  "HTMLElement",
+  "HTMLInputElement",
+  "HTMLButtonElement",
+  "HTMLAnchorElement",
+  "HTMLFieldSetElement",
+  "HTMLDetailsElement",
+];
+
+/** Carga la página construida en jsdom y expone sus globales a los scripts reales. */
+function prepararDom(busqueda = "") {
+  const dom = new JSDOM(readDist(...RUTA), {
+    url: `http://localhost/practicar-sistemas-informaticos/${busqueda}`,
+  });
+  for (const nombre of GLOBALES) {
+    globalThis[nombre] = nombre === "window" ? dom.window : dom.window[nombre];
+  }
+  return dom;
+}
+
 describe("práctica de Sistemas Informáticos: comportamiento en el DOM", () => {
-  const GLOBALES = [
-    "window",
-    "document",
-    "Element",
-    "Node",
-    "HTMLElement",
-    "HTMLInputElement",
-    "HTMLButtonElement",
-    "HTMLAnchorElement",
-    "HTMLFieldSetElement",
-    "HTMLDetailsElement",
-  ];
   const esperar = (ms = 150) => new Promise((resolve) => setTimeout(resolve, ms));
 
   function montar() {
-    const dom = new JSDOM(readDist(...RUTA), {
-      url: "http://localhost/practicar-sistemas-informaticos/",
-    });
-    for (const nombre of GLOBALES) {
-      globalThis[nombre] = nombre === "window" ? dom.window : dom.window[nombre];
-    }
+    const dom = prepararDom();
     iniciarPracticaMicroondas();
     const doc = dom.window.document;
     const q = (selector) => doc.querySelector(selector);
@@ -584,5 +595,121 @@ describe("práctica de Sistemas Informáticos: comportamiento en el DOM", () => 
     await esperar();
     assert.match(p.estado("toque"), /Empezaste de nuevo/);
     assert.equal(p.estado(puerta.id), "");
+  });
+});
+
+describe("práctica de Sistemas Informáticos: con el recorrido activo", () => {
+  /** Monta la página con la navegación real y registra los intentos de cambiar de material. */
+  function montarConRecorrido(busqueda = "?recorrido=gm-2026-2") {
+    const dom = prepararDom(busqueda);
+    iniciarNavegacionRecorrido();
+    iniciarPracticaMicroondas();
+    const doc = dom.window.document;
+    const navegaciones = [];
+    for (const enlace of doc.querySelectorAll("nav.recorrido a[rel]")) {
+      enlace.addEventListener("click", (evento) => {
+        evento.preventDefault();
+        navegaciones.push(enlace.getAttribute("rel"));
+      });
+    }
+    const q = (selector) => doc.querySelector(selector);
+    return {
+      dom,
+      doc,
+      q,
+      navegaciones,
+      tecla(objetivo, key) {
+        objetivo.focus();
+        doc.activeElement.dispatchEvent(
+          new dom.window.KeyboardEvent("keydown", { key, bubbles: true, cancelable: true }),
+        );
+      },
+      swipe(objetivo, desdeX, hastaX) {
+        const lista = (puntos) => ({ length: puntos.length, item: (i) => puntos[i] ?? null });
+        const punto = (x) => ({ identifier: 1, clientX: x, clientY: 300, target: objetivo });
+        for (const [tipo, x, activos] of [
+          ["touchstart", desdeX, 1],
+          ["touchmove", hastaX, 1],
+          ["touchend", hastaX, 0],
+        ]) {
+          const evento = new dom.window.Event(tipo, { bubbles: true, cancelable: true });
+          Object.defineProperty(evento, "touches", { value: lista(activos ? [punto(x)] : []) });
+          Object.defineProperty(evento, "changedTouches", { value: lista([punto(x)]) });
+          objetivo.dispatchEvent(evento);
+        }
+      },
+    };
+  }
+
+  it("muestra el recorrido con Anterior hacia Tres miradas y sin Siguiente", () => {
+    const p = montarConRecorrido();
+    const nav = p.q('nav.recorrido[data-recorrido-id="gm-2026-2"]');
+    assert.equal(nav.hidden, false);
+    assert.match(nav.textContent, /Paso 11 de 11/);
+    assert.equal(
+      nav.querySelector('a[rel="prev"]').getAttribute("href"),
+      "/pizarrones/tres-miradas-sobre-una-situacion/?recorrido=gm-2026-2",
+    );
+    assert.equal(nav.querySelector('a[rel="next"]'), null);
+    // La navegación queda fuera de la región excluida.
+    assert.equal(nav.closest("[data-navegacion-recorrido-excluir]"), null);
+  });
+
+  it("las flechas dentro de la práctica no cambian de material", () => {
+    const p = montarConRecorrido();
+    const dentro = [
+      'input[data-decision="senal"][value="entrada"]',
+      "#decision-tiempo",
+      "#titulo-toque",
+      "[data-revisar=toque]",
+      "[data-reiniciar]",
+      '[data-unidad="toque"] details.ayuda > summary',
+      ".para-llevarte > summary",
+      // Un clic sobre el texto del caso deja el foco en la región misma.
+      "[data-practica-microondas]",
+    ];
+    for (const selector of dentro) {
+      for (const key of ["ArrowLeft", "ArrowRight"]) p.tecla(p.q(selector), key);
+    }
+    assert.deepEqual(p.navegaciones, []);
+
+    // Fuera de la región, la flecha izquierda sigue llevando al material anterior.
+    p.doc.activeElement.blur();
+    p.doc.body.dispatchEvent(
+      new p.dom.window.KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true }),
+    );
+    assert.deepEqual(p.navegaciones, ["prev"]);
+  });
+
+  it("un swipe dentro de la región interactiva no cambia de material", () => {
+    const p = montarConRecorrido();
+    for (const selector of [".caso p", '#decision-calculo label', "[data-estado]", ".unidad-titulo"]) {
+      p.swipe(p.q(selector), 300, 520);
+    }
+    assert.deepEqual(p.navegaciones, []);
+
+    // El mismo gesto sobre el encabezado, fuera de la región, sí navega.
+    p.swipe(p.q("h1"), 300, 520);
+    assert.deepEqual(p.navegaciones, ["prev"]);
+  });
+
+  it("revisar y editar con el recorrido activo no navega", () => {
+    const p = montarConRecorrido();
+    p.q('input[data-decision="senal"][value="entrada"]').click();
+    p.q("[data-revisar=toque]").click();
+    p.q('input[data-decision="senal"][value="operacion"]').click();
+    p.q('#devolucion-senal a').click();
+    assert.equal(p.doc.activeElement, p.q("#revisar-toque"));
+    assert.deepEqual(p.navegaciones, []);
+    assert.equal(p.doc.location.search, "?recorrido=gm-2026-2");
+  });
+
+  it("sin parámetro de recorrido, la navegación queda oculta y las flechas no hacen nada", () => {
+    const p = montarConRecorrido("");
+    assert.equal(p.q("nav.recorrido").hidden, true);
+    p.doc.body.dispatchEvent(
+      new p.dom.window.KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true }),
+    );
+    assert.deepEqual(p.navegaciones, []);
   });
 });

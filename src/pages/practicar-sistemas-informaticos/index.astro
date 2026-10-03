@@ -1,8 +1,11 @@
 ---
-import Layout from "../../layouts/Layout.astro";
+import NavegacionRecorrido from "../../components/NavegacionRecorrido.astro";
 import { paraLlevarte, sistema, unidades } from "../../data/practica-microondas";
+import { navegacionesParaMaterial } from "../../data/recorridos";
+import Layout from "../../layouts/Layout.astro";
 
 const title = "Qué llega, qué hace, qué conserva y qué comunica";
+const navegaciones = navegacionesParaMaterial(Astro.url.pathname);
 ---
 
 <Layout
@@ -13,9 +16,17 @@ const title = "Qué llega, qué hace, qué conserva y qué comunica";
     <header class="apertura">
       <p class="ubicacion">Sistemas Informáticos · Práctica</p>
       <h1 class="page-title">{title}</h1>
+      <NavegacionRecorrido navegaciones={navegaciones} />
     </header>
 
-    <div class="practica" data-practica-microondas data-navegacion-recorrido-excluir>
+    {/* tabindex="-1": un clic en cualquier parte de la práctica deja el foco
+        dentro de la región, y las flechas no cambian de material. */}
+    <div
+      class="practica"
+      data-practica-microondas
+      data-navegacion-recorrido-excluir
+      tabindex="-1"
+    >
       <p class="como-usar" data-con-script hidden>
         Pulsá Revisar cuando quieras y cambiá cualquier respuesta después. Sin
         puntaje; nada se guarda al recargar.
@@ -206,6 +217,10 @@ const title = "Qué llega, qué hace, qué conserva y qué comunica";
 
   .practica {
     overflow-wrap: break-word;
+  }
+
+  .practica:focus {
+    outline: none;
   }
 
   .como-usar,

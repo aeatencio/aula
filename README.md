@@ -90,7 +90,7 @@ https://aula.andresatencio.com
 
 Requisitos:
 
-- Node.js 22 o superior, en una versión par;
+- Node.js 22.22.2 o superior dentro de la versión 22, 24.15.0 o superior dentro de la 24, o 26 o posterior (lo exige `jsdom`, que usan los tests), preferentemente en una versión par;
 - npm.
 
 Instalación:

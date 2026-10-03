@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
@@ -8,6 +8,7 @@ import {
   direccionPorTecla,
   mostrarNavegacionActiva,
 } from "../src/scripts/navegacion-recorrido.ts";
+import { recorridos } from "../src/data/recorridos.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const dist = join(root, "dist");
@@ -149,12 +150,81 @@ describe("navegación progresiva de recorridos", () => {
     assert.match(intermedioGm, /rel="prev"/);
     assert.match(intermedioGm, /rel="next"/);
 
-    const ultimoGm = navRecorrido(
+    const tresMiradas = navRecorrido(
       readDist("pizarrones", "tres-miradas-sobre-una-situacion", "index.html"),
       "gm-2026-2",
     );
-    assert.match(ultimoGm, /rel="prev"/);
+    assert.match(tresMiradas, /rel="prev"/);
+    assert.match(
+      tresMiradas,
+      /href="\/practicar-sistemas-informaticos\/\?recorrido=gm-2026-2"[^>]+rel="next"[^>]+aria-label="Siguiente: Preparación para la evaluación"/,
+    );
+
+    const ultimoGm = navRecorrido(
+      readDist("practicar-sistemas-informaticos", "index.html"),
+      "gm-2026-2",
+    );
+    assert.match(ultimoGm, /Paso 11 de 11/);
+    assert.match(
+      ultimoGm,
+      /href="\/pizarrones\/tres-miradas-sobre-una-situacion\/\?recorrido=gm-2026-2"[^>]+rel="prev"/,
+    );
     assert.doesNotMatch(ultimoGm, /rel="next"/);
+  });
+
+  it("incorpora la práctica sólo al final de Gabriela Mistral", () => {
+    const gm = recorridos.find((recorrido) => recorrido.id === "gm-2026-2");
+    const cfp = recorridos.find((recorrido) => recorrido.id === "cfp7-si-2026");
+    assert.equal(gm.materiales.length, 11);
+    assert.deepEqual(gm.materiales.at(-2).href, "/pizarrones/tres-miradas-sobre-una-situacion/");
+    assert.deepEqual(gm.materiales.at(-1), {
+      href: "/practicar-sistemas-informaticos/",
+      title: "Preparación para la evaluación",
+      tipo: "Práctica",
+    });
+    assert.deepEqual(
+      cfp.materiales.map((material) => material.href),
+      [
+        "/pizarrones/hardware-software-y-tarea/",
+        "/pizarrones/entrada-procesamiento-y-salida/",
+        "/pizarrones/arquitectura-de-von-neumann/",
+        "/pizarrones/el-sistema-operativo/",
+        "/sistema-operativo/",
+      ],
+    );
+
+    const practica = readDist("practicar-sistemas-informaticos", "index.html");
+    assert.match(practica, /<div class="navegacion-recorrido" data-navegacion-recorrido[\s>]/);
+    assert.doesNotMatch(practica, /data-recorrido-id="cfp7-si-2026"/);
+
+    const portadaGm = readDist(
+      "escuelas",
+      "gabriela-mistral",
+      "2-cuatrimestre-2026",
+      "index.html",
+    );
+    const enlaces = [...portadaGm.matchAll(/href="([^"]+\?recorrido=gm-2026-2)"/g)].map(
+      (m) => m[1],
+    );
+    assert.equal(enlaces.length, 11);
+    assert.equal(enlaces.at(-1), "/practicar-sistemas-informaticos/?recorrido=gm-2026-2");
+    assert.match(portadaGm, /Preparación para la evaluación/);
+
+    const portadaCfp = readDist("escuelas", "cfp-7", "sistemas-informaticos-2026", "index.html");
+    assert.doesNotMatch(portadaCfp, /practicar-sistemas-informaticos/);
+  });
+
+  it("mantiene las evaluaciones A y B y sus claves fuera del sitio y de la navegación", () => {
+    const paginas = readdirSync(dist, { recursive: true }).filter((ruta) =>
+      String(ruta).endsWith(".html"),
+    );
+    assert.ok(paginas.length > 20);
+    for (const ruta of paginas) {
+      const html = readFileSync(join(dist, String(ruta)), "utf8");
+      assert.doesNotMatch(html, /href="[^"]*evaluaci[oó]n/i, String(ruta));
+      assert.doesNotMatch(html, /clave-docente/i, String(ruta));
+    }
+    assert.ok(!existsSync(join(dist, "evaluaciones")));
   });
 
   it("conserva destinos independientes para CFP 7 y para Sistema Operativo", () => {

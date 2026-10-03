@@ -73,6 +73,11 @@ export const recorridos: Recorrido[] = [
         href: "/pizarrones/tres-miradas-sobre-una-situacion/",
         title: "Tres miradas sobre una misma situación",
       },
+      {
+        href: "/practicar-sistemas-informaticos/",
+        title: "Preparación para la evaluación",
+        tipo: "Práctica",
+      },
     ],
   },
   {
