@@ -1,0 +1,1211 @@
+---
+import Layout from "../layouts/Layout.astro";
+
+/*
+  Los cuatro casos de cada ejemplo siguen el orden de la tabla de verdad
+  (V y V, V y F, F y V, F y F). Los resultados se calculan con el operador
+  de cada ejemplo para que el texto no pueda contradecir la lógica.
+*/
+type Caso = { ejemplo: string; c1: boolean; c2: boolean };
+
+const casosBoliche: Caso[] = [
+  { ejemplo: "21 años, con entrada", c1: true, c2: true },
+  { ejemplo: "20 años, sin entrada", c1: true, c2: false },
+  { ejemplo: "16 años, con entrada", c1: false, c2: true },
+  { ejemplo: "16 años, sin entrada", c1: false, c2: false },
+];
+
+const casosRecital: Caso[] = [
+  { ejemplo: "Tiene las dos", c1: true, c2: true },
+  { ejemplo: "Solo la digital", c1: true, c2: false },
+  { ejemplo: "Solo la impresa", c1: false, c2: true },
+  { ejemplo: "No tiene ninguna", c1: false, c2: false },
+];
+
+const filas = casosBoliche.map((boliche, indice) => {
+  const recital = casosRecital[indice]!;
+  return {
+    a: boliche.c1,
+    b: boliche.c2,
+    boliche: `${boliche.ejemplo} → ${boliche.c1 && boliche.c2 ? "entra" : "no entra"}`,
+    recital: `${recital.ejemplo.toLowerCase()} → ${recital.c1 || recital.c2 ? "entra" : "no entra"}`,
+  };
+});
+
+const vf = (valor: boolean) => (valor ? "V" : "F");
+const siNo = (valor: boolean) => (valor ? "Sí" : "No");
+---
+
+<Layout
+  title="Operadores lógicos: Y y O · Aula"
+  description="Cómo combinar dos condiciones con los operadores Y y O: dos ejemplos con sus cuatro casos, la tabla de verdad y cuatro ejercicios para programar en PSeInt."
+>
+  <article class="operadores">
+    <header class="apertura">
+      <p class="ubicacion">Técnicas de Programación · Teoría y práctica</p>
+      <h1 class="page-title">Operadores lógicos: Y y O</h1>
+      <p class="bajada">Cómo combinar dos condiciones y llevarlo a PSeInt</p>
+      <nav class="indice-pasos" aria-label="En esta página">
+        <ol>
+          <li><a href="#combinar">Combinar condiciones</a></li>
+          <li><a href="#operador-y">El operador Y</a></li>
+          <li><a href="#operador-o">El operador O</a></li>
+          <li><a href="#tabla">La tabla de verdad</a></li>
+          <li><a href="#practica">Práctica en PSeInt</a></li>
+        </ol>
+      </nav>
+    </header>
+
+    <section class="tramo prosa" aria-labelledby="combinar">
+      <h2 id="combinar"><span class="numero">1</span> <span class="fila-texto">Combinar condiciones</span></h2>
+      <p>
+        Un programa decide qué hacer a partir de condiciones: preguntas que
+        se responden con sí o con no. Por ejemplo: <em>¿la persona es mayor de
+        18 años?</em>
+      </p>
+      <p>
+        A veces una sola condición no alcanza. <strong>Los operadores lógicos
+        sirven para combinar condiciones.</strong> En esta página vemos dos:{" "}
+        <strong>Y</strong> y <strong>O</strong>.
+      </p>
+      <p>
+        Cada condición puede cumplirse o no. Con dos condiciones hay{" "}
+        <strong>cuatro casos posibles</strong>. Para entender un operador, vamos
+        a mirar qué pasa en cada uno.
+      </p>
+    </section>
+
+    <section class="tramo" aria-labelledby="operador-y">
+      <div class="prosa">
+        <h2 id="operador-y"><span class="numero">2</span> <span class="fila-texto">El operador Y</span></h2>
+      </div>
+
+      <div class="pizarra">
+        <p class="regla"><span class="op">Y</span> <span class="fila-texto">tienen que cumplirse las dos.</span></p>
+
+        <p class="situacion">
+          Para entrar a un boliche hay que ser mayor de 18 años{" "}
+          <strong>Y</strong> tener entrada.
+        </p>
+
+        <div class="condiciones" role="group" aria-label="Las dos condiciones del boliche">
+          <p class="condicion"><span>Condición 1</span> ser mayor de 18 años</p>
+          <p class="union" aria-hidden="true">Y</p>
+          <p class="condicion"><span>Condición 2</span> tener entrada</p>
+        </div>
+
+        <p class="codigo">
+          <span>En código</span>
+          <code>edad &gt; 18 Y tieneEntrada</code>
+        </p>
+
+        <div
+          class="tabla-desplazable"
+          role="region"
+          aria-labelledby="casos-boliche"
+          tabindex="0"
+        >
+          <table class="casos">
+            <caption id="casos-boliche">Los cuatro casos del boliche</caption>
+            <thead>
+              <tr>
+                <th scope="col">Caso</th>
+                <th scope="col">¿Mayor de 18?</th>
+                <th scope="col">¿Tiene entrada?</th>
+                <th scope="col">¿Entra?</th>
+              </tr>
+            </thead>
+            <tbody>
+              {casosBoliche.map((caso) => {
+                const entra = caso.c1 && caso.c2;
+                return (
+                  <tr>
+                    <th scope="row">{caso.ejemplo}</th>
+                    <td class:list={[caso.c1 ? "si" : "no"]}>{siNo(caso.c1)}</td>
+                    <td class:list={[caso.c2 ? "si" : "no"]}>{siNo(caso.c2)}</td>
+                    <td class:list={["resultado", entra ? "si" : "no"]}>
+                      {entra ? "Entra" : "No entra"}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        <p class="idea">
+          Con Y, solo entra si se cumplen las dos. Si falla una, ya no entra.
+        </p>
+      </div>
+
+      <details class="pensar">
+        <summary>
+          <span class="pensar-etiqueta">Para pensar</span>
+          <span class="pensar-pregunta">
+            Alguien de 25 años se olvidó la entrada en su casa. ¿Entra? ¿Qué
+            condición no se cumple?
+          </span>
+          <span class="pensar-ver">Ver una respuesta</span>
+        </summary>
+        <p>
+          No entra. Cumple la condición 1, porque es mayor de 18, pero no la
+          condición 2, porque no tiene la entrada. Con Y alcanza con que falle
+          una para que el resultado sea no.
+        </p>
+      </details>
+    </section>
+
+    <section class="tramo" aria-labelledby="operador-o">
+      <div class="prosa">
+        <h2 id="operador-o"><span class="numero">3</span> <span class="fila-texto">El operador O</span></h2>
+      </div>
+
+      <div class="pizarra">
+        <p class="regla"><span class="op">O</span> <span class="fila-texto">tiene que cumplirse al menos una.</span></p>
+
+        <p class="situacion">
+          Para entrar a un recital alcanza con tener la entrada digital{" "}
+          <strong>O</strong> tener la entrada impresa.
+        </p>
+
+        <div class="condiciones" role="group" aria-label="Las dos condiciones del recital">
+          <p class="condicion"><span>Condición 1</span> tener entrada digital</p>
+          <p class="union" aria-hidden="true">O</p>
+          <p class="condicion"><span>Condición 2</span> tener entrada impresa</p>
+        </div>
+
+        <p class="codigo">
+          <span>En código</span>
+          <code>entradaDigital O entradaImpresa</code>
+        </p>
+
+        <div
+          class="tabla-desplazable"
+          role="region"
+          aria-labelledby="casos-recital"
+          tabindex="0"
+        >
+          <table class="casos">
+            <caption id="casos-recital">Los cuatro casos del recital</caption>
+            <thead>
+              <tr>
+                <th scope="col">Caso</th>
+                <th scope="col">¿Entrada digital?</th>
+                <th scope="col">¿Entrada impresa?</th>
+                <th scope="col">¿Entra?</th>
+              </tr>
+            </thead>
+            <tbody>
+              {casosRecital.map((caso) => {
+                const entra = caso.c1 || caso.c2;
+                return (
+                  <tr>
+                    <th scope="row">{caso.ejemplo}</th>
+                    <td class:list={[caso.c1 ? "si" : "no"]}>{siNo(caso.c1)}</td>
+                    <td class:list={[caso.c2 ? "si" : "no"]}>{siNo(caso.c2)}</td>
+                    <td class:list={["resultado", entra ? "si" : "no"]}>
+                      {entra ? "Entra" : "No entra"}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        <p class="idea">
+          Con O, alcanza con que se cumpla una. Si se cumplen las dos, también
+          entra. Solo queda afuera quien no tiene ninguna.
+        </p>
+      </div>
+
+      <details class="pensar">
+        <summary>
+          <span class="pensar-etiqueta">Para pensar</span>
+          <span class="pensar-pregunta">
+            Alguien llega con la entrada en el celular y también impresa. ¿Entra?
+            ¿Por qué?
+          </span>
+          <span class="pensar-ver">Ver una respuesta</span>
+        </summary>
+        <p>
+          Sí. Con O alcanza con que se cumpla una condición, y tener las dos no
+          lo impide: también es un caso en el que se cumple al menos una.
+        </p>
+      </details>
+    </section>
+
+    <section class="tramo" aria-labelledby="tabla">
+      <div class="prosa">
+        <h2 id="tabla"><span class="numero">4</span> <span class="fila-texto">La tabla de verdad</span></h2>
+        <p>
+          El boliche y el recital tienen la misma forma: dos condiciones y
+          cuatro casos. La tabla de verdad muestra esa forma de manera general,
+          para cualquier par de condiciones.
+        </p>
+        <ul class="claves">
+          <li><strong>A</strong> y <strong>B</strong> son las dos condiciones.</li>
+          <li><strong>V</strong> = verdadero: la condición se cumple (el «Sí» de los ejemplos).</li>
+          <li><strong>F</strong> = falso: la condición no se cumple (el «No»).</li>
+        </ul>
+      </div>
+
+      <div class="pizarra pizarra--tabla">
+        <table class="verdad" data-tabla-verdad>
+          <caption>Tabla de verdad de Y y de O</caption>
+          <thead>
+            <tr>
+              <th scope="col">A</th>
+              <th scope="col">B</th>
+              <th scope="col" class="corte">A Y B</th>
+              <th scope="col">A O B</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filas.map((fila) => (
+              <tr
+                data-fila={`${vf(fila.a)}${vf(fila.b)}`}
+                data-boliche={fila.boliche}
+                data-recital={fila.recital}
+              >
+                <td class={fila.a ? "v" : "f"}>{vf(fila.a)}</td>
+                <td class={fila.b ? "v" : "f"}>{vf(fila.b)}</td>
+                <td class:list={["corte", fila.a && fila.b ? "v" : "f"]}>
+                  {vf(fila.a && fila.b)}
+                </td>
+                <td class={fila.a || fila.b ? "v" : "f"}>{vf(fila.a || fila.b)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        <p class="nota-tabla">
+          Las filas están en el mismo orden que los cuatro casos del boliche y
+          del recital.
+        </p>
+
+        <div class="explorador" data-explorador hidden>
+          <p class="explorador-titulo">Probá una fila</p>
+          <div class="explorador-controles">
+            {["a", "b"].map((condicion) => (
+              <fieldset>
+                <legend>{condicion.toUpperCase()}</legend>
+                {["V", "F"].map((valor) => (
+                  <label>
+                    <input
+                      type="radio"
+                      name={`explorador-${condicion}`}
+                      value={valor}
+                      data-condicion={condicion}
+                      checked={valor === "V"}
+                    />
+                    <span>{valor}</span>
+                  </label>
+                ))}
+              </fieldset>
+            ))}
+          </div>
+          <div class="explorador-lectura" data-lectura aria-live="polite"></div>
+        </div>
+      </div>
+
+      <div class="prosa">
+        <ul class="conclusiones">
+          <li><strong>A Y B</strong> solo da V cuando las dos son V.</li>
+          <li>
+            <strong>A O B</strong> da V si al menos una es V. Solo da F cuando
+            las dos son F.
+          </li>
+        </ul>
+      </div>
+
+      <details class="pensar">
+        <summary>
+          <span class="pensar-etiqueta">Para pensar</span>
+          <span class="pensar-pregunta">
+            ¿En cuántas filas da V el operador Y? ¿Y el operador O?
+          </span>
+          <span class="pensar-ver">Ver una respuesta</span>
+        </summary>
+        <p>
+          Y da V en una sola fila: cuando A y B son V. O da V en tres filas:
+          solo da F cuando A y B son F.
+        </p>
+      </details>
+
+      <div class="resumen" role="note" aria-label="Resumen">
+        <p><span class="op">Y</span> <span class="fila-texto">tienen que cumplirse las dos.</span></p>
+        <p><span class="op">O</span> <span class="fila-texto">alcanza con que se cumpla al menos una.</span></p>
+      </div>
+    </section>
+
+    <section class="tramo" aria-labelledby="practica">
+      <div class="prosa">
+        <h2 id="practica"><span class="numero">5</span> <span class="fila-texto">Práctica en PSeInt</span></h2>
+        <p>
+          Ahora llevamos estas ideas a programas. Los ejercicios 1 y 2 programan
+          los ejemplos de esta página. Los ejercicios 3 y 4 son problemas nuevos.
+          Hacelos en orden.
+        </p>
+      </div>
+
+      <aside class="ayuda" aria-labelledby="ayuda-pseint">
+        <h3 id="ayuda-pseint">Ayuda para PSeInt</h3>
+        <ul>
+          <li>
+            <strong>Preguntas de sí o no.</strong> Guardá la respuesta en una
+            variable de tipo <code>Logico</code>, por ejemplo{" "}
+            <code>Definir tieneEntrada Como Logico</code>. Al ejecutar,
+            respondé <code>Verdadero</code> o <code>Falso</code>.
+          </li>
+          <li>
+            <strong>Operadores.</strong> En la condición del <code>Si</code>{" "}
+            se escriben <code>Y</code> y <code>O</code>, como en esta página.
+          </li>
+          <li>
+            <strong>Diagrama de flujo.</strong> Cuando el programa funcione, usá
+            la opción de PSeInt para dibujar su diagrama de flujo.
+          </li>
+        </ul>
+      </aside>
+
+      <ol class="ejercicios">
+        <li class="ejercicio" id="ejercicio-1">
+          <p class="ejercicio-cabeza">
+            <span class="ejercicio-numero">Ejercicio 1</span>
+            <span class="op op--chica">Y</span>
+          </p>
+          <h3>Entrar al boliche</h3>
+          <p>Hacé un programa que:</p>
+          <ol>
+            <li>Pida la edad.</li>
+            <li>Pregunte si tiene entrada.</li>
+            <li>
+              Muestre «Puede entrar» solo si es mayor de 18 años{" "}
+              <strong>Y</strong> tiene entrada.
+            </li>
+            <li>Si no, muestre «No puede entrar».</li>
+          </ol>
+          <p class="pista">
+            La condición es la misma que en <a href="#operador-y">el ejemplo del
+            boliche</a>.
+          </p>
+          <p class="subtitulo">Probalo con estos cuatro casos</p>
+          <ul class="pruebas">
+            <li>21 años, con entrada</li>
+            <li>20 años, sin entrada</li>
+            <li>16 años, con entrada</li>
+            <li>16 años, sin entrada</li>
+          </ul>
+          <p>¿Lo que muestra el programa coincide con la tabla del boliche?</p>
+          <p class="diagrama">
+            <span>Diagrama</span> Buscá dónde aparece la condición con Y.
+          </p>
+        </li>
+
+        <li class="ejercicio" id="ejercicio-2">
+          <p class="ejercicio-cabeza">
+            <span class="ejercicio-numero">Ejercicio 2</span>
+            <span class="op op--chica">O</span>
+          </p>
+          <h3>Entrar al recital</h3>
+          <p>Hacé un programa que:</p>
+          <ol>
+            <li>Pregunte si la persona tiene entrada digital.</li>
+            <li>Pregunte si tiene entrada impresa.</li>
+            <li>
+              Muestre «Puede entrar» si tiene entrada digital{" "}
+              <strong>O</strong> entrada impresa.
+            </li>
+            <li>Si no tiene ninguna, muestre «No puede entrar».</li>
+          </ol>
+          <p class="pista">
+            La condición es la misma que en <a href="#operador-o">el ejemplo del
+            recital</a>.
+          </p>
+          <p class="subtitulo">Probalo con estos cuatro casos</p>
+          <ul class="pruebas">
+            <li>digital sí, impresa sí</li>
+            <li>digital sí, impresa no</li>
+            <li>digital no, impresa sí</li>
+            <li>digital no, impresa no</li>
+          </ul>
+          <p>¿Lo que muestra el programa coincide con la tabla del recital?</p>
+          <p class="diagrama">
+            <span>Diagrama</span> Comparalo con el del ejercicio 1: ¿qué cambia
+            y qué queda igual?
+          </p>
+        </li>
+
+        <li class="ejercicio" id="ejercicio-3">
+          <p class="ejercicio-cabeza">
+            <span class="ejercicio-numero">Ejercicio 3</span>
+            <span class="op op--chica">Y</span>
+          </p>
+          <h3>Pasar de nivel</h3>
+          <p>
+            En un juego, pasás de nivel si tenés más de 100 puntos{" "}
+            <strong>Y</strong> te quedan más de 0 vidas.
+          </p>
+          <p>Hacé un programa que:</p>
+          <ol>
+            <li>Pida los puntos.</li>
+            <li>Pida las vidas que quedan.</li>
+            <li>Muestre «Pasás de nivel» o «No pasás».</li>
+          </ol>
+          <p class="pista">
+            Acá no hace falta una variable <code>Logico</code>: las dos
+            condiciones comparan números. Antes de programar, escribí la
+            condición completa.
+          </p>
+          <p class="subtitulo">Inventá tus casos de prueba</p>
+          <p>
+            Elegí valores para cuatro casos, uno por cada fila de{" "}
+            <a href="#tabla">la tabla de verdad</a>: V y V, V y F, F y V, F y F.
+            Anotá qué debería mostrar cada uno antes de ejecutarlo.
+          </p>
+          <p class="diagrama">
+            <span>Diagrama</span> ¿En qué se parece al del ejercicio 1?
+          </p>
+        </li>
+
+        <li class="ejercicio" id="ejercicio-4">
+          <p class="ejercicio-cabeza">
+            <span class="ejercicio-numero">Ejercicio 4</span>
+            <span class="op op--chica">O</span>
+          </p>
+          <h3>Ganar un premio</h3>
+          <p>
+            En otro juego, ganás un premio si hacés más de 1000 puntos{" "}
+            <strong>O</strong> terminás el nivel en menos de 60 segundos.
+          </p>
+          <p>Hacé un programa que:</p>
+          <ol>
+            <li>Pida los puntos.</li>
+            <li>Pida el tiempo, en segundos.</li>
+            <li>Muestre «Ganaste un premio» o «Sin premio».</li>
+          </ol>
+          <p class="pista">
+            También compara números. Antes de programar, escribí la condición
+            completa.
+          </p>
+          <p class="subtitulo">Inventá tus casos de prueba</p>
+          <p>
+            Otra vez, un caso por cada fila de la tabla. ¿En cuántos de tus
+            casos debería aparecer «Ganaste un premio»?
+          </p>
+          <p class="diagrama">
+            <span>Diagrama</span> Comparalo con el del ejercicio 3: ¿qué cambió?
+          </p>
+        </li>
+      </ol>
+    </section>
+
+    <details class="docentes">
+      <summary>Para docentes</summary>
+      <div class="docentes-contenido">
+        <p>
+          Este material reconstruye un primer acercamiento a los operadores
+          lógicos. En clase se construyeron dos pizarrones paralelos, Y con el
+          boliche y O con el recital, y después se proyectó la tabla de verdad
+          para analizarla con esos ejemplos. La práctica en PSeInt es la
+          continuación propuesta.
+        </p>
+        <ul>
+          <li>
+            <strong>Secuencia.</strong> Los ejemplos usan Sí y No. V y F
+            aparecen recién con la tabla, como generalización de casos que ya
+            se entendieron.
+          </li>
+          <li>
+            <strong>Alcance.</strong> El O es inclusivo. NO, O exclusiva y{" "}
+            <code>Si</code> anidados quedan para más adelante.
+          </li>
+          <li>
+            <strong>Ejercicios.</strong> El 1 y el 2 aplican los ejemplos y
+            usan variables <code>Logico</code>: conviene probar antes que la
+            versión y el perfil de PSeInt del grupo acepten{" "}
+            <code>Verdadero</code> y <code>Falso</code> al leer. El 3 y el 4
+            transfieren la idea a problemas nuevos con comparaciones numéricas.
+            No se publican soluciones.
+          </li>
+          <li>
+            <strong>Mayor de 18.</strong> Con <code>edad &gt; 18</code>, una
+            persona de 18 años exactos no entra. Es coherente con «ser mayor de
+            18», y puede abrir una conversación sobre cómo traducir una frase a
+            una condición.
+          </li>
+        </ul>
+      </div>
+    </details>
+  </article>
+</Layout>
+
+<script>
+  import { iniciarTablaDeVerdad } from "../scripts/operadores-logicos";
+
+  iniciarTablaDeVerdad();
+</script>
+
+<style>
+  .operadores {
+    max-width: 52rem;
+  }
+
+  .apertura {
+    margin: 0 0 2rem;
+    padding-bottom: 1.35rem;
+    border-bottom: 2px solid var(--line);
+  }
+
+  .ubicacion {
+    margin: 0 0 0.45rem;
+    color: var(--muted);
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  .bajada {
+    margin: 0.45rem 0 0;
+    color: var(--muted);
+    font-size: clamp(1.15rem, 0.4vw + 1.05rem, 1.4rem);
+    font-weight: 700;
+    line-height: 1.35;
+  }
+
+  .indice-pasos ol {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1.25rem;
+    margin: 1.1rem 0 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: indice;
+    font-size: 0.95rem;
+  }
+
+  .indice-pasos li {
+    counter-increment: indice;
+  }
+
+  .indice-pasos li::before {
+    content: counter(indice) ". ";
+    color: var(--muted);
+    font-weight: 700;
+  }
+
+  .indice-pasos a {
+    color: var(--ink);
+    font-weight: 600;
+    text-decoration: none;
+    border-bottom: 2px solid var(--accent);
+  }
+
+  .indice-pasos a:hover {
+    color: var(--accent);
+  }
+
+  code {
+    font-family: "Cascadia Mono", Consolas, "DejaVu Sans Mono", monospace;
+    font-size: 0.92em;
+    overflow-wrap: anywhere;
+  }
+
+  .tramo {
+    margin-top: 2.75rem;
+    scroll-margin-top: 1rem;
+  }
+
+  .tramo h2 {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.6rem;
+    margin: 0 0 0.75rem;
+    font-size: clamp(1.3rem, 0.5vw + 1.18rem, 1.65rem);
+    line-height: 1.2;
+    scroll-margin-top: 1rem;
+  }
+
+  /*
+    El texto que acompaña a un recuadro (número u operador) queda al lado
+    mientras tenga lugar; con la letra muy ampliada en una pantalla angosta
+    pasa abajo en lugar de ensanchar la página.
+  */
+  .fila-texto {
+    flex: 1 1 10rem;
+    min-width: 0;
+  }
+
+  .numero {
+    display: inline-grid;
+    flex: none;
+    width: 1.8rem;
+    height: 1.8rem;
+    place-items: center;
+    background: var(--ink);
+    color: var(--board);
+    font-size: 0.95rem;
+  }
+
+  .prosa {
+    max-width: 44rem;
+  }
+
+  .prosa p {
+    margin: 0 0 0.8rem;
+  }
+
+  /* Panel con aire de pizarrón, como los pizarrones de Aula. */
+  .pizarra {
+    margin: 0.5rem 0 0;
+    padding: clamp(1rem, 3vw, 1.75rem);
+    border: 2px solid var(--line);
+    background: var(--board);
+  }
+
+  .regla {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0 0 1rem;
+    font-size: clamp(1.2rem, 0.55vw + 1.05rem, 1.5rem);
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  .op {
+    display: inline-grid;
+    flex: none;
+    min-width: 2.6rem;
+    height: 2.6rem;
+    place-items: center;
+    border: 2px solid var(--accent);
+    color: var(--accent);
+    font-size: 1.5rem;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .op--chica {
+    min-width: 2rem;
+    height: 2rem;
+    font-size: 1.1rem;
+  }
+
+  .situacion {
+    margin: 0 0 1.1rem;
+  }
+
+  .condiciones {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: stretch;
+    gap: 0.6rem;
+    margin: 0 0 1.1rem;
+  }
+
+  .condicion {
+    margin: 0;
+    padding: 0.65rem 0.8rem;
+    border: 2px solid var(--line);
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  .condicion span {
+    display: block;
+    margin-bottom: 0.2rem;
+    color: var(--muted);
+    font-size: 0.75rem;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+  }
+
+  .union {
+    display: grid;
+    margin: 0;
+    place-items: center;
+    color: var(--accent);
+    font-size: 1.5rem;
+    font-weight: 800;
+  }
+
+  .codigo {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.3rem 0.75rem;
+    margin: 0 0 1.25rem;
+  }
+
+  .codigo span,
+  .subtitulo,
+  .pensar-etiqueta,
+  .explorador-titulo,
+  .diagrama span {
+    color: var(--muted);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+  }
+
+  .codigo code {
+    min-width: 0;
+    padding: 0.3rem 0.6rem;
+    background: var(--ink);
+    color: var(--board);
+    font-size: 1rem;
+  }
+
+  /* Tablas: los mismos tonos marcan Sí/entra y V, No/no entra y F. */
+  .casos,
+  .verdad {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: center;
+  }
+
+  .casos caption,
+  .verdad caption {
+    margin-bottom: 0.45rem;
+    color: var(--muted);
+    font-size: 0.92rem;
+    font-weight: 700;
+    text-align: left;
+  }
+
+  .casos th,
+  .casos td,
+  .verdad th,
+  .verdad td {
+    border: 2px solid var(--line);
+    padding: 0.5rem 0.4rem;
+  }
+
+  .casos thead th,
+  .verdad thead th {
+    background: color-mix(in srgb, var(--ink) 9%, var(--board));
+    font-size: 0.88rem;
+    line-height: 1.25;
+  }
+
+  .casos tbody th {
+    font-weight: 600;
+    text-align: left;
+  }
+
+  .si,
+  .v {
+    background: color-mix(in srgb, var(--accent) 13%, var(--board));
+  }
+
+  .no,
+  .f {
+    background: color-mix(in srgb, var(--emphasis) 11%, var(--board));
+  }
+
+  .casos td {
+    font-weight: 700;
+  }
+
+  .resultado {
+    white-space: nowrap;
+  }
+
+  /*
+    Con texto ampliado, una tabla puede no entrar en pantallas angostas: se
+    desplaza dentro de su recuadro sin ensanchar la página.
+  */
+  .tabla-desplazable {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  .tabla-desplazable:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 3px;
+  }
+
+  .idea {
+    margin: 1.1rem 0 0;
+    font-weight: 700;
+  }
+
+  .claves,
+  .conclusiones {
+    margin: 0 0 1rem;
+    padding-left: 1.2rem;
+  }
+
+  .claves li + li,
+  .conclusiones li + li {
+    margin-top: 0.3rem;
+  }
+
+  .conclusiones {
+    margin-top: 1.25rem;
+  }
+
+  .pizarra--tabla {
+    max-width: 34rem;
+  }
+
+  .verdad {
+    table-layout: fixed;
+    font-size: clamp(1.15rem, 1vw + 0.95rem, 1.45rem);
+    font-weight: 700;
+  }
+
+  .verdad thead th {
+    font-size: clamp(0.95rem, 0.6vw + 0.85rem, 1.15rem);
+  }
+
+  .verdad .corte {
+    border-left-width: 6px;
+  }
+
+  .verdad tr[data-elegida] td {
+    outline: 3px solid var(--ink);
+    outline-offset: -5px;
+  }
+
+  .nota-tabla {
+    margin: 0.75rem 0 0;
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+
+  .explorador {
+    margin-top: 1.25rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--hairline);
+  }
+
+  .explorador[hidden] {
+    display: none;
+  }
+
+  .explorador-titulo {
+    margin: 0 0 0.5rem;
+  }
+
+  .explorador-controles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1.5rem;
+  }
+
+  .explorador fieldset {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .explorador legend {
+    float: left;
+    margin-right: 0.35rem;
+    font-weight: 800;
+  }
+
+  .explorador label {
+    position: relative;
+  }
+
+  .explorador input {
+    position: absolute;
+    opacity: 0;
+    inset: 0;
+    margin: 0;
+    cursor: pointer;
+  }
+
+  .explorador label span {
+    display: inline-grid;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    place-items: center;
+    border: 2px solid var(--line);
+    font-weight: 800;
+  }
+
+  .explorador input:checked + span {
+    background: var(--ink);
+    color: var(--board);
+  }
+
+  .explorador input:focus-visible + span {
+    outline: 3px solid var(--accent);
+    outline-offset: 3px;
+  }
+
+  .explorador-lectura {
+    margin-top: 0.9rem;
+  }
+
+  .explorador-lectura p {
+    margin: 0 0 0.35rem;
+  }
+
+  .pensar {
+    max-width: 44rem;
+    margin-top: 1.1rem;
+    padding: 0.75rem 1rem;
+    border-left: 4px solid var(--emphasis);
+    background: var(--board);
+  }
+
+  .pensar summary {
+    display: block;
+    cursor: pointer;
+    font-weight: 700;
+    line-height: 1.4;
+    list-style: none;
+  }
+
+  .pensar summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .pensar-pregunta {
+    display: block;
+  }
+
+  .pensar-ver {
+    display: inline-block;
+    margin-top: 0.45rem;
+    color: var(--accent);
+    font-size: 0.9rem;
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  .pensar-ver::before {
+    content: "▸ ";
+  }
+
+  .pensar[open] .pensar-ver::before {
+    content: "▾ ";
+  }
+
+  .pensar-etiqueta {
+    display: block;
+    color: var(--emphasis);
+  }
+
+  .pensar p {
+    margin: 0.6rem 0 0;
+  }
+
+  .resumen {
+    max-width: 44rem;
+    margin-top: 1.5rem;
+    padding: 1rem 1.15rem;
+    background: var(--ink);
+    color: var(--board);
+  }
+
+  .resumen p {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
+
+  .resumen p + p {
+    margin-top: 0.6rem;
+  }
+
+  .resumen .op {
+    border-color: var(--board);
+    color: var(--board);
+  }
+
+  .ayuda {
+    max-width: 44rem;
+    margin: 0.5rem 0 1.5rem;
+    padding: 1rem 1.15rem;
+    border: 2px dashed var(--line);
+  }
+
+  .ayuda h3 {
+    margin: 0 0 0.5rem;
+    font-size: 1.05rem;
+  }
+
+  .ayuda ul {
+    margin: 0;
+    padding-left: 1.2rem;
+  }
+
+  .ayuda li + li {
+    margin-top: 0.45rem;
+  }
+
+  .ejercicios {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .ejercicio {
+    min-width: 0;
+    padding: clamp(1rem, 2vw, 1.35rem);
+    border: 2px solid var(--line);
+    background: var(--board);
+    scroll-margin-top: 1rem;
+  }
+
+  .ejercicio-cabeza {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 0 0 0.4rem;
+  }
+
+  .ejercicio-numero {
+    color: var(--accent);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+  }
+
+  .ejercicio h3 {
+    margin: 0 0 0.6rem;
+    font-size: clamp(1.1rem, 0.35vw + 1.02rem, 1.35rem);
+    line-height: 1.25;
+  }
+
+  .ejercicio p {
+    margin: 0 0 0.6rem;
+  }
+
+  .ejercicio ol,
+  .pruebas {
+    margin: 0 0 0.75rem;
+    padding-left: 1.3rem;
+  }
+
+  .pista {
+    padding-left: 0.75rem;
+    border-left: 3px solid var(--accent);
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+
+  .subtitulo {
+    margin-top: 0.9rem;
+  }
+
+  .diagrama {
+    margin-top: 0.9rem;
+    padding-top: 0.7rem;
+    border-top: 1px solid var(--hairline);
+  }
+
+  .diagrama span {
+    display: block;
+  }
+
+  .docentes {
+    max-width: 50rem;
+    margin-top: 3rem;
+    padding-top: 1rem;
+    border-top: 2px solid var(--line);
+  }
+
+  .docentes summary {
+    width: fit-content;
+    min-height: 2.75rem;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .docentes-contenido {
+    padding: 0.25rem 0 0 1.25rem;
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+
+  .docentes-contenido p {
+    margin: 0 0 0.75rem;
+  }
+
+  .docentes-contenido ul {
+    margin: 0;
+    padding-left: 1.1rem;
+  }
+
+  .docentes-contenido li + li {
+    margin-top: 0.5rem;
+  }
+
+  .pensar summary:focus-visible,
+  .docentes summary:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 3px;
+  }
+
+  @media (max-width: 48rem) {
+    .ejercicios {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 34rem) {
+    .condiciones {
+      grid-template-columns: 1fr;
+    }
+
+    .union {
+      justify-content: start;
+      padding-left: 0.8rem;
+    }
+
+    .casos {
+      font-size: 0.92rem;
+    }
+
+    .casos thead th {
+      font-size: 0.78rem;
+    }
+
+    .casos th,
+    .casos td {
+      padding: 0.45rem 0.3rem;
+    }
+  }
+
+  @media print {
+    .indice-pasos,
+    .explorador,
+    .docentes {
+      display: none;
+    }
+
+    .pizarra,
+    .ejercicio,
+    .resumen {
+      break-inside: avoid;
+    }
+
+    .ejercicios {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+</style>

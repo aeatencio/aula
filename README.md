@@ -41,6 +41,10 @@ Los materiales pueden encontrarse de tres maneras:
 - Hilos y agentes
 - Agentes y arneses
 
+### Técnicas de Programación
+
+- [Operadores lógicos: Y y O](/operadores-logicos/) · Teoría y práctica. Los operadores `Y` y `O` con dos ejemplos y sus cuatro casos, la tabla de verdad y cuatro ejercicios para programar en PSeInt.
+
 ### Temas
 
 Un tema reúne varios materiales que se usan juntos.
