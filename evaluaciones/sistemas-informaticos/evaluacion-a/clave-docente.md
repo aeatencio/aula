@@ -4,7 +4,9 @@ Corresponde al instrumento y a los dos PDF de esta carpeta. Usarla por separado 
 
 ## Corrección
 
-Cada ítem correcto suma un acierto dentro de su parte. Registrar las cuatro partes por separado (sobre 8, 8, 8 y 6), sin puntaje total ni nota única.
+Cada ítem correcto suma un acierto dentro de su parte. Registrar las cuatro partes por separado (sobre 8, 8, 8 y 6): son el resultado principal. No se deriva automáticamente una nota única.
+
+Como síntesis puede mostrarse un resultado global de aciertos y porcentaje calculado sólo con las partes que se contabilicen para cada estudiante; su denominador es la cantidad de ítems de esas partes (30 con las cuatro). Ese global no reemplaza los resultados por parte ni es por sí mismo una nota.
 
 Un casillero vacío o con dos letras no suma, salvo **B+D en el ítem 18**. Si una letra está tachada y reemplazada, vale la nueva; si es ilegible, consultar antes de anular.
 

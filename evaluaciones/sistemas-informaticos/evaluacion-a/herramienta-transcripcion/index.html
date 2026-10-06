@@ -1,0 +1,1409 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Transcripción · Evaluación A</title>
+<style>
+  :root {
+    --tinta: #1d232b;
+    --suave: #5d6875;
+    --linea: #c9d0d8;
+    --fondo: #f5f6f8;
+    --panel: #ffffff;
+    --actual: #1f5fd1;
+    --vacia: #8a939e;
+    --multiple: #6b3fb3;
+    --dudosa: #a35d00;
+    --error: #c0262d;
+    --p1: #e8f1ff; --p1-borde: #7fa7e6;
+    --p2: #eaf7ee; --p2-borde: #6fb488;
+    --p3: #fff4e3; --p3-borde: #dda24a;
+    --p4: #f6ecfb; --p4-borde: #b38ad4;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 16px clamp(10px, 2vw, 32px) 48px;
+    background: var(--fondo);
+    color: var(--tinta);
+    font: 15px/1.4 "Segoe UI", system-ui, sans-serif;
+  }
+  /* Ancho fluido; el tope sólo evita líneas y tablas desmedidas en pantallas muy anchas. */
+  .pagina { max-width: 1800px; margin: 0 auto; }
+  h1 { font-size: 18px; margin: 0 0 2px; }
+  h2 { font-size: 16px; margin: 0 0 10px; }
+  .nota { color: var(--suave); font-size: 13px; margin: 0; }
+  section {
+    background: var(--panel);
+    border: 1px solid var(--linea);
+    border-radius: 8px;
+    padding: clamp(10px, 1.2vw, 16px);
+    margin-top: 14px;
+    min-width: 0;
+  }
+  [data-parte="1"] { --pc: var(--p1); --pb: var(--p1-borde); }
+  [data-parte="2"] { --pc: var(--p2); --pb: var(--p2-borde); }
+  [data-parte="3"] { --pc: var(--p3); --pb: var(--p3-borde); }
+  [data-parte="4"] { --pc: var(--p4); --pb: var(--p4-borde); }
+
+  /* ---------- evaluación en curso: datos | grilla | ayuda ---------- */
+  .carga {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "datos" "grilla" "ayuda";
+    gap: 14px 24px;
+  }
+  .datos { grid-area: datos; min-width: 0; }
+  .col-grilla { grid-area: grilla; min-width: 0; }
+  .ayuda { grid-area: ayuda; min-width: 0; }
+  @media (min-width: 1480px) {
+    .carga {
+      grid-template-columns: minmax(210px, 240px) minmax(0, 1fr) minmax(240px, 290px);
+      grid-template-areas: "datos grilla ayuda";
+      align-items: start;
+    }
+    .datos .campos { flex-direction: column; align-items: stretch; }
+    .datos #curso, .datos #estudiante { width: 100%; }
+    .datos .estado { flex-direction: column; gap: 4px; margin-top: 18px; }
+    .ayuda { border-left: 1px solid var(--linea); padding-left: 18px; }
+    .ayuda .teclas { grid-template-columns: 1fr; }
+  }
+
+  .campos { display: flex; gap: 10px 16px; flex-wrap: wrap; align-items: end; }
+  label { display: grid; gap: 2px; font-size: 13px; color: var(--suave); }
+  input[type="text"] {
+    font: inherit;
+    font-size: 17px;
+    padding: 5px 8px;
+    border: 1px solid var(--linea);
+    border-radius: 5px;
+    color: var(--tinta);
+    max-width: 100%;
+  }
+  #curso { width: 9em; }
+  #estudiante { width: 22em; }
+  .edicion { color: var(--multiple); font-weight: 600; }
+
+  .estado {
+    display: flex; gap: 6px 24px; align-items: baseline; flex-wrap: wrap;
+    margin: 12px 0 0;
+  }
+  #titular { font-size: 30px; font-weight: 700; min-width: 5.5em; line-height: 1.15; }
+  #subtitular { font-size: 17px; }
+  #progreso { color: var(--suave); }
+
+  /* ---------- grilla ---------- */
+  #zona {
+    outline: none;
+    border: 2px dashed var(--linea);
+    border-radius: 8px;
+    padding: clamp(6px, 0.8vw, 10px);
+    position: relative;
+    container-type: inline-size;
+  }
+  #zona:focus { border: 2px solid var(--actual); }
+  #fuera {
+    display: none;
+    position: absolute; inset: 0;
+    background: rgba(245, 246, 248, 0.82);
+    align-items: center; justify-content: center; text-align: center;
+    padding: 12px;
+    font-size: 17px; font-weight: 600; color: var(--suave);
+    border-radius: 6px; pointer-events: none;
+  }
+  #zona:not(:focus) #fuera { display: flex; }
+
+  /* Tamaño del casillero y del hueco según el ancho real de la zona; el hueco
+     nunca baja de 26px porque ahí va la corrección roja (B/D en el 18). */
+  #grilla {
+    --rotulo: 8.5em;
+    --hueco: clamp(26px, 3cqi, 36px);
+    --res: 122px;
+    --celda: clamp(40px, calc((100cqi - var(--rotulo) - var(--res) - 46px - 8 * var(--hueco)) / 8), 64px);
+    display: grid; gap: 6px;
+  }
+  .parte {
+    display: grid; grid-template-columns: var(--rotulo) minmax(0, 1fr) var(--res);
+    grid-template-areas: "rot celdas res";
+    align-items: center; column-gap: 12px;
+    padding: 6px 8px 6px 10px;
+    border-left: 4px solid var(--pb);
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--pc) 45%, white);
+  }
+  .parte-rotulo { grid-area: rot; font-size: 13px; color: var(--suave); line-height: 1.2; }
+  .celdas { grid-area: celdas; }
+  /* Resultado de la parte: a la derecha de su banda en ancho; debajo del
+     rótulo o junto a él en anchos menores. */
+  .parte-res {
+    grid-area: res; display: grid; align-content: center;
+    font-size: 12px; line-height: 1.3; color: var(--suave);
+    border-left: 2px solid var(--pb); padding-left: 10px; min-height: 38px;
+  }
+  .parte-res b { font-size: 16px; color: var(--tinta); white-space: nowrap; }
+  .parte-res.incompleta { border-left-style: dashed; }
+  .parte-res .faltan { color: var(--suave); font-style: italic; font-size: 12.5px; }
+  .cuenta { display: flex; align-items: center; gap: 4px; margin-top: 4px; font-size: 12px; color: var(--tinta); cursor: pointer; white-space: nowrap; }
+  .cuenta input { margin: 0; }
+  /* Parte que no se contabiliza: se sigue viendo y corrigiendo, más apagada. */
+  .parte.no-cuenta { background: #f3f4f6; border-left-style: dashed; }
+  .no-cuenta-txt { display: block; font-size: 11.5px; color: var(--suave); font-style: italic; }
+  .sin { color: var(--suave); font-style: italic; font-size: 11.5px; }
+  @container (max-width: 820px) {
+    #grilla { --res: 0px; --celda: clamp(40px, calc((100cqi - var(--rotulo) - 34px - 8 * var(--hueco)) / 8), 64px); }
+    .parte { grid-template-columns: var(--rotulo) minmax(0, 1fr); grid-template-areas: "rot celdas" "res celdas"; row-gap: 6px; }
+    .parte-rotulo { align-self: end; }
+    .parte-res { align-self: start; border-left: 0; padding: 4px 0 0; border-top: 2px solid var(--pb); min-height: 0; }
+    .parte-res.incompleta { border-top-style: dashed; }
+  }
+  .parte-rotulo b { color: var(--tinta); display: block; font-size: 14px; }
+  .celdas {
+    display: grid;
+    grid-template-columns: repeat(8, var(--celda));
+    column-gap: var(--hueco); row-gap: 8px;
+  }
+  @container (max-width: 700px) {
+    #grilla { --rotulo: 0px; --celda: clamp(38px, calc((100cqi - 22px - 8 * var(--hueco)) / 8), 60px); }
+    .parte { grid-template-columns: minmax(0, 1fr) minmax(0, auto); grid-template-areas: "rot res" "celdas celdas"; row-gap: 4px; column-gap: 14px; }
+    .parte-rotulo { align-self: center; }
+    .parte-rotulo b { display: inline; margin-right: 8px; }
+    .cuenta { display: inline-flex; margin: 0 0 0 10px; }
+    .parte-res { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 8px; border-top: 0; border-left: 2px solid var(--pb); padding: 0 0 0 8px; align-self: center; }
+    .parte-res.incompleta { border-left-style: dashed; }
+  }
+  /* Muy angosto: cada parte en filas de cuatro, sin achicar los casilleros. */
+  @container (max-width: 470px) {
+    #grilla { --celda: clamp(40px, calc((100cqi - 22px - 4 * var(--hueco)) / 4), 58px); }
+    .celdas { grid-template-columns: repeat(4, var(--celda)); }
+    .parte { grid-template-columns: minmax(0, 1fr); grid-template-areas: "rot" "res" "celdas"; }
+  }
+  .celda {
+    width: var(--celda); height: var(--celda);
+    border: 1px solid var(--linea);
+    border-radius: 6px;
+    display: grid; grid-template-rows: 16px 1fr;
+    text-align: center;
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    background: var(--pc);
+  }
+  .celda .num { font-size: 11px; color: var(--suave); padding-top: 2px; }
+  .celda .val { font: 700 clamp(18px, calc(var(--celda) * 0.38), 24px)/1 Consolas, "Cascadia Mono", monospace; align-self: center; }
+  /* Corrección: fuera del casillero, a la derecha, como en el papel. */
+  .celda .corr {
+    position: absolute; left: calc(100% + var(--hueco) * 0.2); top: 50%; transform: translateY(-50%);
+    font: 700 min(18px, calc(var(--hueco) * 0.6))/1 "Segoe UI", system-ui, sans-serif; color: var(--error);
+    white-space: nowrap; pointer-events: none;
+  }
+  .celda .corr.varias { font-size: max(10px, calc(var(--hueco) * 0.4)); left: calc(100% + 2px); }
+  .celda.sin .val { color: #c3c9d0; }
+  .celda.vacia .val { color: var(--vacia); }
+  .celda.multiple .val { color: var(--multiple); font-size: clamp(13px, calc(var(--celda) * 0.27), 17px); }
+  .celda.dudosa .val { color: var(--dudosa); }
+  .celda.dudosa { border-color: var(--dudosa); border-style: dashed; }
+  .celda.rango { border: 2px solid var(--error); }
+  .celda.actual { outline: 4px solid var(--actual); outline-offset: 1px; background: #fff; }
+  .celda.componiendo { border: 2px dashed var(--multiple); }
+  .celda.fin { background: #fff; border-style: dashed; }
+  .celda.fin .val { font-size: 13px; color: var(--suave); }
+
+  #mensaje { min-height: 1.5em; margin: 8px 0 4px; font-weight: 600; }
+
+  /* Resultados en vivo de la evaluación en curso. */
+  .vivo { margin: 2px 0 8px; padding: 8px 10px; border: 1px solid var(--linea); border-radius: 6px; background: #fbfcfd; }
+  .vivo-cab { font-size: 13px; margin-bottom: 6px; }
+  .vivo-cuerpo { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: start; }
+  .vivo-cuerpo > .vp.global { flex: 0 0 170px; }
+  .vivo-cuerpo > .vivo-ejes { flex: 1 1 360px; }
+  .vp { border-left: 3px solid var(--pb); padding-left: 7px; font-size: 12px; color: var(--suave); display: grid; }
+  .vp b { font-size: 16px; color: var(--tinta); font-weight: 700; }
+  .vp .rot { color: var(--tinta); }
+  .vp.global { border-left: 3px solid var(--tinta); padding-left: 10px; }
+  .vp.global b { font-size: 14px; font-weight: 600; }
+  .vivo-ejes {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 2px 14px;
+    font-size: 12.5px; color: var(--suave);
+  }
+  .vivo-ejes .rot-ejes { grid-column: 1 / -1; font-size: 12px; font-weight: 600; color: var(--tinta); }
+  .ve b { color: var(--tinta); }
+  .vp.incompleta { border-left-style: dashed; }
+  .vivo .faltan { color: var(--suave); font-style: italic; font-size: 12.5px; }
+  .vivo-ejes > .faltan { grid-column: 1 / -1; }
+  .ve .rot { color: var(--tinta); }
+  #mensaje.error { color: var(--error); }
+  #mensaje.ok { color: #1d7a3a; }
+  #mensaje.info { color: var(--actual); }
+  .resumen { color: var(--suave); font-size: 13px; }
+
+  .acciones { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; align-items: center; }
+  .acciones[hidden] { display: none; }
+  button {
+    font: inherit; font-size: 14px;
+    padding: 5px 12px;
+    border: 1px solid var(--linea);
+    border-radius: 5px;
+    background: #fff; color: var(--tinta);
+    cursor: pointer;
+  }
+  button.principal { background: var(--actual); color: #fff; border-color: var(--actual); }
+  button.peligro { color: var(--error); }
+
+  /* ---------- ayuda ---------- */
+  .titulo-ayuda { font-size: 14px; margin: 0 0 6px; }
+  .teclas {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+    gap: 6px 24px; font-size: 13px; color: var(--suave);
+  }
+  .teclas > div { display: grid; grid-template-columns: 6.8em minmax(0, 1fr); gap: 8px; align-items: baseline; }
+  kbd {
+    font: 12px Consolas, monospace;
+    border: 1px solid var(--linea); border-bottom-width: 2px;
+    border-radius: 4px; padding: 0 5px; background: #fff; color: var(--tinta);
+  }
+
+  /* ---------- evaluaciones guardadas ---------- */
+  .guardadas .cabecera { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 16px; margin-bottom: 8px; }
+  .guardadas .cabecera h2 { margin: 0; }
+  .guardadas .cabecera .acciones { margin-top: 0; }
+  #avisoImport { margin: 0 0 8px; font-size: 13px; font-weight: 600; }
+  #avisoImport.error { color: var(--error); }
+  #avisoImport.ok { color: #1d7a3a; }
+  table { border-collapse: collapse; font-size: 13px; width: 100%; }
+  th, td { border-bottom: 1px solid #e3e7ec; padding: 5px 8px; text-align: left; vertical-align: middle; }
+  thead th { vertical-align: bottom; font-size: 13px; }
+  td:nth-child(3) { min-width: 9em; }
+  td:last-child { white-space: nowrap; width: 1%; }
+  /* Cada ítem ocupa una columna fija igual en todas las filas y en la
+     cabecera; si no entran las cuatro partes, bajan de línea juntas. */
+  .resp { --slot: 2.05em; font: 14px Consolas, "Cascadia Mono", monospace; }
+  .resp .partes { display: flex; flex-wrap: wrap; gap: 8px 18px; }
+  .resp .grupo { border-left: 3px solid var(--pb); padding-left: 6px; }
+  .resp .linea { display: grid; grid-template-columns: repeat(8, var(--slot)); }
+  .resp .grupo[data-parte="3"] .linea { grid-template-columns: var(--slot) calc(var(--slot) * 1.6) repeat(6, var(--slot)); }
+  .resp .grupo[data-parte="4"] .linea { grid-template-columns: repeat(6, var(--slot)); }
+  .resp .rotulo { display: block; font: 600 12px "Segoe UI", system-ui, sans-serif; color: var(--tinta); white-space: nowrap; }
+  .resp .v { padding-left: 1px; white-space: nowrap; }
+  .resp .v.num { font: 11px "Segoe UI", system-ui, sans-serif; color: var(--suave); }
+  td.resp .res { display: block; font: 12px/1.3 "Segoe UI", system-ui, sans-serif; color: var(--tinta); margin-top: 3px; white-space: nowrap; }
+  td.resp .res .resp-n { color: var(--suave); }
+  td.resp .res .revisar { color: var(--dudosa); font-weight: 600; }
+  .resp .grupo.no-cuenta { border-left-style: dashed; }
+  td.resp .corr { font: 700 10px/1 "Segoe UI", system-ui, sans-serif; color: var(--error); vertical-align: 0.55em; margin-left: 1px; }
+  td.resp .v.multiple { color: var(--multiple); font-size: 0.8em; }
+  td.resp .v.largo { font-size: 0.62em; }
+  td.resp .v.largo .corr { display: block; vertical-align: baseline; margin: 1px 0 0; }
+  td.resp .v.dudosa { color: var(--dudosa); }
+  td.resp .v.vacia { color: var(--vacia); }
+  td.resp .v.rango { text-decoration: underline wavy var(--error); }
+  /* Síntesis por fila: global (recuadro) y ejes, en columnas fijas. */
+  .resp .sintesis {
+    display: flex; flex-wrap: wrap; gap: 3px 8px; margin-top: 6px; padding-top: 5px;
+    border-top: 1px dashed #dfe4ea;
+    font: 12px/1.3 "Segoe UI", system-ui, sans-serif; color: var(--suave);
+  }
+  .resp .s { width: 100px; }
+  .resp .s.global { width: 140px; border: 1px solid var(--linea); border-radius: 4px; padding: 0 5px; color: var(--tinta); }
+  .resp .s b { color: var(--tinta); font-weight: 600; }
+  thead .resp .sintesis { border-top: 0; margin-top: 4px; padding-top: 0; color: var(--tinta); font-weight: 600; font-size: 11.5px; }
+  thead .resp .s.global { border-color: transparent; }
+  .provisorio { text-decoration: underline dotted var(--dudosa); text-underline-offset: 3px; }
+  tr.editando { background: #f1ebfa; }
+  tr.viendo { background: #e8f0fb; }
+  /* Ver: sólo lectura, distinto de cargar o editar. */
+  .barra-ver {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px;
+    margin: 0 0 10px; padding: 6px 10px; border-radius: 6px;
+    background: #e8f0fb; border: 1px solid #b9cdea; font-size: 14px;
+  }
+  .barra-ver[hidden] { display: none; }
+  .barra-ver-acciones { display: flex; flex-wrap: wrap; gap: 6px; }
+  .carga.viendo #zona { border: 2px solid #b9cdea; }
+  .carga.viendo #fuera { display: none; }
+  .carga.viendo .celda { cursor: default; }
+  .carga.viendo input[readonly] { background: var(--fondo); }
+  #sinFilas { color: var(--suave); }
+  #leyenda { max-width: 120ch; margin-top: 8px; }
+  /* Angosto: cada evaluación como tarjeta; cada parte lleva su rótulo. */
+  @media (max-width: 760px) {
+    #tabla thead { display: none; }
+    #tabla, #tabla tbody { display: block; }
+    #tabla tr {
+      display: grid; grid-template-columns: auto auto minmax(0, 1fr) auto;
+      grid-template-areas: "n curso nombre acc" "resp resp resp resp";
+      align-items: center; border-bottom: 1px solid #e3e7ec; padding: 6px 0;
+    }
+    #tabla td { border: 0; padding: 2px 6px; }
+    #tabla td:nth-child(1) { grid-area: n; }
+    #tabla td:nth-child(2) { grid-area: curso; }
+    #tabla td:nth-child(3) { grid-area: nombre; font-weight: 600; min-width: 0; }
+    #tabla td:nth-child(4) { grid-area: resp; }
+    #tabla td:nth-child(5) { grid-area: acc; }
+    td.resp .grupo::before { content: attr(data-rotulo); display: block; font: 11px "Segoe UI", system-ui, sans-serif; color: var(--suave); }
+    td.resp .s::before { content: attr(data-rotulo); display: block; font-size: 11px; color: var(--suave); }
+  }
+  pre#vista {
+    background: var(--fondo); border: 1px solid var(--linea); border-radius: 5px;
+    padding: 8px; font-size: 12px; overflow-x: auto; max-height: 14em; tab-size: 6;
+  }
+  #avisoAlmacen { display: none; color: var(--error); font-weight: 600; }
+</style>
+</head>
+<body>
+<main class="pagina">
+<h1>Transcripción de respuestas · Evaluación A · Sistemas Informáticos</h1>
+<p class="nota">Herramienta local: no envía datos a ningún servidor. Lo cargado queda sólo en este navegador; al terminar, exportalo, guardalo fuera del repositorio y vaciá la sesión. Los nombres y respuestas reales son privados: nunca se versionan.</p>
+<p id="avisoAlmacen">Este navegador no permite guardado local: si cerrás o recargás la pestaña se pierde lo cargado. Exportá con frecuencia.</p>
+
+<section class="carga" aria-labelledby="t-carga">
+ <div class="datos">
+  <h2 id="t-carga">Evaluación en curso <span id="edicion" class="edicion"></span></h2>
+  <div id="barraVer" class="barra-ver" hidden>
+    <span>Sólo lectura: <b id="verNombre"></b></span>
+    <span class="barra-ver-acciones">
+      <button type="button" id="btnEditarVista">Editar esta evaluación</button>
+      <button type="button" id="btnCerrarVista">Volver a la carga</button>
+    </span>
+  </div>
+  <div class="campos">
+    <label>Curso / división <input type="text" id="curso" autocomplete="off" spellcheck="false" placeholder="p. ej. 3.º A"></label>
+    <label>Estudiante (nombre o identificador) <input type="text" id="estudiante" autocomplete="off" spellcheck="false"></label>
+    <span class="nota">Enter en «Estudiante» pasa a las respuestas.</span>
+  </div>
+
+  <div class="estado" aria-live="polite">
+    <span id="titular"></span>
+    <span id="subtitular"></span>
+    <span id="progreso"></span>
+  </div>
+
+ </div>
+
+ <div class="col-grilla">
+  <div id="zona" tabindex="0" aria-label="Respuestas: escribí la letra de cada ítem">
+    <div id="grilla"></div>
+    <div id="fuera">El teclado no está en la grilla · hacé clic acá o Enter en «Estudiante»</div>
+  </div>
+
+  <div id="mensaje" role="status" aria-live="assertive"></div>
+  <div id="vivo" class="vivo"></div>
+  <div class="resumen" id="resumen"></div>
+  <div class="acciones" id="accionesCarga">
+    <button type="button" class="principal" id="btnGuardar">Guardar evaluación (Enter)</button>
+    <button type="button" class="peligro" id="btnDescartar">Descartar evaluación en curso</button>
+  </div>
+ </div>
+
+ <aside class="ayuda">
+  <h3 class="titulo-ayuda">Teclas</h3>
+    <div class="teclas">
+      <div><span class="k"><kbd>A</kbd> <kbd>B</kbd> <kbd>C</kbd> <kbd>D</kbd></span><span>carga la letra y avanza (mayúscula o minúscula). En 1–8 sólo hay A–C: una D pide confirmación.</span></div>
+      <div><span class="k"><kbd>-</kbd></span><span>casillero en blanco en el papel; avanza.</span></div>
+      <div><span class="k"><kbd>+</kbd></span><span>varias marcas: <kbd>B</kbd><kbd>+</kbd><kbd>C</kbd><kbd>Enter</kbd> → B+C en ese ítem y pasa al siguiente (igual con B+C+D). Si la tecla anterior no fue una letra, <kbd>+</kbd> agrega al ítem actual. <kbd>Retroceso</kbd> quita la última; <kbd>Esc</kbd> cancela.</span></div>
+      <div><span class="k"><kbd>?</kbd></span><span>en un ítem sin cargar: ilegible (<code>?</code>) y avanza. Sobre una letra ya cargada: la marca como dudosa (<code>B?</code>) o quita la marca.</span></div>
+      <div><span class="k">número</span><span>ir a ese ítem (<kbd>1</kbd><kbd>8</kbd> salta al 18; <kbd>3</kbd> <kbd>Enter</kbd> al 3).</span></div>
+      <div><span class="k"><kbd>←</kbd> <kbd>→</kbd> <kbd>↑</kbd> <kbd>↓</kbd></span><span>moverse por la grilla. <kbd>Retroceso</kbd> borra la respuesta anterior (o la actual si tiene valor); <kbd>Supr</kbd> borra la actual.</span></div>
+      <div><span class="k"><kbd>Enter</kbd></span><span>con los 30 ítems cargados, guarda y pasa a la siguiente evaluación. Si falta alguno, va al primero que falta.</span></div>
+      <div><span class="k"><kbd>Espacio</kbd></span><span>se ignora (podés separar letras con espacios).</span></div>
+    </div>
+ </aside>
+</section>
+
+<section class="guardadas" aria-labelledby="t-filas">
+ <div class="cabecera">
+  <h2 id="t-filas">Evaluaciones guardadas en esta sesión (<span id="cantidad">0</span>)</h2>
+  <div class="acciones">
+    <button type="button" id="btnCopiar">Copiar TSV (para pegar en una planilla)</button>
+    <button type="button" id="btnDescargar">Descargar .tsv</button>
+    <button type="button" id="btnImportar" title="Restaurar evaluaciones desde un .tsv exportado por esta herramienta (se lee en el navegador; no se envía)">Importar TSV…</button>
+    <input type="file" id="archivoImport" accept=".tsv,.txt,text/tab-separated-values,text/plain" hidden>
+    <button type="button" class="peligro" id="btnVaciar">Vaciar sesión</button>
+    <span class="nota" id="estadoExport"></span>
+  </div>
+ </div>
+  <p id="avisoImport" role="status" hidden></p>
+  <p id="sinFilas">Todavía no hay evaluaciones guardadas.</p>
+  <table id="tabla" hidden>
+    <thead><tr><th>#</th><th>Curso</th><th>Estudiante</th><th class="resp" id="cabResp">Respuestas y aciertos por parte</th><th></th></tr></thead>
+    <tbody></tbody>
+  </table>
+  <p class="nota" id="leyenda" hidden>Debajo de cada parte: aciertos sobre el total de la parte · porcentaje de aciertos sobre ese total ·
+    respondidas (todo lo que no está en blanco). Según <code>clave-docente.md</code> (12: sólo D; 18: B, D o B+D). En blanco, varias letras
+    (salvo B+D en el 18) y letras fuera de opciones no suman. Ilegibles (<code>?</code>) y dudosas (<code>B?</code>) no suman y se cuentan «a revisar»
+    en el papel. En rojo, fuera de la respuesta incorrecta o en blanco, lo que acepta la clave (en el 18, B/D: vale B, D o B+D);
+    nunca junto a ilegibles o dudosas. Debajo, el resultado global (aciertos de los ítems de las partes contabilizadas ÷ cantidad de esos
+    ítems: 30, 24, 22…; no es promedio de las partes ni nota: la clave registra los resultados por parte) y los ejes de
+    <code>analisis-de-items.md</code> sólo con sus ítems principales que caen en partes contabilizadas (el mouse sobre cada eje
+    muestra sus ítems); un eje con ítems a revisar aparece subrayado y uno sin ítems contabilizados muestra «—». Una parte con
+    borde punteado y «no se contabiliza» conserva sus respuestas y su resultado propio. Todo es una lectura derivada:
+    lo exportado sigue siendo la respuesta cruda.</p>
+  <p class="nota" style="margin-top:10px">Vista previa de la exportación (separada por tabulaciones):</p>
+  <pre id="vista"></pre>
+</section>
+</main>
+
+<script>
+"use strict";
+(() => {
+  // Estructura real de la Evaluación A (fuente/evaluacion.html): la Parte 1
+  // tiene opciones A–C; las demás, A–D.
+  const PARTES = [
+    { n: 1, nombre: "Reconocer", desde: 1, hasta: 8, letras: "ABC" },
+    { n: 2, nombre: "Relacionar", desde: 9, hasta: 16, letras: "ABCD" },
+    { n: 3, nombre: "Interpretar", desde: 17, hasta: 24, letras: "ABCD" },
+    { n: 4, nombre: "Usar lo que sabés", desde: 25, hasta: 30, letras: "ABCD" },
+  ];
+  const N = 30;
+  // Partes que se contabilizan en global y ejes, por evaluación. Por defecto,
+  // las cuatro. Datos de versiones anteriores sin este campo: las cuatro.
+  const TODAS = () => PARTES.map(() => true);
+  const cuentanValidas = (c) => (Array.isArray(c) && c.length === PARTES.length && c.every((x) => typeof x === "boolean") ? c : TODAS());
+  const EVALUACION = "SI-A";
+  const CLAVE_LOCAL = "aula-transcripcion-si-a-v1";
+  // Valor crudo de un ítem: "-" en blanco, "?" ilegible, o letras A–D
+  // ordenadas y unidas con "+", con "?" final si la lectura es dudosa.
+  const VALOR = /^(-|\?|[A-D](\+[A-D])*\??)$/;
+  // Clave vigente de evaluaciones/sistemas-informaticos/evaluacion-a/clave-docente.md:
+  // respuestas aceptadas por ítem (12: sólo D; 18: B, D o B+D).
+  // tests/transcripcion-evaluacion-a.test.mjs comprueba que coincida con ese archivo.
+  const ACEPTADAS = [
+    ["B"], ["A"], ["C"], ["B"], ["C"], ["A"], ["B"], ["C"],
+    ["D"], ["B"], ["A"], ["D"], ["B"], ["C"], ["A"], ["C"],
+    ["B"], ["B", "D", "B+D"], ["A"], ["A"], ["C"], ["B"], ["C"], ["D"],
+    ["C"], ["B"], ["D"], ["A"], ["B"], ["A"]
+  ];
+  // Ejes de analisis-de-items.md («Cobertura»), sólo con los ítems principales:
+  // sin los que figuran entre paréntesis como integrados. Cada ítem queda en un
+  // solo eje. «corto» es sólo el rótulo en pantalla. tests/transcripcion-
+  // evaluacion-a.test.mjs comprueba que nombres e ítems coincidan con ese archivo.
+  const EJES = [
+    { "nombre": "Hardware, software, programa", "corto": "Hardware y software", "items": [1, 2, 9] },
+    { "nombre": "Instrucciones, datos, operaciones, resultados", "corto": "Instrucciones y datos", "items": [3, 10, 11, 24] },
+    { "nombre": "Entrada, procesamiento y salida", "corto": "Entrada y salida", "items": [4, 5, 12, 21, 25] },
+    { "nombre": "CPU y memoria / Von Neumann", "corto": "CPU y memoria", "items": [6, 20, 30] },
+    { "nombre": "RAM, almacenamiento y recorrido", "corto": "RAM y almacenamiento", "items": [7, 13, 22] },
+    { "nombre": "Estado", "corto": "Estado", "items": [14, 17, 18, 26] },
+    { "nombre": "SO y administración de recursos", "corto": "Sistema operativo", "items": [8, 15, 23, 28, 29] },
+    { "nombre": "Representaciones y miradas", "corto": "Representaciones", "items": [16, 19, 27] }
+  ];
+
+  const $ = (id) => document.getElementById(id);
+  const parteDe = (i) => PARTES.find((p) => i + 1 >= p.desde && i + 1 <= p.hasta);
+  const letrasDe = (v) => v.replace("?", "").split("+");
+  const esLetras = (v) => v !== null && v !== "-" && v !== "?";
+  const fueraDeRango = (i, v) => esLetras(v) && letrasDe(v).some((l) => !parteDe(i).letras.includes(l));
+  const limpiar = (t) => t.normalize("NFC").replace(/[\t\r\n]+/g, " ").trim();
+  const clase = (i, v) => {
+    if (v === null) return "sin";
+    if (v === "-") return "vacia";
+    const c = [];
+    if (v.includes("?")) c.push("dudosa");
+    if (v.includes("+")) c.push("multiple");
+    if (v.split("+").length > 2) c.push("largo"); // tres marcas o más: sólo afecta la presentación
+    if (fueraDeRango(i, v)) c.push("rango");
+    return c.join(" ");
+  };
+
+  // Resultado derivado de las respuestas crudas, por parte. Respondida: todo
+  // lo que no es "-" (también "?" y lo fuera de opciones, porque hay una marca).
+  // Acierto: valor exacto entre los aceptados. "?" y lecturas dudosas ("B?")
+  // no suman: se cuentan aparte como «a revisar» en el papel.
+  // Regla única por ítem (partes, global y ejes): valor exacto entre los
+  // aceptados. "-" no es respondida; "?" y dudosas no suman (a revisar).
+  const acierto = (i, v) => v !== null && !v.includes("?") && ACEPTADAS[i].includes(v);
+  const revisa = (v) => v !== null && v.includes("?");
+  const pct = (a, n) => Math.round((100 * a) / n);
+
+  function resultados(respuestas) {
+    return PARTES.map((p) => {
+      const r = { total: p.hasta - p.desde + 1, respondidas: 0, aciertos: 0, revisar: 0 };
+      for (let i = p.desde - 1; i < p.hasta; i++) {
+        const v = respuestas[i];
+        if (v === null || v === "-") continue;
+        r.respondidas++;
+        if (revisa(v)) r.revisar++;
+        else if (acierto(i, v)) r.aciertos++;
+      }
+      r.porcentaje = pct(r.aciertos, r.total);
+      return r;
+    });
+  }
+
+  // Ítems (1–30) de las partes contabilizadas.
+  const itemsQueCuentan = (cuentan) => PARTES.flatMap((p, k) =>
+    cuentan[k] ? Array.from({ length: p.hasta - p.desde + 1 }, (_, j) => p.desde + j) : []);
+
+  // Resultado global: aciertos de los ítems de las partes contabilizadas ÷
+  // cantidad de esos ítems × 100 (30, 24, 22, 16…). No es el promedio de los
+  // porcentajes de las partes. Sin partes contabilizadas: total 0, sin %.
+  function resultadoGlobal(respuestas, cuentan) {
+    const items = itemsQueCuentan(cuentan);
+    const aciertos = items.filter((n) => acierto(n - 1, respuestas[n - 1])).length;
+    const revisar = items.filter((n) => revisa(respuestas[n - 1])).length;
+    return { aciertos, total: items.length, porcentaje: items.length ? pct(aciertos, items.length) : null, revisar };
+  }
+
+  // Ejes: sólo sus ítems que pertenecen a partes contabilizadas; el
+  // denominador varía por evaluación y puede ser 0 (sin %).
+  function resultadosEjes(respuestas, cuentan) {
+    const cuenta = new Set(itemsQueCuentan(cuentan));
+    return EJES.map((e) => {
+      const items = e.items.filter((n) => cuenta.has(n));
+      const aciertos = items.filter((n) => acierto(n - 1, respuestas[n - 1])).length;
+      const revisar = items.filter((n) => revisa(respuestas[n - 1])).length;
+      return { ...e, contados: items, aciertos, total: items.length, porcentaje: items.length ? pct(aciertos, items.length) : null, revisar };
+    });
+  }
+
+  const textoGlobal = (g) => (g.total ? `<b>${g.aciertos}/${g.total}</b> · ${g.porcentaje} %` : `<span class="sin">sin partes contabilizadas</span>`);
+  const textoEje = (e) => (e.total ? `<b>${e.aciertos}/${e.total}</b> · ${e.porcentaje} %` : `<b>—</b> <span class="sin">sin ítems contabilizados</span>`);
+  const tituloEje = (e) => `${e.nombre} · ítems ${e.items.join(", ")}` +
+    (e.contados && e.contados.length < e.items.length ? ` · contabilizados: ${e.contados.join(", ") || "ninguno"}` : "");
+
+  // Corrección visible (sólo presentación): para una respuesta cargada, segura
+  // e incorrecta, lo aceptado por la clave; en el 18, "B/D". Nunca para "?" ni
+  // dudosas. La respuesta cruda no se toca.
+  function correccion(i, v) {
+    if (v === null || v.includes("?") || ACEPTADAS[i].includes(v)) return "";
+    return ACEPTADAS[i].filter((a) => !a.includes("+")).join("/");
+  }
+  const tituloCorreccion = (i) => `Clave del ítem ${i + 1}: ${ACEPTADAS[i].join(", ").replace(/, ([^,]*)$/, " o $1")}`;
+
+  let s = nuevo("");
+  let filas = [];
+  let proximoId = 1;
+  let exportado = "";
+  // Composición de varias letras en curso: { item, letras, origen }.
+  let multi = null;
+  // Ítem que cargó la tecla inmediatamente anterior (una letra que avanzó);
+  // permite que «B + C Enter» componga sobre ese ítem. Cualquier otra tecla,
+  // clic o salida de la grilla lo borra. No hay temporizadores.
+  let recien = -1;
+  // Fila guardada que se está viendo en sólo lectura (id), o null. Es estado de
+  // pantalla: no se persiste y nunca modifica «s», que sigue siendo la
+  // evaluación en carga (nueva o en edición). Estados: sin evaluación abierta
+  // (s vacía), cargando una nueva, editando una guardada (s.editando) y viendo
+  // una guardada (viendo).
+  let viendo = null;
+  let irA = "";
+  let irATimer = null;
+  let pendiente = -1;
+  let almacenOk = true;
+
+  function nuevo(curso) {
+    return { curso, estudiante: "", respuestas: Array(N).fill(null), cuentan: TODAS(), cursor: 0, editando: null };
+  }
+
+  // ---------- persistencia mínima (sólo este navegador) ----------
+  function guardarLocal() {
+    try {
+      localStorage.setItem(CLAVE_LOCAL, JSON.stringify({ s, filas, proximoId, exportado }));
+    } catch {
+      sinAlmacen();
+    }
+  }
+  function cargarLocal() {
+    try {
+      const d = JSON.parse(localStorage.getItem(CLAVE_LOCAL) || "null");
+      if (!d) return;
+      const ok = (r) => Array.isArray(r) && r.length === N && r.every((v) => v === null || VALOR.test(v));
+      if (d.s && ok(d.s.respuestas)) s = { ...d.s, cuentan: cuentanValidas(d.s.cuentan) };
+      if (Array.isArray(d.filas)) {
+        filas = d.filas.filter((f) => ok(f.respuestas) && f.respuestas.every((v) => v !== null))
+          .map((f) => ({ ...f, cuentan: cuentanValidas(f.cuentan) }));
+      }
+      proximoId = d.proximoId || filas.length + 1;
+      exportado = d.exportado || "";
+    } catch {
+      sinAlmacen();
+    }
+  }
+  function sinAlmacen() {
+    almacenOk = false;
+    $("avisoAlmacen").style.display = "block";
+  }
+
+  // ---------- grilla ----------
+  const celdas = [];
+  let celdaFin;
+  const resPartes = [];
+  // Cabecera de la tabla: números de ítem en las mismas columnas que las
+  // respuestas, para cotejar con el papel.
+  const textoRevisar = (n) => (n ? ` · <span class="revisar">${n} a revisar</span>` : "");
+
+  // Síntesis de una evaluación completa: resultado global y ejes, en columnas
+  // fijas para que se lean alineadas con la cabecera.
+  function sintesis(respuestas, cuentan) {
+    const d = document.createElement("div");
+    d.className = "sintesis";
+    const g = resultadoGlobal(respuestas, cuentan);
+    const sg = document.createElement("span");
+    sg.className = "s global";
+    sg.dataset.rotulo = "Resultado global";
+    sg.innerHTML = textoGlobal(g) + textoRevisar(g.revisar);
+    sg.title = g.total ? `Resultado global: ${g.aciertos} aciertos sobre los ${g.total} ítems de las partes que cuentan` : "Sin partes contabilizadas";
+    d.append(sg);
+    for (const e of resultadosEjes(respuestas, cuentan)) {
+      const se = document.createElement("span");
+      se.className = `s eje${e.revisar ? " provisorio" : ""}${e.total ? "" : " vacio"}`;
+      se.dataset.rotulo = e.corto;
+      se.innerHTML = textoEje(e);
+      se.title = tituloEje(e) + (e.revisar ? ` · ${e.revisar} a revisar sin contar como acierto` : "");
+      d.append(se);
+    }
+    return d;
+  }
+
+  function construirCabecera() {
+    const partes = document.createElement("div");
+    partes.className = "partes";
+    for (const p of PARTES) {
+      const g = document.createElement("span");
+      g.className = "grupo";
+      g.dataset.parte = p.n;
+      const rot = document.createElement("span");
+      rot.className = "rotulo";
+      rot.textContent = `${p.n} · ${p.nombre}`;
+      const linea = document.createElement("span");
+      linea.className = "linea";
+      for (let n = p.desde; n <= p.hasta; n++) {
+        const v = document.createElement("span");
+        v.className = `v num${n === 18 ? " i18" : ""}`;
+        v.textContent = n;
+        linea.append(v);
+      }
+      g.append(rot, linea);
+      partes.append(g);
+    }
+    const sint = document.createElement("div");
+    sint.className = "sintesis";
+    const sg = document.createElement("span");
+    sg.className = "s global";
+    sg.textContent = "Resultado global";
+    sint.append(sg);
+    for (const e of EJES) {
+      const se = document.createElement("span");
+      se.className = "s eje";
+      se.textContent = e.corto;
+      se.title = tituloEje(e);
+      sint.append(se);
+    }
+    $("cabResp").replaceChildren(partes, sint);
+  }
+
+  function construirGrilla() {
+    const g = $("grilla");
+    for (const p of PARTES) {
+      const fila = document.createElement("div");
+      fila.className = "parte";
+      fila.dataset.parte = p.n;
+      fila.innerHTML = `<div class="parte-rotulo"><b>${p.desde}–${p.hasta} · ${p.nombre}</b>opciones ${p.letras[0]}–${p.letras.at(-1)}` +
+        `<label class="cuenta" title="Si se desmarca, la parte se sigue cargando y corrigiendo, pero no entra en el global ni en los ejes">` +
+        `<input type="checkbox" checked aria-label="Contabilizar la Parte ${p.n} en el global y los ejes"> Contabilizar</label></div>`;
+      const casilla = fila.querySelector(".cuenta input");
+      // Un clic no le quita el foco a la grilla; con Tab también se alcanza.
+      fila.querySelector(".cuenta").addEventListener("mousedown", (e) => e.preventDefault());
+      casilla.addEventListener("change", () => {
+        if (viendo) return render(); // en sólo lectura no cambia nada
+        s.cuentan[p.n - 1] = casilla.checked;
+        mensaje(`Parte ${p.n} · ${p.nombre}: ${casilla.checked ? "se contabiliza" : "no se contabiliza"} en el resultado global y los ejes.`);
+        render();
+      });
+      const cont = document.createElement("div");
+      cont.className = "celdas";
+      for (let n = p.desde; n <= p.hasta; n++) {
+        const c = document.createElement("div");
+        c.className = "celda";
+        c.innerHTML = `<span class="num">${n}</span><span class="val"></span><span class="corr"></span>`;
+        c.addEventListener("mousedown", (e) => { e.preventDefault(); if (viendo) return; irAItem(n); $("zona").focus(); });
+        celdas.push(c);
+        cont.append(c);
+      }
+      if (p.n === 4) {
+        celdaFin = document.createElement("div");
+        celdaFin.className = "celda fin";
+        celdaFin.innerHTML = `<span class="num"></span><span class="val">fin</span>`;
+        celdaFin.addEventListener("mousedown", (e) => { e.preventDefault(); if (viendo) return; recien = -1; multi = null; s.cursor = N; render(); $("zona").focus(); });
+        cont.append(celdaFin);
+      }
+      // Resultado de la parte, pegado a su banda (se completa en renderVivo).
+      const res = document.createElement("div");
+      res.className = "parte-res";
+      res.dataset.parte = p.n;
+      res.title = `Parte ${p.n} · ${p.nombre}`;
+      resPartes.push(res);
+      fila.append(cont, res);
+      g.append(fila);
+    }
+  }
+
+  const faltantes = (r = s.respuestas) => r.flatMap((v, i) => (v === null ? [i + 1] : []));
+  const enCurso = () => s.estudiante !== "" || s.respuestas.some((v) => v !== null);
+  // Hay trabajo que se perdería: en una edición, si difiere de la fila
+  // guardada; en una evaluación nueva, si ya tiene estudiante o respuestas.
+  function cambiosSinGuardar() {
+    const f = s.editando != null ? filas.find((x) => x.id === s.editando) : null;
+    if (!f) return enCurso();
+    return limpiar(s.curso) !== f.curso || limpiar(s.estudiante) !== f.estudiante ||
+      s.respuestas.some((v, i) => v !== f.respuestas[i]) || s.cuentan.some((c, k) => c !== f.cuentan[k]);
+  }
+  // Lo que muestra la sección de carga: la fila vista (copia de sólo lectura) o «s».
+  function enPantalla() {
+    const f = viendo != null ? filas.find((x) => x.id === viendo) : null;
+    if (!f) return s;
+    return { curso: f.curso, estudiante: f.estudiante, respuestas: [...f.respuestas], cuentan: [...f.cuentan], cursor: -1, editando: null };
+  }
+
+  function render() {
+    const e = enPantalla();
+    e.respuestas.forEach((v, i) => {
+      const c = celdas[i];
+      const compone = !viendo && multi && multi.item === i;
+      c.className = `celda ${compone ? "multiple componiendo" : clase(i, v)}${i === e.cursor ? " actual" : ""}`;
+      // Durante la composición se ve lo que se está armando; lo guardado no
+      // cambia hasta Enter.
+      c.querySelector(".val").textContent = compone ? `${[...multi.letras].sort().join("+")}+` : v === null ? "·" : v === "-" ? "–" : v;
+      const corr = c.querySelector(".corr");
+      corr.textContent = compone ? "" : correccion(i, v);
+      corr.className = `corr${corr.textContent.includes("/") ? " varias" : ""}`;
+      corr.title = corr.textContent ? tituloCorreccion(i) : "";
+    });
+    celdaFin.className = `celda fin${e.cursor === N ? " actual" : ""}`;
+
+    const falta = faltantes(e.respuestas);
+    const cargados = N - falta.length;
+    if (viendo) {
+      $("titular").textContent = "Viendo";
+      $("subtitular").textContent = `${e.estudiante}${e.curso ? ` · ${e.curso}` : ""} · sólo lectura`;
+    } else if (multi) {
+      $("titular").textContent = `Ítem ${multi.item + 1}`;
+      $("subtitular").textContent = `Varias letras: ${[...multi.letras].sort().join("+") || "…"}  ·  Enter confirma · Retroceso quita la última · Esc cancela`;
+    } else if (irA) {
+      $("titular").textContent = `Ir a ${irA}…`;
+      $("subtitular").textContent = "Enter confirma, Esc cancela";
+    } else if (s.cursor < N) {
+      const p = parteDe(s.cursor);
+      $("titular").textContent = `Ítem ${s.cursor + 1}`;
+      $("subtitular").textContent = `Parte ${p.n} · ${p.nombre} · opciones ${p.letras[0]}–${p.letras.at(-1)}`;
+    } else {
+      $("titular").textContent = falta.length ? "Fin" : "Completa";
+      $("subtitular").textContent = falta.length
+        ? `Faltan ${falta.length}: ${falta.join(", ")} · Enter va al primero`
+        : "Enter guarda y pasa a la siguiente";
+    }
+    $("progreso").textContent = `${cargados} de ${N} cargados`;
+
+    const cuenta = (pred) => e.respuestas.filter((v, i) => v !== null && pred(v, i)).length;
+    $("resumen").textContent =
+      `En blanco: ${cuenta((v) => v === "-")} · varias letras: ${cuenta((v) => v.includes("+"))} · ` +
+      `ilegibles o dudosas: ${cuenta((v) => v.includes("?"))} · fuera de opciones: ${cuenta((v, i) => fueraDeRango(i, v))}`;
+
+    renderVivo(falta, e);
+
+    const nFila = (id) => filas.findIndex((f) => f.id === id) + 1;
+    $("edicion").textContent = viendo ? `· viendo la fila ${nFila(viendo)} (sólo lectura)`
+      : s.editando ? `· editando la transcripción de la fila ${nFila(s.editando)}` : "";
+    for (const campo of ["curso", "estudiante"]) {
+      if ($(campo).value !== e[campo]) $(campo).value = e[campo];
+      $(campo).readOnly = !!viendo;
+    }
+    document.querySelector("section.carga").classList.toggle("viendo", !!viendo);
+    $("barraVer").hidden = !viendo;
+    $("accionesCarga").hidden = !!viendo;
+    if (viendo) $("verNombre").textContent = `${e.estudiante}${e.curso ? ` (${e.curso})` : ""}, fila ${nFila(viendo)}`;
+    renderFilas();
+    guardarLocal();
+  }
+
+  // Resultados de la evaluación en curso, recalculados en cada render (cada
+  // tecla). Cada parte, junto a su banda en la grilla, muestra cifras en cuanto
+  // todos sus ítems tienen un valor explícito; el panel (global y ejes), sólo
+  // con los 30.
+  function renderVivo(falta, e) {
+    const faltan = (lista, max) => `falta${lista.length > 1 ? "n" : ""} ${lista.length}${lista.length <= max ? `: ${lista.join(", ")}` : ""}`;
+    const res = resultados(e.respuestas);
+    PARTES.forEach((p, k) => {
+      const r = res[k];
+      const faltaP = falta.filter((n) => n >= p.desde && n <= p.hasta);
+      const el = resPartes[k];
+      const cuenta = e.cuentan[k];
+      el.parentElement.classList.toggle("no-cuenta", !cuenta);
+      el.parentElement.querySelector(".cuenta input").checked = cuenta;
+      el.parentElement.querySelector(".cuenta input").disabled = !!viendo;
+      el.classList.toggle("incompleta", faltaP.length > 0);
+      el.innerHTML = (faltaP.length
+        ? `<span class="faltan">${faltaP.length === r.total ? "sin cargar" : faltan(faltaP, 3)}</span>`
+        : `<b>${r.aciertos}/${r.total} · ${r.porcentaje} %</b><span class="resp-n">resp. ${r.respondidas}/${r.total}${textoRevisar(r.revisar)}</span>`) +
+        (cuenta ? "" : `<span class="no-cuenta-txt">no se contabiliza</span>`);
+    });
+    // Global y ejes: sólo con todos los ítems de las partes que cuentan.
+    const items = itemsQueCuentan(e.cuentan);
+    const faltaCuenta = falta.filter((n) => items.includes(n));
+    const nombres = PARTES.filter((p, k) => e.cuentan[k]).map((p) => p.n);
+    const cuales = nombres.length === PARTES.length ? "las 4 partes" : `parte${nombres.length > 1 ? "s" : ""} ${nombres.join(", ").replace(/, (\d)$/, " y $1")}`;
+    let global, ejes;
+    if (!items.length) {
+      global = `<div class="vp global incompleta"><span class="rot">Resultado global</span><span class="faltan">sin partes contabilizadas</span></div>`;
+      ejes = `<span class="faltan">sin partes contabilizadas</span>`;
+    } else if (faltaCuenta.length) {
+      global = `<div class="vp global incompleta"><span class="rot">Resultado global</span>` +
+        `<span class="faltan">con ${cuales} completas · ${faltan(faltaCuenta, 8)}</span></div>`;
+      ejes = `<span class="faltan">aparecen con ${cuales} completas</span>`;
+    } else {
+      const g = resultadoGlobal(e.respuestas, e.cuentan);
+      global = `<div class="vp global" title="Aciertos sobre los ${g.total} ítems de las partes que cuentan; no es nota. La clave registra los resultados por parte.">` +
+        `<span class="rot">Resultado global</span><b>${g.aciertos}/${g.total} · ${g.porcentaje} %</b>` +
+        `<span class="resp-n">sobre ${g.total} ítems (${cuales})${textoRevisar(g.revisar)}</span></div>`;
+      ejes = resultadosEjes(e.respuestas, e.cuentan).map((e) =>
+        `<span class="ve${e.revisar ? " provisorio" : ""}${e.total ? "" : " vacio"}" title="${tituloEje(e)}${e.revisar ? ` · ${e.revisar} a revisar` : ""}">` +
+        `<span class="rot">${e.corto}</span> ${textoEje(e)}</span>`).join("");
+    }
+    $("vivo").innerHTML = (viendo
+      ? `<div class="vivo-cab"><b>Resultados</b> <span class="nota">global y por eje de la evaluación vista (sólo lectura); los de cada parte, junto a su banda.</span></div>`
+      : `<div class="vivo-cab"><b>Resultados en vivo</b> <span class="nota">global y por eje; los de cada parte, junto a su banda. Se recalculan con cada cambio` +
+        `${e.editando ? "; la fila guardada se actualiza al guardar" : ""}.</span></div>`) +
+      `<div class="vivo-cuerpo">${global}<div class="vivo-ejes"><span class="rot-ejes">Por eje</span>${ejes}</div></div>`;
+  }
+
+  function mensaje(texto, tipo = "info") {
+    const m = $("mensaje");
+    m.textContent = texto;
+    m.className = tipo;
+  }
+
+  // ---------- edición de la evaluación en curso ----------
+  function poner(i, v) {
+    s.respuestas[i] = v;
+  }
+  function avanzar() {
+    s.cursor = Math.min(N, s.cursor + 1);
+  }
+  function irAItem(n) {
+    clearTimeout(irATimer);
+    recien = -1;
+    multi = null; // un clic en otra celda abandona la composición
+    irA = "";
+    s.cursor = n - 1;
+    mensaje("");
+    render();
+  }
+
+  function letra(L, pendientePrevio) {
+    const i = s.cursor;
+    if (i >= N) return mensaje(`Ya están los ${N} ítems: sobra una letra. Revisá si se corrió alguna respuesta.`, "error");
+    if (!parteDe(i).letras.includes(L) && pendientePrevio !== i) {
+      pendiente = i;
+      return mensaje(`El ítem ${i + 1} sólo tiene opciones A–C. Si en el papel dice ${L}, presioná ${L} otra vez.`, "error");
+    }
+    poner(i, L);
+    if (fueraDeRango(i, L)) mensaje(`Ítem ${i + 1}: ${L} registrada aunque no es una opción.`, "error");
+    else mensaje("");
+    avanzar();
+    recien = i;
+  }
+
+  // «+»: si la tecla anterior fue una letra que cargó un ítem y avanzó, vuelve
+  // a ese ítem; si fue una D en 1–8 que esperaba confirmación, la toma como
+  // parte de la respuesta; si no, compone sobre el ítem actual.
+  function componer(recienPrevio, pendientePrevio) {
+    const i = recienPrevio >= 0 ? recienPrevio : s.cursor;
+    if (i >= N) return mensaje("Ubicate en un ítem para cargar varias letras.", "error");
+    const v = s.respuestas[i];
+    const letras = pendientePrevio === i ? ["D"] : esLetras(v) ? letrasDe(v) : [];
+    multi = { item: i, letras, origen: s.cursor };
+    s.cursor = i;
+    mensaje(`Ítem ${i + 1}: agregá las otras letras y Enter.`);
+  }
+
+  function enBlanco() {
+    if (s.cursor >= N) return mensaje(`Ya están los ${N} ítems: sobra una respuesta.`, "error");
+    poner(s.cursor, "-");
+    mensaje("");
+    avanzar();
+  }
+
+  function duda() {
+    const i = s.cursor;
+    if (i >= N) return mensaje(`Ya están los ${N} ítems.`, "error");
+    const v = s.respuestas[i];
+    if (v === null || v === "-") {
+      poner(i, "?");
+      mensaje("");
+      avanzar();
+    } else if (v === "?") {
+      mensaje(`El ítem ${i + 1} ya está como ilegible.`);
+    } else {
+      const nuevoV = v.endsWith("?") ? v.slice(0, -1) : v + "?";
+      poner(i, nuevoV);
+      mensaje(`Ítem ${i + 1}: ${nuevoV.endsWith("?") ? `${nuevoV} marcada como dudosa` : "sin marca de duda"}.`);
+    }
+  }
+
+  function borrar(atras) {
+    if (atras && (s.cursor >= N || s.respuestas[s.cursor] === null)) {
+      if (s.cursor === 0) return;
+      s.cursor--;
+    }
+    if (s.cursor < N) poner(s.cursor, null);
+    mensaje("");
+  }
+
+  function digito(d) {
+    clearTimeout(irATimer);
+    irA += d;
+    const n = Number(irA);
+    if (n < 1 || n > N) {
+      mensaje(`No hay ítem ${irA}.`, "error");
+      irA = "";
+      return;
+    }
+    if (n * 10 > N || irA.length === 2) return irAItem(n);
+    irATimer = setTimeout(() => irA && irAItem(Number(irA)), 1000);
+  }
+
+  function mover(e) {
+    const i = s.cursor;
+    if (e === "ArrowLeft") s.cursor = Math.max(0, i - 1);
+    else if (e === "ArrowRight") s.cursor = Math.min(N, i + 1);
+    else if (e === "Home") s.cursor = 0;
+    else if (e === "End") s.cursor = N;
+    else {
+      // ↑ ↓: misma columna en la parte anterior o siguiente.
+      const p = i >= N ? PARTES[3] : parteDe(i);
+      const col = i >= N ? 6 : i + 1 - p.desde;
+      const q = PARTES[p.n - 1 + (e === "ArrowUp" ? -1 : 1)];
+      if (!q) return;
+      s.cursor = Math.min(q.desde - 1 + col, q.hasta - 1 + (q.n === 4 ? 1 : 0));
+    }
+    mensaje("");
+  }
+
+  function teclaMulti(k) {
+    const { item: i, letras } = multi;
+    if (/^[a-d]$/i.test(k)) {
+      const L = k.toUpperCase();
+      if (letras.includes(L)) mensaje(`${L} ya está en la respuesta del ítem ${i + 1}.`);
+      else { letras.push(L); mensaje(""); }
+    } else if (k === "+") {
+      // separador: «B+C+D»
+    } else if (k === "Enter") {
+      const v = [...letras].sort().join("+");
+      multi = null;
+      if (!v) return mensaje("Sin letras: el ítem quedó como estaba.");
+      poner(i, v);
+      mensaje(fueraDeRango(i, v) ? `Ítem ${i + 1}: ${v} incluye una letra que no es opción.` : "", fueraDeRango(i, v) ? "error" : "info");
+      s.cursor = i;
+      avanzar();
+    } else if (k === "Escape") {
+      s.cursor = multi.origen;
+      multi = null;
+      mensaje("Varias letras: cancelado; el ítem quedó como estaba.");
+    } else if (k === "Backspace") {
+      letras.pop();
+    } else {
+      mensaje("Varias letras: escribí otra letra, Enter para confirmar, Retroceso para quitar la última o Esc para cancelar.", "error");
+    }
+  }
+
+  function tecla(e) {
+    if (e.target !== e.currentTarget) return; // p. ej. Espacio sobre «Contabilizar»
+    if (viendo) {
+      // Sólo lectura: ninguna tecla modifica; Esc vuelve a la carga.
+      if (e.key === "Escape") { e.preventDefault(); cerrarVista(); }
+      return;
+    }
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    const k = e.key;
+    // Espacio: separador transparente («B + C»); no cambia ningún estado.
+    if (k === " ") return e.preventDefault();
+    const pendientePrevio = pendiente;
+    const recienPrevio = recien;
+    pendiente = -1;
+    recien = -1;
+    if (irA && k === "Escape") { clearTimeout(irATimer); irA = ""; e.preventDefault(); return render(); }
+    // Un salto pendiente («3» puede ser 3 o 30) se resuelve antes de otra tecla:
+    // «3 B» carga B en el ítem 3.
+    if (irA && !/^[0-9]$/.test(k)) {
+      irAItem(Number(irA));
+      if (k === "Enter") { e.preventDefault(); return; }
+    }
+    if (multi) teclaMulti(k);
+    else if (/^[0-9]$/.test(k)) digito(k);
+    else if (/^[a-d]$/i.test(k)) letra(k.toUpperCase(), pendientePrevio);
+    else if (/^[a-zñ]$/i.test(k)) mensaje(`«${k.toUpperCase()}» no es una opción: usá A, B, C, D, - o ?.`, "error");
+    else if (k === "-") enBlanco();
+    else if (k === "?") duda();
+    else if (k === "+") componer(recienPrevio, pendientePrevio);
+    else if (k === "Backspace") borrar(true);
+    else if (k === "Delete") borrar(false);
+    else if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(k)) mover(k);
+    else if (k === "Enter") guardar();
+    else if (k === "Escape") mensaje("");
+    else return;
+    e.preventDefault();
+    render();
+  }
+
+  // ---------- guardar / editar / descartar ----------
+  function guardar() {
+    if (viendo) return;
+    s.curso = limpiar($("curso").value);
+    s.estudiante = limpiar($("estudiante").value);
+    const falta = faltantes();
+    if (falta.length) {
+      s.cursor = falta[0] - 1;
+      mensaje(`Faltan ${falta.length} ítems (${falta.join(", ")}). Estás en el ${falta[0]}.`, "error");
+      $("zona").focus();
+      return render();
+    }
+    if (!s.estudiante) {
+      mensaje("Falta el nombre o identificador del estudiante.", "error");
+      render();
+      return $("estudiante").focus();
+    }
+    const mismo = (f) => f.id !== s.editando &&
+      f.estudiante.toLocaleLowerCase("es") === s.estudiante.toLocaleLowerCase("es") &&
+      f.curso.toLocaleLowerCase("es") === s.curso.toLocaleLowerCase("es");
+    if (filas.some(mismo) && !confirm(`Ya hay una evaluación guardada de «${s.estudiante}»${s.curso ? ` en ${s.curso}` : ""}. ¿Guardar otra igual?`)) {
+      return $("estudiante").focus();
+    }
+    const fila = { id: s.editando ?? proximoId++, curso: s.curso, estudiante: s.estudiante, respuestas: [...s.respuestas], cuentan: [...s.cuentan] };
+    const pos = filas.findIndex((f) => f.id === s.editando);
+    if (pos >= 0) filas[pos] = fila;
+    else filas.push(fila);
+    const n = (pos >= 0 ? pos : filas.length - 1) + 1;
+    s = nuevo(s.curso);
+    multi = null;
+    mensaje(`Guardada la fila ${n}: ${fila.estudiante}. Siguiente evaluación.`, "ok");
+    render();
+    $("estudiante").focus();
+  }
+
+  function descartar() {
+    if (cambiosSinGuardar() && !confirm("¿Descartar la evaluación en curso? Lo cargado en ella se pierde.")) return;
+    s = nuevo(s.curso);
+    multi = null;
+    mensaje("Evaluación en curso descartada.");
+    render();
+    $("estudiante").focus();
+  }
+
+  function editar(id) {
+    const f = filas.find((x) => x.id === id);
+    if (!f) return;
+    if (s.editando !== id) {
+      // Sólo se pregunta si se perdería trabajo real (no por ver o por una edición sin cambios).
+      if (cambiosSinGuardar() && !confirm("Hay cambios sin guardar en la evaluación en curso. ¿Descartarlos para editar esta fila?")) return;
+      s = { curso: f.curso, estudiante: f.estudiante, respuestas: [...f.respuestas], cuentan: [...f.cuentan], cursor: 0, editando: id };
+    }
+    viendo = null;
+    multi = null;
+    mensaje(`Editando la transcripción de «${f.estudiante}». Enter guarda los cambios en la misma fila.`);
+    render();
+    $("zona").focus();
+  }
+
+  function eliminar(id) {
+    const f = filas.find((x) => x.id === id);
+    if (!f || !confirm(`¿Borrar la evaluación de «${f.estudiante}»?`)) return;
+    filas = filas.filter((x) => x.id !== id);
+    if (s.editando === id) s.editando = null;
+    if (viendo === id) viendo = null;
+    render();
+  }
+
+  // Ver: muestra una fila guardada en sólo lectura. No toca la evaluación en
+  // carga, así que no hay nada que confirmar al entrar, cambiar ni salir.
+  function ver(id) {
+    const f = filas.find((x) => x.id === id);
+    if (!f) return;
+    viendo = id;
+    multi = null;
+    clearTimeout(irATimer);
+    irA = "";
+    recien = -1;
+    pendiente = -1;
+    mensaje(`Viendo «${f.estudiante}» en sólo lectura. «Editar esta evaluación» para modificarla; Esc vuelve a la carga.`);
+    render();
+    $("zona").focus();
+  }
+
+  function cerrarVista() {
+    if (viendo == null) return;
+    viendo = null;
+    mensaje("");
+    render();
+    (s.estudiante ? $("zona") : $("estudiante")).focus();
+  }
+
+  // ---------- filas guardadas y exportación ----------
+  function renderFilas() {
+    const tb = document.querySelector("#tabla tbody");
+    tb.replaceChildren();
+    filas.forEach((f, n) => {
+      const tr = document.createElement("tr");
+      if (f.id === viendo) tr.className = "viendo";
+      else if (f.id === s.editando) tr.className = "editando";
+      const celda = (t) => { const td = document.createElement("td"); td.textContent = t; return td; };
+      const resp = document.createElement("td");
+      resp.className = "resp";
+      const partes = document.createElement("div");
+      partes.className = "partes";
+      resp.append(partes);
+      const res = resultados(f.respuestas);
+      for (const p of PARTES) {
+        const g = document.createElement("span");
+        g.className = "grupo";
+        g.dataset.parte = p.n;
+        g.dataset.rotulo = `${p.desde}–${p.hasta} · ${p.nombre}`;
+        const linea = document.createElement("span");
+        linea.className = "linea";
+        for (let i = p.desde - 1; i < p.hasta; i++) {
+          const v = document.createElement("span");
+          v.className = `v ${clase(i, f.respuestas[i])}${i === 17 ? " i18" : ""}`;
+          v.textContent = f.respuestas[i];
+          const corr = correccion(i, f.respuestas[i]);
+          if (corr) {
+            const c = document.createElement("span");
+            c.className = "corr";
+            c.textContent = corr;
+            c.title = tituloCorreccion(i);
+            v.append(c);
+          }
+          v.title = `Ítem ${i + 1}`;
+          linea.append(v);
+        }
+        const r = res[p.n - 1];
+        if (!f.cuentan[p.n - 1]) g.classList.add("no-cuenta");
+        const rs = document.createElement("span");
+        rs.className = "res";
+        rs.dataset.parte = p.n;
+        rs.innerHTML = `<b>${r.aciertos}/${r.total}</b> · ${r.porcentaje} %<br>` +
+          `<span class="resp-n">resp. ${r.respondidas}/${r.total}</span>` +
+          (r.revisar ? ` · <span class="revisar">${r.revisar} a revisar</span>` : "") +
+          (f.cuentan[p.n - 1] ? "" : `<br><span class="no-cuenta-txt">no se contabiliza</span>`);
+        rs.title = `Parte ${p.n} · ${p.nombre}: ${r.aciertos} aciertos y ${r.respondidas} respondidas sobre ${r.total}` +
+          (r.revisar ? `; ${r.revisar} ilegibles o dudosas sin contar como acierto` : "");
+        g.append(linea, rs);
+        partes.append(g);
+      }
+      resp.append(sintesis(f.respuestas, f.cuentan));
+      const acc = document.createElement("td");
+      const bv = document.createElement("button");
+      bv.textContent = "Ver";
+      bv.dataset.accion = "ver";
+      bv.title = "Ver la evaluación completa sin modificarla";
+      bv.addEventListener("click", () => ver(f.id));
+      const be = document.createElement("button");
+      be.textContent = "Editar";
+      be.dataset.accion = "editar";
+      be.title = "Editar la transcripción (las respuestas cargadas)";
+      be.addEventListener("click", () => editar(f.id));
+      const bb = document.createElement("button");
+      bb.textContent = "Borrar";
+      bb.dataset.accion = "borrar";
+      bb.className = "peligro";
+      bb.addEventListener("click", () => eliminar(f.id));
+      acc.append(bv, " ", be, " ", bb);
+      tr.append(celda(n + 1), celda(f.curso), celda(f.estudiante), resp, acc);
+      tb.append(tr);
+    });
+    $("cantidad").textContent = filas.length;
+    $("tabla").hidden = !filas.length;
+    $("leyenda").hidden = !filas.length;
+    $("sinFilas").hidden = !!filas.length;
+    const t = filas.length ? tsv() : "";
+    $("vista").textContent = t;
+    $("estadoExport").textContent = !filas.length ? "" : t === exportado ? "Exportado: sin cambios desde la última exportación." : "Hay cambios sin exportar.";
+  }
+
+  // Esquema TSV: evaluacion, curso, estudiante, i01–i30 (respuesta cruda) y, al
+  // final, parte1_cuenta–parte4_cuenta (1 = se contabiliza, 0 = no).
+  const CABECERA_TSV = ["evaluacion", "curso", "estudiante", ...Array.from({ length: N }, (_, i) => `i${String(i + 1).padStart(2, "0")}`),
+    ...PARTES.map((p) => `parte${p.n}_cuenta`)];
+
+  function tsv() {
+    const lineas = [CABECERA_TSV, ...filas.map((f) => [EVALUACION, limpiar(f.curso), limpiar(f.estudiante), ...f.respuestas, ...f.cuentan.map((c) => (c ? "1" : "0"))])];
+    for (const f of filas) {
+      if (!f.respuestas.every((v) => v !== null && VALOR.test(v))) throw new Error(`Fila inválida: ${f.estudiante}`);
+      if (!(f.cuentan.length === PARTES.length && f.cuentan.every((c) => typeof c === "boolean"))) throw new Error(`Partes inválidas: ${f.estudiante}`);
+    }
+    return lineas.map((l) => l.join("\t")).join("\n") + "\n";
+  }
+
+  // ---------- importación (sólo en el navegador) ----------
+  // Un valor se acepta tal como lo exporta la herramienta: sin transformarlo.
+  // Varias letras deben venir en orden y sin repetir (A+B, no B+A).
+  const valorImportable = (v) => VALOR.test(v) && letrasDe(v).every((l, k, ls) => k === 0 || l > ls[k - 1]);
+
+  // Valida todo el texto antes de tocar nada. Devuelve { filas } o { errores }.
+  function leerTsv(texto) {
+    const lineas = texto.replace(/^\uFEFF/, "").split(/\r?\n/);
+    while (lineas.length && lineas.at(-1) === "") lineas.pop();
+    if (!lineas.length) return { errores: ["El archivo está vacío."] };
+    const cab = lineas[0].split("\t");
+    if (cab.length !== CABECERA_TSV.length) {
+      return { errores: [`El encabezado tiene ${cab.length} columnas; se esperaban ${CABECERA_TSV.length} (evaluacion, curso, estudiante, i01–i30, parte1_cuenta–parte4_cuenta).`] };
+    }
+    const k = cab.findIndex((x, i) => x !== CABECERA_TSV[i]);
+    if (k >= 0) return { errores: [`Encabezado inesperado en la columna ${k + 1}: «${cab[k]}» en lugar de «${CABECERA_TSV[k]}».`] };
+    if (lineas.length === 1) return { errores: ["El archivo no tiene evaluaciones: sólo el encabezado."] };
+    const errores = [];
+    const nuevas = lineas.slice(1).map((linea, j) => {
+      const err = (texto) => errores.push(`Línea ${j + 2}: ${texto}`);
+      const c = linea.split("\t");
+      if (c.length !== CABECERA_TSV.length) return err(`tiene ${c.length} columnas; se esperaban ${CABECERA_TSV.length}.`);
+      if (c[0] !== EVALUACION) err(`evaluacion es «${c[0]}»; se esperaba «${EVALUACION}».`);
+      const estudiante = limpiar(c[2]);
+      if (!estudiante) err("falta el estudiante.");
+      const respuestas = c.slice(3, 3 + N);
+      respuestas.forEach((v, i) => {
+        if (!valorImportable(v)) err(`${CABECERA_TSV[3 + i]} es «${v}», que no es un valor de la herramienta (A–D; varias letras en orden, como A+B; -; ?; o con ? final).`);
+      });
+      const cuentan = c.slice(3 + N).map((x, p) => {
+        if (x !== "1" && x !== "0") err(`parte${p + 1}_cuenta es «${x}»; debe ser 1 o 0.`);
+        return x === "1";
+      });
+      return { curso: limpiar(c[1]), estudiante, respuestas, cuentan };
+    });
+    return errores.length ? { errores } : { filas: nuevas };
+  }
+
+  function avisoImport(texto, tipo = "info") {
+    const a = $("avisoImport");
+    a.textContent = texto;
+    a.className = tipo;
+    a.hidden = !texto;
+  }
+
+  // Restaura las evaluaciones guardadas desde un TSV exportado por la
+  // herramienta: reemplaza las de esta sesión (con confirmación si hay alguna)
+  // y no toca la evaluación en carga. Todo o nada.
+  function importar(texto) {
+    if (s.editando != null) return avisoImport("No se importó nada: terminá o descartá la edición en curso antes de importar.", "error");
+    const r = leerTsv(texto);
+    if (r.errores) {
+      const mas = r.errores.length > 8 ? ` (y ${r.errores.length - 8} problemas más)` : "";
+      return avisoImport(`No se importó nada. ${r.errores.slice(0, 8).join(" ")}${mas}`, "error");
+    }
+    if (filas.length) {
+      const sinExportar = tsv() !== exportado ? " (hay cambios sin exportar que se perderían)" : "";
+      if (!confirm(`Importar reemplaza las ${filas.length} evaluaciones guardadas en esta sesión${sinExportar} por las ${r.filas.length} del archivo. ` +
+        "La evaluación en carga no cambia. ¿Continuar?")) {
+        return avisoImport("Importación cancelada: no cambió nada.");
+      }
+    }
+    viendo = null;
+    filas = r.filas.map((f, k) => ({ id: k + 1, ...f }));
+    proximoId = filas.length + 1;
+    // Si el archivo es idéntico a lo que la herramienta exportaría, no hay
+    // cambios sin exportar.
+    const normal = texto.replace(/^\uFEFF/, "").replace(/\r\n/g, "\n").replace(/\n*$/, "\n");
+    exportado = tsv() === normal ? normal : "";
+    render();
+    avisoImport(`Importadas ${filas.length} evaluaciones desde el archivo. Se pueden ver y editar en la tabla.`, "ok");
+  }
+
+  function leerArchivo(archivo) {
+    return new Promise((ok, mal) => {
+      const lector = new FileReader();
+      lector.onload = () => ok(String(lector.result));
+      lector.onerror = () => mal(lector.error);
+      lector.readAsText(archivo, "utf-8");
+    });
+  }
+
+  function marcarExportado(t, texto) {
+    exportado = t;
+    guardarLocal();
+    renderFilas();
+    mensaje(texto, "ok");
+  }
+
+  async function copiar() {
+    if (!filas.length) return mensaje("No hay evaluaciones guardadas para exportar.", "error");
+    const t = tsv();
+    try {
+      await navigator.clipboard.writeText(t);
+    } catch {
+      const r = document.createRange();
+      r.selectNodeContents($("vista"));
+      getSelection().removeAllRanges();
+      getSelection().addRange(r);
+      if (!document.execCommand("copy")) return mensaje("No se pudo copiar: seleccioná la vista previa y copiala a mano.", "error");
+    }
+    marcarExportado(t, `Copiadas ${filas.length} filas. Pegalas en la celda A1 de una planilla.`);
+  }
+
+  function descargar() {
+    if (!filas.length) return mensaje("No hay evaluaciones guardadas para exportar.", "error");
+    const t = tsv();
+    const a = document.createElement("a");
+    const hoy = new Date();
+    const fecha = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, "0")}-${String(hoy.getDate()).padStart(2, "0")}`;
+    a.href = URL.createObjectURL(new Blob([t], { type: "text/tab-separated-values;charset=utf-8" }));
+    a.download = `respuestas-si-a-${fecha}.tsv`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    marcarExportado(t, `Descargado ${a.download} con ${filas.length} filas.`);
+  }
+
+  function vaciar() {
+    const sinExportar = filas.length && tsv() !== exportado;
+    const texto = sinExportar
+      ? "Hay cambios SIN EXPORTAR. ¿Vaciar igual la sesión? Se borran todas las evaluaciones guardadas y la que está en curso."
+      : "¿Vaciar la sesión? Se borran de este navegador todas las evaluaciones guardadas y la que está en curso.";
+    if (!confirm(texto)) return;
+    filas = [];
+    s = nuevo("");
+    exportado = "";
+    proximoId = 1;
+    try { localStorage.removeItem(CLAVE_LOCAL); } catch { /* sin almacenamiento */ }
+    mensaje("Sesión vaciada.");
+    render();
+  }
+
+  // ---------- conexiones ----------
+  construirGrilla();
+  construirCabecera();
+  cargarLocal();
+  $("zona").addEventListener("keydown", tecla);
+  $("zona").addEventListener("blur", () => { pendiente = -1; recien = -1; });
+  $("curso").addEventListener("input", (e) => { s.curso = e.target.value; guardarLocal(); });
+  $("estudiante").addEventListener("input", (e) => { s.estudiante = e.target.value; guardarLocal(); });
+  $("curso").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); $("estudiante").focus(); } });
+  $("estudiante").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") { e.preventDefault(); $("zona").focus(); }
+  });
+  $("btnGuardar").addEventListener("click", guardar);
+  $("btnDescartar").addEventListener("click", descartar);
+  $("btnEditarVista").addEventListener("click", () => editar(viendo));
+  $("btnCerrarVista").addEventListener("click", cerrarVista);
+  $("btnCopiar").addEventListener("click", copiar);
+  $("btnDescargar").addEventListener("click", descargar);
+  $("btnVaciar").addEventListener("click", vaciar);
+  $("btnImportar").addEventListener("click", () => $("archivoImport").click());
+  $("archivoImport").addEventListener("change", async (e) => {
+    const archivo = e.target.files && e.target.files[0];
+    if (!archivo) return;
+    try {
+      importar(await leerArchivo(archivo));
+    } catch {
+      avisoImport("No se pudo leer el archivo: no se importó nada.", "error");
+    }
+    e.target.value = ""; // permite volver a elegir el mismo archivo
+  });
+  window.addEventListener("beforeunload", (e) => {
+    const sinExportar = filas.length && tsv() !== exportado;
+    if ((!almacenOk && (cambiosSinGuardar() || filas.length)) || sinExportar) {
+      e.preventDefault();
+      e.returnValue = "";
+    }
+  });
+  render();
+  (s.estudiante ? $("zona") : $("estudiante")).focus();
+})();
+</script>
+</body>
+</html>

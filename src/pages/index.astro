@@ -261,6 +261,20 @@ import Layout from "../layouts/Layout.astro";
       </li>
     </ul>
   </section>
+
+  {import.meta.env.DEV && (
+    <section class="secundario contexto" aria-labelledby="herramientas-titulo">
+      <h2 id="herramientas-titulo">Herramientas locales</h2>
+      <ul class="contexto-lista">
+        <li>
+          <a href="/herramientas/transcripcion-evaluacion-a/">
+            Transcripción · Evaluación A de Sistemas Informáticos
+          </a>
+        </li>
+      </ul>
+      <p>Sólo en desarrollo (<code>astro dev</code>): no se publica.</p>
+    </section>
+  )}
 </Layout>
 
 <style>
