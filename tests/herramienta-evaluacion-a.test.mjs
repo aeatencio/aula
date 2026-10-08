@@ -1,4 +1,4 @@
-// Herramienta de transcripción de la Evaluación A, con datos ficticios: se
+// Herramienta de corrección y análisis de la Evaluación A, con datos ficticios: se
 // maneja la grilla con teclado sobre el HTML real, en jsdom. No usa dist/.
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -9,7 +9,7 @@ import { JSDOM } from "jsdom";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const EVALUACION = join(root, "evaluaciones", "sistemas-informaticos", "evaluacion-a");
-const html = readFileSync(join(EVALUACION, "herramienta-transcripcion", "index.html"), "utf8");
+const html = readFileSync(join(EVALUACION, "herramienta", "index.html"), "utf8");
 
 function abrir(almacen = null) {
   const dom = new JSDOM(html, {
@@ -17,7 +17,7 @@ function abrir(almacen = null) {
     runScripts: "dangerously",
     pretendToBeVisual: true,
     beforeParse(w) {
-      if (almacen) w.localStorage.setItem("aula-transcripcion-si-a-v1", almacen);
+      if (almacen) w.localStorage.setItem("aula-evaluacion-a-v1", almacen);
       w.confirmaciones = [];
       w.respuestaConfirm = true;
       w.confirm = (t) => { w.confirmaciones.push(t); return w.respuestaConfirm; };
@@ -229,7 +229,7 @@ test("una evaluación en curso sobrevive a recargar la pestaña", () => {
   t.escribirCampo("estudiante", "Prueba Recarga");
   t.tecla("Enter");
   t.escribir("BAC");
-  const almacen = t.w.localStorage.getItem("aula-transcripcion-si-a-v1");
+  const almacen = t.w.localStorage.getItem("aula-evaluacion-a-v1");
   t.dom.window.close();
 
   const r = abrir(almacen);
@@ -289,6 +289,56 @@ test("cómputo por parte: ítems 12 y 18, múltiples, dudosas y fuera de opcione
   t.dom.window.close();
 });
 
+test("✓ rojo en las respuestas que coinciden con la clave; la clave en las incorrectas", () => {
+  // Ítem 18 con sus tres variantes válidas y con otras; el resto, casos límite.
+  const variantes = [
+    ["B", "✓"], ["D", "✓"], ["B+D", "✓"],
+    ["B?", ""], ["B+D?", ""], ["?", ""], ["-", "B/D"], ["A", "B/D"], ["B+C", "B/D"],
+  ];
+  const filas = variantes.map(([v], k) => ({ id: k + 1, curso: "F", estudiante: `Prueba Tilde ${k + 1}`, respuestas: conCambios({ 18: v }), cuentan: [T, T, T, T] }));
+  // Una fila más con casos en otros ítems: incorrecta, blanco, múltiple correcta
+  // e incorrecta, D fuera de opciones (1–8), dudosa correcta e ilegible.
+  filas.push({ id: 99, curso: "F", estudiante: "Prueba Tilde Casos", cuentan: [T, T, T, T],
+    respuestas: conCambios({ 1: "A", 2: "-", 3: "D", 4: "A+B", 5: "C?", 6: "?", 12: "A", 30: "B" }) });
+  const t = abrir(almacenCon(filas));
+  const { $, w } = t;
+  const almacenAntes = w.localStorage.getItem("aula-evaluacion-a-v1");
+  const tsvAntes = $("vista").textContent;
+  const resultadosAntes = filas.map((_, n) => t.resultados(n).join("|") + sintesisFila(t, n).join("|"));
+  const marcaFila = (n, item) => t.filas()[n].querySelectorAll("td.resp .v")[item - 1].querySelector(".corr")?.textContent ?? "";
+  const marcaGrilla = (item) => t.d.querySelectorAll("#grilla .celda")[item - 1].querySelector(".corr").textContent;
+  variantes.forEach(([v, esperado], n) => {
+    assert.equal(marcaFila(n, 18), esperado, `fila guardada, 18 = ${v}`);
+    boton(t, n, "ver").click();
+    assert.equal(marcaGrilla(18), esperado, `Ver, 18 = ${v}`);
+    t.$("btnCerrarVista").click();
+  });
+  const casos = filas.length - 1;
+  const esperados = { 1: "B", 2: "A", 3: "C", 4: "B", 5: "", 6: "", 7: "✓", 12: "D", 30: "A" };
+  for (const [item, marca] of Object.entries(esperados)) assert.equal(marcaFila(casos, Number(item)), marca, `ítem ${item}`);
+  // En la carga y edición: el ✓ aparece y desaparece con la respuesta.
+  boton(t, casos, "editar").click();
+  for (const [item, marca] of Object.entries(esperados)) assert.equal(marcaGrilla(Number(item)), marca, `grilla, ítem ${item}`);
+  t.escribir("1B");
+  assert.equal(marcaGrilla(1), "✓");
+  t.escribir("1C");
+  assert.equal(marcaGrilla(1), "B");
+  t.escribir("1B{ArrowLeft}?");
+  assert.equal(marcaGrilla(1), "", "B? (dudosa) no recibe ✓ aunque la letra coincida");
+  // Es sólo presentación: el ✓ no se guarda, no se exporta y no cambia resultados.
+  t.$("btnDescartar").click();
+  assert.equal(w.localStorage.getItem("aula-evaluacion-a-v1").includes("✓"), false);
+  assert.equal($("vista").textContent, tsvAntes);
+  assert.deepEqual(JSON.parse(w.localStorage.getItem("aula-evaluacion-a-v1")).filas, JSON.parse(almacenAntes).filas, "filas guardadas intactas");
+  assert.deepEqual(filas.map((_, n) => t.resultados(n).join("|") + sintesisFila(t, n).join("|")), resultadosAntes);
+  // El ✓ es un carácter de texto (U+2713), no un emoji, con el mismo estilo que la corrección.
+  const tilde = t.d.querySelector("td.resp .corr.tilde");
+  assert.equal(tilde.textContent.codePointAt(0), 0x2713);
+  assert.equal(tilde.textContent.length, 1);
+  assert.equal(tilde.title, "Coincide con la clave");
+  t.dom.window.close();
+});
+
 test("corrección roja: sólo capa visual, fuera de la respuesta cruda", () => {
   const base = "BACBCABC DBADBCAC BBAACBCD CBDABA".replace(/ /g, "").split("");
   const fila = (id, cambios) => {
@@ -308,15 +358,23 @@ test("corrección roja: sólo capa visual, fuera de la respuesta cruda", () => {
   const almacen = JSON.stringify({ s: { curso: "", estudiante: "", respuestas: Array(30).fill(null), cursor: 0, editando: null }, filas, proximoId: 6, exportado: "" });
   const t = abrir(almacen);
   const tsvAntes = t.$("vista").textContent;
-  // Por fila: { ítem: corrección } y la respuesta cruda mostrada.
+  // Por fila: { ítem: corrección } (sin los ✓ de las correctas), los ítems con
+  // ✓ y la respuesta cruda mostrada.
   const enFila = (n) => {
     const vs = [...t.filas()[n].querySelectorAll("td.resp .v")];
     const corr = {};
-    vs.forEach((v, i) => { const c = v.querySelector(".corr"); if (c) corr[i + 1] = c.textContent; });
-    return { corr, crudas: vs.map((v) => v.firstChild.textContent) };
+    const tildes = [];
+    vs.forEach((v, i) => {
+      const c = v.querySelector(".corr");
+      if (c && c.textContent === "✓") tildes.push(i + 1);
+      else if (c) corr[i + 1] = c.textContent;
+    });
+    return { corr, tildes, crudas: vs.map((v) => v.firstChild.textContent) };
   };
   const f1 = enFila(0);
   assert.deepEqual(f1.corr, { 1: "B", 3: "C", 4: "B", 6: "A", 18: "B/D" });
+  assert.deepEqual(f1.tildes, [2, 7, 8, 9, 12, 13, 14, 15, 16, 17, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30],
+    "✓ en las correctas; nada en ? (5), B? (10) ni C? (11)");
   assert.deepEqual(f1.crudas, filas[0].respuestas, "la respuesta cruda se muestra intacta");
   assert.deepEqual(enFila(1).corr, { 17: "B" }, "B+D en el 18 es correcta; A+B en el 17 no");
   assert.deepEqual(enFila(2).corr, {}, "B+D? queda a revisar, sin corrección");
@@ -330,12 +388,18 @@ test("corrección roja: sólo capa visual, fuera de la respuesta cruda", () => {
   t.filas()[0].querySelector('button[data-accion="editar"]').click();
   const celdas = [...t.d.querySelectorAll("#grilla .celda")].slice(0, 30);
   const corrGrilla = {};
-  celdas.forEach((c, i) => { const x = c.querySelector(".corr").textContent; if (x) corrGrilla[i + 1] = x; });
+  const tildesGrilla = [];
+  celdas.forEach((c, i) => {
+    const x = c.querySelector(".corr").textContent;
+    if (x === "✓") tildesGrilla.push(i + 1);
+    else if (x) corrGrilla[i + 1] = x;
+  });
   assert.deepEqual(corrGrilla, { 1: "B", 3: "C", 4: "B", 6: "A", 18: "B/D" });
+  assert.deepEqual(tildesGrilla, f1.tildes, "los mismos ✓ en la grilla");
   assert.deepEqual(t.valores().slice(0, 6), ["B+D", "A", "D", "C", "?", "–"], "en el casillero, lo que respondió");
   // Al cambiar la respuesta, la corrección se actualiza al instante.
   t.escribir("4B");
-  assert.equal(celdas[3].querySelector(".corr").textContent, "");
+  assert.equal(celdas[3].querySelector(".corr").textContent, "✓", "corregida en el papel: ✓");
   t.escribir("4C");
   assert.equal(celdas[3].querySelector(".corr").textContent, "B");
   assert.equal(t.valores()[3], "C");
@@ -491,7 +555,7 @@ const vivo = (t) => ({
   // Cifras de una parte completa, o el aviso de lo que falta.
   partes: [...t.d.querySelectorAll("#grilla .parte-res")].map((e) => (e.querySelector("b") ?? e.querySelector(".faltan")).textContent),
   global: t.d.querySelector("#vivo .vp.global b")?.textContent,
-  ejes: [...t.d.querySelectorAll("#vivo .ve")].map((e) => e.querySelector("b").textContent + " " + e.textContent.split("·").at(-1).trim()),
+  ejes: [...t.d.querySelectorAll("#vivo .ve")].map((e) => e.querySelector("b").textContent),
 });
 
 test("los ejes del prototipo coinciden con analisis-de-items.md (sólo ítems principales)", () => {
@@ -518,16 +582,16 @@ test("resultado global sobre 30 y ejes: casos de corrección", () => {
     { id: 3, curso: "F", estudiante: "Casos especiales", respuestas: conCambios({ 12: "A", 18: "B+D", 5: "-", 17: "A+B", 20: "?", 21: "C?" }) },
   ];
   const t = abrir(almacenCon(filas));
-  assert.deepEqual(sintesisFila(t, 0), ["30/30 · 100 %", "3/3 · 100 %", "4/4 · 100 %", "5/5 · 100 %", "3/3 · 100 %", "3/3 · 100 %", "4/4 · 100 %", "5/5 · 100 %", "3/3 · 100 %"]);
+  assert.deepEqual(sintesisFila(t, 0), ["30/30 · 100 %", "3/3", "4/4", "5/5", "3/3", "3/3", "4/4", "5/5", "3/3"], "ejes sin porcentaje");
 
   assert.deepEqual(t.resultados(1).map((r) => r.split("%")[0] + "%"), ["8/8 · 100 %", "0/8 · 0 %", "0/8 · 0 %", "6/6 · 100 %"]);
   const s2 = sintesisFila(t, 1);
   assert.equal(s2[0], "14/30 · 47 %", "14/30 = 47 %, no el promedio de 100, 0, 0 y 100 (50 %)");
-  assert.deepEqual(s2.slice(1), ["2/3 · 67 %", "1/4 · 25 %", "3/5 · 60 %", "2/3 · 67 %", "1/3 · 33 %", "1/4 · 25 %", "3/5 · 60 %", "1/3 · 33 %"]);
+  assert.deepEqual(s2.slice(1), ["2/3", "1/4", "3/5", "2/3", "1/3", "1/4", "3/5", "1/3"]);
 
   const s3 = sintesisFila(t, 2);
   assert.equal(s3[0], "25/30 · 83 % · 2 a revisar");
-  assert.deepEqual(s3.slice(1), ["3/3 · 100 %", "4/4 · 100 %", "2/5 · 40 %", "2/3 · 67 %", "3/3 · 100 %", "3/4 · 75 %", "5/5 · 100 %", "3/3 · 100 %"]);
+  assert.deepEqual(s3.slice(1), ["3/3", "4/4", "2/5", "2/3", "3/3", "3/4", "5/5", "3/3"]);
   const ejes3 = [...t.filas()[2].querySelectorAll(".sintesis .s.eje")];
   assert.deepEqual(ejes3.map((e) => e.classList.contains("provisorio")), [false, false, true, true, false, false, false, false],
     "sólo los ejes con ítems a revisar quedan marcados");
@@ -562,8 +626,8 @@ test("resultados en vivo: se recalculan antes de guardar; global con los 30 carg
   v = vivo(t);
   assert.equal(v.partes[3], "5/6 · 83 %");
   assert.equal(v.global, "29/30 · 97 %");
-  assert.equal(v.ejes[3], "2/3 67 %", "CPU y memoria / Von Neumann incluye el 30");
-  assert.equal(v.ejes[0], "3/3 100 %", "los demás ejes no cambian");
+  assert.equal(v.ejes[3], "2/3", "CPU y memoria / Von Neumann incluye el 30");
+  assert.equal(v.ejes[0], "3/3", "los demás ejes no cambian");
   // Incorrecta → correcta.
   t.escribir("30A");
   assert.equal(vivo(t).global, "30/30 · 100 %");
@@ -572,7 +636,7 @@ test("resultados en vivo: se recalculan antes de guardar; global con los 30 carg
   v = vivo(t);
   assert.equal(v.partes[1], "7/8 · 88 %");
   assert.match(t.d.querySelector('#grilla .parte-res[data-parte="2"]').textContent, /resp\. 7\/8/);
-  assert.equal(v.ejes[2], "4/5 80 %", "Entrada y salida incluye el 12");
+  assert.equal(v.ejes[2], "4/5", "Entrada y salida incluye el 12");
   t.escribir("12A");
   assert.equal(vivo(t).partes[1], "7/8 · 88 %", "12 = A sigue sin sumar");
   t.escribir("12D");
@@ -580,7 +644,7 @@ test("resultados en vivo: se recalculan antes de guardar; global con los 30 carg
   // Múltiple: B+C incorrecta en el 18; B+D correcta (con B + D Enter).
   t.escribir("18B+C{Enter}");
   assert.equal(vivo(t).partes[2], "7/8 · 88 %");
-  assert.equal(vivo(t).ejes[5], "3/4 75 %", "Estado incluye el 18");
+  assert.equal(vivo(t).ejes[5], "3/4", "Estado incluye el 18");
   t.escribir("18B+D{Enter}");
   assert.equal(vivo(t).partes[2], "8/8 · 100 %");
   // Dudosa: marcar el 1 como B? lo saca de los aciertos y lo deja a revisar.
@@ -588,7 +652,7 @@ test("resultados en vivo: se recalculan antes de guardar; global con los 30 carg
   v = vivo(t);
   assert.equal(v.global, "29/30 · 97 %");
   assert.match($("vivo").querySelector(".vp.global").textContent, /1 a revisar/);
-  assert.equal(v.ejes[0], "2/3 67 %");
+  assert.equal(v.ejes[0], "2/3");
   assert.ok($("vivo").querySelectorAll(".ve")[0].classList.contains("provisorio"));
   t.escribir("?");
   assert.equal(vivo(t).global, "30/30 · 100 %");
@@ -615,13 +679,13 @@ test("resultados en vivo al editar una fila guardada y tras recargar", () => {
   const v = vivo(t);
   assert.equal(v.partes[3], "6/6 · 100 %");
   assert.equal(v.global, "30/30 · 100 %");
-  assert.equal(v.ejes[2], "5/5 100 %");
+  assert.equal(v.ejes[2], "5/5");
   assert.equal(sintesisFila(t, 0)[0], "29/30 · 97 %", "la fila guardada no cambia hasta guardar");
   const tsvAntes = $("vista").textContent;
   assert.equal(tsvAntes.split("\n")[1].split("\t")[3 + 24], "D");
 
   // Recargar con la edición en curso: los resultados en vivo se recalculan.
-  const almacen = t.w.localStorage.getItem("aula-transcripcion-si-a-v1");
+  const almacen = t.w.localStorage.getItem("aula-evaluacion-a-v1");
   t.dom.window.close();
   const r = abrir(almacen);
   assert.equal(vivo(r).global, "30/30 · 100 %");
@@ -716,11 +780,11 @@ test("global y ejes sólo con las partes contabilizadas: denominadores 30, 24, 1
   assert.equal(global(5), "sin partes contabilizadas");
 
   // Ejes con denominadores variables (sólo Partes 1 y 2: ítems 1–16).
-  assert.deepEqual(sintesisFila(t, 2).slice(1), ["1/3 · 33 %", "3/3 · 100 %", "3/3 · 100 %", "1/1 · 100 %", "2/2 · 100 %", "1/1 · 100 %", "2/2 · 100 %", "1/1 · 100 %"]);
+  assert.deepEqual(sintesisFila(t, 2).slice(1), ["1/3", "3/3", "3/3", "1/1 pocos ítems", "2/2 pocos ítems", "1/1 pocos ítems", "2/2 pocos ítems", "1/1 pocos ítems"]);
   // Sólo Parte 4: ejes sin ítems contabilizados muestran «—», no 0 %.
   const s5 = sintesisFila(t, 4).slice(1);
-  assert.deepEqual(s5, ["— sin ítems contabilizados", "— sin ítems contabilizados", "0/1 · 0 %", "1/1 · 100 %",
-    "— sin ítems contabilizados", "1/1 · 100 %", "2/2 · 100 %", "1/1 · 100 %"]);
+  assert.deepEqual(s5, ["— sin ítems contabilizados", "— sin ítems contabilizados", "0/1 pocos ítems", "1/1 pocos ítems",
+    "— sin ítems contabilizados", "1/1 pocos ítems", "2/2 pocos ítems", "1/1 pocos ítems"]);
   assert.match(t.filas()[4].querySelectorAll(".sintesis .s.eje")[2].title, /contabilizados: 25/);
 
   // Una parte excluida conserva su resultado propio y lo indica.
@@ -821,7 +885,7 @@ test("la selección es de cada estudiante, se edita, persiste y es compatible co
   // Recargar: configuración por fila y de la evaluación en curso.
   t.escribirCampo("estudiante", "Prueba Partes C");
   casilla(t, 2).click();
-  const almacen = t.w.localStorage.getItem("aula-transcripcion-si-a-v1");
+  const almacen = t.w.localStorage.getItem("aula-evaluacion-a-v1");
   t.dom.window.close();
   const r = abrir(almacen);
   assert.equal(sintesisFila(r, 0)[0], "22/22 · 100 %");
@@ -867,7 +931,7 @@ const filasVer = [
 test("Ver muestra una evaluación guardada completa y no permite modificar nada", () => {
   const t = abrir(almacenCon(filasVer));
   const { $, w } = t;
-  const almacenAntes = w.localStorage.getItem("aula-transcripcion-si-a-v1");
+  const almacenAntes = w.localStorage.getItem("aula-evaluacion-a-v1");
   const tsvAntes = $("vista").textContent;
   boton(t, 0, "ver").click();
   assert.equal($("barraVer").hidden, false);
@@ -896,7 +960,7 @@ test("Ver muestra una evaluación guardada completa y no permite modificar nada"
   casilla(t, 4).dispatchEvent(new w.Event("change", { bubbles: true }));
   $("btnGuardar").click();
   assert.deepEqual(pantalla(t), v);
-  assert.equal(w.localStorage.getItem("aula-transcripcion-si-a-v1"), almacenAntes, "localStorage intacto");
+  assert.equal(w.localStorage.getItem("aula-evaluacion-a-v1"), almacenAntes, "localStorage intacto");
   assert.equal($("vista").textContent, tsvAntes, "TSV intacto");
   assert.equal(w.confirmaciones.length, 0);
   t.dom.window.close();
@@ -985,17 +1049,17 @@ test("Ver → Editar abre esa misma evaluación; una edición modificada conserv
 test("Ver no cambia el formato de localStorage ni de exportación", () => {
   const t = abrir(almacenCon(filasVer));
   const { $, w } = t;
-  const claves = () => Object.keys(JSON.parse(w.localStorage.getItem("aula-transcripcion-si-a-v1"))).sort();
+  const claves = () => Object.keys(JSON.parse(w.localStorage.getItem("aula-evaluacion-a-v1"))).sort();
   const tsv = $("vista").textContent;
   boton(t, 1, "ver").click();
   assert.deepEqual(claves(), ["exportado", "filas", "proximoId", "s"]);
-  assert.equal(JSON.parse(w.localStorage.getItem("aula-transcripcion-si-a-v1")).s.estudiante, "", "Ver no escribe en la evaluación en carga");
+  assert.equal(JSON.parse(w.localStorage.getItem("aula-evaluacion-a-v1")).s.estudiante, "", "Ver no escribe en la evaluación en carga");
   assert.equal($("vista").textContent, tsv);
   const lineas = tsv.trimEnd().split("\n").map((l) => l.split("\t"));
   assert.ok(lineas.every((l) => l.length === 37));
   assert.equal(lineas[2].slice(33).join(""), "1111");
   // Recargar no restaura el modo Ver (es sólo de pantalla).
-  const r = abrir(w.localStorage.getItem("aula-transcripcion-si-a-v1"));
+  const r = abrir(w.localStorage.getItem("aula-evaluacion-a-v1"));
   assert.equal(r.$("barraVer").hidden, true);
   r.dom.window.close();
   t.dom.window.close();
@@ -1006,10 +1070,15 @@ const importarArchivo = async (t, texto) => {
   const archivo = new t.w.File([texto], "respuestas-ficticias.tsv", { type: "text/tab-separated-values" });
   const input = t.$("archivoImport");
   Object.defineProperty(input, "files", { value: [archivo], configurable: true });
+  // La lectura es asíncrona (FileReader): esperar a que la herramienta informe
+  // el resultado, sin depender de un tiempo fijo.
+  t.$("avisoImport").textContent = "";
   input.dispatchEvent(new t.w.Event("change", { bubbles: true }));
-  await new Promise((r) => setTimeout(r, 20));
+  for (let espera = 0; !t.$("avisoImport").textContent && espera < 2000; espera += 5) {
+    await new Promise((r) => setTimeout(r, 5));
+  }
 };
-const almacenado = (t) => JSON.parse(t.w.localStorage.getItem("aula-transcripcion-si-a-v1"));
+const almacenado = (t) => JSON.parse(t.w.localStorage.getItem("aula-evaluacion-a-v1"));
 const filasImport = [
   { id: 1, curso: "3.º F", estudiante: "Prueba Importar Uno", respuestas: conCambios({ 1: "A+B", 4: "-", 10: "B?", 18: "B+D", 20: "?", 25: "B+C+D" }), cuentan: [T, T, T, F] },
   { id: 2, curso: "3.º F", estudiante: "Prueba Importar Dos, «coma»", respuestas: conCambios({ 3: "D", 12: "A", 30: "-" }), cuentan: [T, F, T, T] },
@@ -1093,7 +1162,7 @@ test("Importar TSV: un archivo inválido no importa nada e informa el problema",
   const texto = origen.$("vista").textContent;
   origen.dom.window.close();
   const t = abrir(almacenCon([{ id: 1, curso: "F", estudiante: "Prueba Existente", respuestas: [...CLAVE30], cuentan: [T, T, T, T] }]));
-  const antes = t.w.localStorage.getItem("aula-transcripcion-si-a-v1");
+  const antes = t.w.localStorage.getItem("aula-evaluacion-a-v1");
   const lineas = texto.trimEnd().split("\n");
   const cambiar = (n, col, valor) => lineas.map((l, k) => (k === n ? l.split("\t").map((c, i) => (i === col ? valor : c)).join("\t") : l)).join("\n") + "\n";
   const casos = [
@@ -1118,12 +1187,480 @@ test("Importar TSV: un archivo inválido no importa nada e informa el problema",
   await importarArchivo(t, varios);
   assert.match(t.$("avisoImport").textContent, /Línea 2: parte4_cuenta es «x».*Línea 3: i12 es «E»/);
   assert.equal(t.w.confirmaciones.length, 0, "no se llega a preguntar");
-  assert.equal(t.w.localStorage.getItem("aula-transcripcion-si-a-v1"), antes);
+  assert.equal(t.w.localStorage.getItem("aula-evaluacion-a-v1"), antes);
   assert.equal(t.filas().length, 1);
 
   // Final de línea CRLF y BOM (planilla que volvió a guardar el archivo): se aceptan.
   await importarArchivo(t, "﻿" + texto.replace(/\n/g, "\r\n"));
   assert.match(t.$("avisoImport").textContent, /Importadas 3/);
   assert.equal(t.$("vista").textContent, texto);
+  t.dom.window.close();
+});
+
+// ---------- Devolución breve y extendida ----------
+// Respuesta incorrecta segura para un ítem (sirve también en 1–8 y en el 18).
+const mal = (...items) => conCambios(Object.fromEntries(items.map((n) => [n, CLAVE30[n - 1] === "A" ? "B" : "A"])));
+const enCarga = (respuestas, cuentan = [T, T, T, T]) =>
+  abrir(almacenCon([], { curso: "F", estudiante: "Prueba Devolución", respuestas, cuentan, cursor: 30, editando: null }));
+const dev = (t) => ({
+  breve: t.d.getElementById("devolucionBreve")?.textContent,
+  extendida: t.d.getElementById("devolucionExtendida")?.textContent,
+  provisoria: t.d.querySelector("#vivo .devolucion .provisoria")?.textContent ?? "",
+  niveles: [...t.d.querySelectorAll("#vivo .ve")].map((e) => e.querySelector(".nivel")?.textContent ?? ""),
+});
+const conDev = (respuestas, cuentan) => { const t = enCarga(respuestas, cuentan); const d = dev(t); t.dom.window.close(); return d; };
+
+test("devolución: regla de mayoría, unidades de estudio en orden fijo y formato «Etiqueta: u; u.»", () => {
+  assert.deepEqual(conDev(conCambios({})), { breve: "Bien: seguir así.", extendida: "Muy buen trabajo: los temas evaluados están bien encaminados.", provisoria: "", niveles: Array(8).fill("") });
+  // Un único error por tema no marca ningún tema.
+  const sueltos = conDev(mal(1, 3, 4, 6, 14));
+  assert.equal(sueltos.breve, "Revisar los errores marcados.");
+  assert.match(sueltos.extendida, /^No aparece un tema con dificultades claras/);
+  // 1. Un solo eje. Mayoría con al menos 3 ítems: 2 de 3 «volver»; 2 de 4 y 2 de 5 «repasar»; 3 de 4 y 3 de 5 «volver».
+  const ram = conDev(mal(7, 13));
+  assert.equal(ram.breve, "Volver a estudiar: RAM y almacenamiento.", "un solo eje del par: su nombre propio");
+  assert.equal(ram.extendida, "Conviene volver a estudiar RAM y almacenamiento, especialmente: qué información está en uso (RAM) y qué información queda guardada (almacenamiento); el recorrido de un programa al abrirlo, del almacenamiento a la RAM y a la CPU.");
+  assert.deepEqual(ram.niveles, ["", "", "", "", "volver a estudiar", "", "", ""]);
+  const estado = conDev(mal(14, 17));
+  assert.equal(estado.breve, "Repasar: estado.");
+  assert.equal(estado.extendida, "Conviene repasar estado: qué datos forman el estado de un sistema; qué cambia y qué se mantiene en el estado.");
+  assert.equal(conDev(mal(6, 20)).breve, "Volver a estudiar: CPU y memoria.");
+  assert.equal(conDev(mal(4, 5)).breve, "Repasar: entrada y salida.");
+  assert.equal(conDev(mal(14, 17, 26)).breve, "Volver a estudiar: estado.");
+  assert.equal(conDev(mal(4, 5, 12)).breve, "Volver a estudiar: entrada y salida.");
+  // 2. Ejes relacionados: los pares de misma intensidad se nombran juntos.
+  const maquina = conDev(mal(6, 20, 7, 13, 8, 15, 23));
+  assert.equal(maquina.breve, "Volver a estudiar: CPU, RAM y almacenamiento; sistema operativo.");
+  assert.equal(maquina.extendida, "Conviene volver a estudiar CPU, RAM y almacenamiento, especialmente: qué hace la CPU y qué hace la RAM mientras se ejecuta un programa; " +
+    "qué información está en uso (RAM) y qué información queda guardada (almacenamiento); el recorrido de un programa al abrirlo, del almacenamiento a la RAM y a la CPU. " +
+    "También conviene volver a estudiar sistema operativo, especialmente: cómo administra los recursos; el papel de los drivers.");
+  assert.equal(conDev(mal(3, 10, 4, 5, 14, 17)).breve, "Repasar: datos y operaciones; entrada, salida y estado.");
+  // Volver + repasar: «Volver a estudiar: u. Repasar: u.»
+  const ambos = conDev(mal(8, 15, 23, 14, 17));
+  assert.equal(ambos.breve, "Volver a estudiar: sistema operativo. Repasar: estado.");
+  assert.equal(ambos.extendida, "Conviene volver a estudiar sistema operativo, especialmente: cómo administra los recursos; el papel de los drivers. " +
+    "También repasá estado: qué datos forman el estado de un sistema; qué cambia y qué se mantiene en el estado.");
+  // El orden es pedagógico fijo, no por cantidad de errores: SO (4 de 5) va después de hardware y software (2 de 3).
+  assert.equal(conDev(mal(8, 15, 23, 28, 1, 2)).breve, "Volver a estudiar: hardware y software; sistema operativo.");
+  assert.equal(conDev(mal(14, 17, 7, 13), [T, T, T, F]).breve, "Volver a estudiar: RAM y almacenamiento; estado.");
+  const cuatro = conDev(mal(8, 15, 23, 28, 6, 20, 30, 3, 10, 14, 17));
+  assert.equal(cuatro.breve, "Volver a estudiar: CPU y memoria; sistema operativo. Repasar: datos y operaciones; estado.");
+  const oraciones = cuatro.extendida.split(/(?<=\.) (?=[A-Z])/);
+  assert.equal(oraciones.length, 4);
+  assert.match(oraciones[0], /^Conviene volver a estudiar CPU y memoria, especialmente: /);
+  assert.match(oraciones[1], /^También conviene volver a estudiar sistema operativo, especialmente: /);
+  assert.match(oraciones[2], /^También repasá datos y operaciones: /);
+  assert.match(oraciones[3], /^También repasá estado: /);
+  assert.equal(conDev(mal(3, 10, 14, 17, 8, 15)).breve, "Repasar: sistema operativo; datos y operaciones; estado.");
+  assert.equal(conDev(mal(6, 20, 30, 16, 19, 27, 4, 5, 12)).breve, "Volver a estudiar: CPU y memoria; entrada y salida; representaciones.");
+  for (const d of [ram, maquina, ambos, cuatro]) assert.doesNotMatch(d.breve + d.extendida, /%|\d|ítem/);
+});
+
+test("devolución: dudosas e ilegibles, partes excluidas y evidencia insuficiente", () => {
+  // Un «?» no es error: 2 errores firmes + 1 a revisar en SO (5 ítems) → repasar, provisoria.
+  const conDudosa = mal(8, 15);
+  conDudosa[22] = "?";
+  const dudosa = conDev(conDudosa);
+  assert.equal(dudosa.breve, "Repasar: sistema operativo.");
+  assert.match(dudosa.provisoria, /^Provisoria: hay 1 respuesta a revisar en el papel/);
+  assert.doesNotMatch(dudosa.breve + dudosa.extendida, /Provisoria|revisar en el papel/);
+  // Error + dudosa en un eje de 3: un solo error firme, no se marca.
+  assert.equal(conDev(conCambios({ 7: "A", 13: "B?" })).breve, "Revisar los errores marcados.");
+  // Partes excluidas: SO con 8, 15 y 28 mal es 3 de 5 («volver»); sin la Parte 1 quedan 15, 23, 28 y 29: 2 de 4 («repasar»).
+  const so = mal(8, 15, 28);
+  assert.equal(conDev(so).breve, "Volver a estudiar: sistema operativo.");
+  assert.equal(conDev(so, [F, T, T, T]).breve, "Repasar: sistema operativo.");
+  // Sólo la Parte 4: ejes de 1–2 ítems; 2 de 2 mal es «repasar», nunca «volver».
+  assert.equal(conDev(mal(28, 29), [F, F, F, T]).breve, "Repasar: sistema operativo.");
+  assert.equal(conDev(mal(25, 30), [F, F, F, T]).breve, "Revisar los errores marcados.", "1 de 1 no alcanza");
+  assert.equal(conDev(mal(25, 26, 27, 28, 29, 30), [F, F, F, T]).breve, "Repasar: sistema operativo.");
+  // Sin partes contabilizadas: no hay devolución.
+  const t = enCarga(mal(8, 15, 23), [F, F, F, F]);
+  assert.equal(t.d.getElementById("devolucionBreve"), null);
+  assert.match(t.$("vivo").textContent, /sin partes contabilizadas/);
+  t.dom.window.close();
+  // Con una parte que cuenta incompleta, no hay devolución todavía.
+  const r = mal(8, 15, 23);
+  r[29] = null;
+  const u = enCarga(r);
+  assert.equal(u.d.getElementById("devolucionBreve"), null);
+  u.dom.window.close();
+});
+
+test("devolución: copiar breve y extendida, en Ver y en Editar, sin modificar nada", async () => {
+  const filas = [{ id: 1, curso: "F", estudiante: "Prueba Devolución Guardada", respuestas: mal(8, 15, 23, 14, 17), cuentan: [T, T, T, T] }];
+  const t = abrir(almacenCon(filas));
+  const { $, w } = t;
+  const antes = w.localStorage.getItem("aula-evaluacion-a-v1");
+  const tsvAntes = $("vista").textContent;
+  boton(t, 0, "ver").click();
+  assert.equal(dev(t).breve, "Volver a estudiar: sistema operativo. Repasar: estado.");
+  assert.deepEqual(dev(t).niveles, ["", "", "", "", "", "repasar", "volver a estudiar", ""]);
+  t.d.getElementById("btnCopiarBreve").click();
+  await new Promise((r) => setTimeout(r, 0));
+  assert.equal(w.portapapeles, "Volver a estudiar: sistema operativo. Repasar: estado.");
+  t.d.getElementById("btnCopiarExtendida").click();
+  await new Promise((r) => setTimeout(r, 0));
+  assert.equal(w.portapapeles, dev(t).extendida);
+  assert.match(w.portapapeles, /^Conviene volver a estudiar sistema operativo/);
+  assert.match($("mensaje").textContent, /Devolución extendida copiada/);
+  assert.equal(w.localStorage.getItem("aula-evaluacion-a-v1"), antes, "copiar no modifica la evaluación");
+  assert.equal($("vista").textContent, tsvAntes, "ni el TSV");
+  assert.doesNotMatch(antes + tsvAntes, /Volver a estudiar|Conviene/, "la devolución no se guarda ni se exporta");
+  // En Editar, la misma devolución, que se recalcula con cada cambio.
+  $("btnEditarVista").click();
+  assert.equal(dev(t).breve, "Volver a estudiar: sistema operativo. Repasar: estado.");
+  t.escribir("14C");
+  assert.equal(dev(t).breve, "Volver a estudiar: sistema operativo.", "con el 14 corregido, estado queda con un solo error");
+  assert.equal(w.confirmaciones.length, 0);
+  t.dom.window.close();
+});
+
+test("devolución: todo eje para repasar o volver a estudiar aparece en ambas versiones, y ningún otro", () => {
+  // Regla, recalculada aquí desde las respuestas y la clave, y unidades fijas.
+  const EJES = JSON.parse(html.match(/const EJES = (\[[\s\S]*?\n  \]);/)[1]);
+  const ACEPTADAS = JSON.parse(html.match(/const ACEPTADAS = (\[[\s\S]*?\]\s*\]);/)[1]);
+  const UNIDAD = [0, 3, 4, 1, 1, 4, 2, 5]; // eje (hw, datos, e/s, cpu, ram, estado, so, repr) → unidad
+  const PARES = [[3, 4], [2, 5]];
+  const PARTE = (n) => (n <= 8 ? 0 : n <= 16 ? 1 : n <= 24 ? 2 : 3);
+  const nivel = (respuestas, cuentan, e) => {
+    const items = e.items.filter((n) => cuentan[PARTE(n)]);
+    const errores = items.filter((n) => { const v = respuestas[n - 1]; return !v.includes("?") && !ACEPTADAS[n - 1].includes(v); }).length;
+    return errores < 2 ? "" : items.length >= 3 && 2 * errores > items.length ? "volver" : "repasar";
+  };
+  let semilla = 20261007;
+  const azar = () => ((semilla = (semilla * 1103515245 + 12345) % 2147483648) / 2147483648);
+  const spans = (t, id) => [...t.d.querySelectorAll(`#${id} .foco`)].map((s) => ({ ejes: s.dataset.ejes.split(" ").map(Number), nivel: s.dataset.nivel }));
+  // Nombre que debe decir cada unidad de la breve: el del par o el propio del eje.
+  const nombre = (ejes) => (ejes.length === 2 ? (ejes[0] === 3 ? "CPU, RAM y almacenamiento" : "entrada, salida y estado") : EJES[ejes[0]].foco);
+  const plano = (ss) => Object.fromEntries(ss.flatMap((s) => s.ejes.map((k) => [String(k), s.nivel])));
+  let conFocos = 0;
+  let largos = 0;
+  for (let caso = 0; caso < 300; caso++) {
+    const respuestas = CLAVE30.map((v, i) => {
+      const r = azar();
+      if (r < 0.3) return CLAVE30[i] === "A" ? "B" : "A";
+      if (r < 0.34) return "-";
+      if (r < 0.37) return "?";
+      if (r < 0.39) return `${v}?`;
+      return v;
+    });
+    const cuentan = [0, 1, 2, 3].map(() => azar() > 0.2);
+    const t = enCarga(respuestas, cuentan);
+    const niveles = EJES.map((e) => nivel(respuestas, cuentan, e));
+    const esperados = Object.fromEntries(niveles.map((n, k) => [String(k), n]).filter(([, n]) => n));
+    if (!cuentan.some(Boolean)) {
+      assert.equal(t.d.getElementById("devolucionBreve"), null);
+      t.dom.window.close();
+      continue;
+    }
+    const breve = t.d.getElementById("devolucionBreve").textContent;
+    const enBreve = spans(t, "devolucionBreve"), enExtendida = spans(t, "devolucionExtendida");
+    // Cobertura exacta, con la intensidad de cada eje, en ambas versiones.
+    assert.deepEqual(plano(enBreve), esperados, `caso ${caso}: breve «${breve}»`);
+    assert.deepEqual(plano(enExtendida), esperados, `caso ${caso}: extendida`);
+    // Cada unidad nombra exactamente sus ejes señalados (nunca un par entero por un solo eje).
+    const textos = [...t.d.querySelectorAll("#devolucionBreve .foco")].map((s) => s.textContent);
+    assert.deepEqual(textos, enBreve.map((s) => nombre(s.ejes)), `caso ${caso}: nombres de «${breve}»`);
+    // Mismas unidades, en el mismo orden, en ambas.
+    assert.deepEqual(enExtendida, enBreve, `caso ${caso}: mismas unidades`);
+    // Orden fijo dentro de cada intensidad; «volver» antes que «repasar».
+    const claves = enBreve.map((s) => [s.nivel === "volver" ? 0 : 1, UNIDAD[s.ejes[0]], s.ejes[0] === 4 || s.ejes[0] === 5 ? 1 : 0]);
+    assert.deepEqual(claves, [...claves].sort((a, b) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2]), `caso ${caso}: orden de «${breve}»`);
+    // Un par con la misma intensidad se nombra junto; si no, por separado.
+    for (const [a, b] of PARES) {
+      const juntos = enBreve.some((s) => s.ejes.length === 2 && s.ejes[0] === a && s.ejes[1] === b);
+      assert.equal(juntos, Boolean(niveles[a]) && niveles[a] === niveles[b], `caso ${caso}: par ${a}-${b}`);
+    }
+    // Nunca cantidades en lugar de contenidos.
+    assert.doesNotMatch(breve, /\d|%|varios|mayoría|mitad|resto|uno más|algunos más|todos los contenidos/);
+    if (enBreve.length) conFocos++;
+    if (enBreve.length >= 5) largos++;
+    t.dom.window.close();
+  }
+  assert.ok(conFocos > 100, `casos con focos: ${conFocos}`);
+  assert.ok(largos > 10, `casos con muchas unidades: ${largos}`);
+});
+
+test("devolución con muchos ejes: unidades de estudio, nunca cantidades (casos 6, 7 y 8 de 8)", () => {
+  // «Volver»: 3 ítems mal del eje (mayoría en todos). «Repasar»: 2 mal, sólo
+  // posible en ejes de 4 o 5 ítems (en uno de 3, 2 mal ya es mayoría).
+  const VOLVER = { hw: [1, 2, 9], datos: [3, 10, 11], es: [4, 5, 12], cpu: [6, 20, 30], ram: [7, 13, 22], estado: [14, 17, 26], so: [8, 15, 23], repr: [16, 19, 27] };
+  const REPASAR = { datos: [3, 10], es: [4, 5], estado: [14, 17], so: [8, 15] };
+  const caso = (volver, repasar) => conDev(mal(...volver.flatMap((x) => VOLVER[x]), ...repasar.flatMap((x) => REPASAR[x])));
+  const todos = ["hw", "datos", "es", "cpu", "ram", "estado", "so", "repr"];
+  const SEIS = "hardware y software; CPU, RAM y almacenamiento; sistema operativo; datos y operaciones; entrada, salida y estado; representaciones";
+
+  // 8/8 volver a estudiar (también todo en blanco): las seis unidades.
+  const ocho = caso(todos, []);
+  assert.equal(ocho.breve, `Volver a estudiar: ${SEIS}.`);
+  assert.equal(conDev(conCambios(Object.fromEntries(CLAVE30.map((_, i) => [i + 1, "-"])))).breve, `Volver a estudiar: ${SEIS}.`);
+  const oraciones = ocho.extendida.split(/(?<=\.) (?=[A-Z])/);
+  assert.equal(oraciones.length, 6);
+  assert.match(oraciones[0], /^Conviene volver a estudiar hardware y software, especialmente: /);
+  assert.match(oraciones[1], /^También conviene volver a estudiar CPU, RAM y almacenamiento, especialmente: qué hace la CPU/);
+  assert.match(oraciones[5], /^También conviene volver a estudiar representaciones, especialmente: /);
+  // 8/8 con mezcla: la máquina y representaciones para volver; el procesamiento de información para repasar.
+  const mezcla = caso(["hw", "cpu", "ram", "so", "repr"], ["datos", "es", "estado"]);
+  assert.equal(mezcla.breve, "Volver a estudiar: hardware y software; CPU, RAM y almacenamiento; sistema operativo; representaciones. " +
+    "Repasar: datos y operaciones; entrada, salida y estado.");
+  // Mezcla que corta un par: entrada y salida para volver, estado para repasar.
+  assert.equal(caso(["hw", "es", "cpu", "ram", "repr"], ["datos", "estado", "so"]).breve,
+    "Volver a estudiar: hardware y software; CPU, RAM y almacenamiento; entrada y salida; representaciones. Repasar: sistema operativo; datos y operaciones; estado.");
+  // 7/8 y 6/8.
+  assert.equal(caso(todos.slice(1), []).breve,
+    "Volver a estudiar: CPU, RAM y almacenamiento; sistema operativo; datos y operaciones; entrada, salida y estado; representaciones.");
+  assert.equal(caso(["es", "cpu", "ram", "estado", "so", "repr"], []).breve,
+    "Volver a estudiar: CPU, RAM y almacenamiento; sistema operativo; entrada, salida y estado; representaciones.");
+  assert.equal(caso(["hw", "cpu", "ram"], ["datos", "es", "estado"]).breve,
+    "Volver a estudiar: hardware y software; CPU, RAM y almacenamiento. Repasar: datos y operaciones; entrada, salida y estado.");
+  for (const d of [ocho, mezcla]) assert.doesNotMatch(d.breve + d.extendida, /\d|%|varios|mayoría|mitad|resto|todos los contenidos/);
+});
+
+// ---------- Guardar sólo exige las partes que se contabilizan ----------
+test("guardar exige sólo los ítems de las partes contabilizadas; los vacíos no se convierten en «-»", () => {
+  const t = abrir();
+  const { $ } = t;
+  t.escribirCampo("curso", "F");
+  t.escribirCampo("estudiante", "Prueba Partes 1 y 2");
+  t.tecla("Enter");
+  casilla(t, 3).click();
+  casilla(t, 4).click();
+  t.escribir("AACBCABC DBADBCAC"); // sólo el 1 incorrecto; ítems 1–16
+  assert.equal($("titular").textContent, "Ítem 17");
+  t.tecla("Enter");
+  assert.equal(t.filas().length, 1, "se guarda con 17–30 sin cargar");
+  const guardada = almacenado(t).filas[0];
+  assert.deepEqual(guardada.respuestas.slice(16), Array(14).fill(null), "no se convierten en «-»");
+  assert.deepEqual(guardada.cuentan, [T, T, F, F]);
+  assert.equal(t.resultados(0)[2], "sin cargarno se contabiliza");
+  assert.equal(t.resultados(0)[3], "sin cargarno se contabiliza");
+  assert.equal(sintesisFila(t, 0)[0], "15/16 · 94 %");
+  const linea = $("vista").textContent.trimEnd().split("\n")[1].split("\t");
+  assert.equal(linea.length, 37);
+  assert.deepEqual(linea.slice(3 + 16, 33), Array(14).fill(""), "TSV: campos vacíos, no «-»");
+  assert.equal(linea.slice(33).join(""), "1100");
+
+  // «Faltan N» cuenta sólo los obligatorios: falta el 5 (parte 1); la parte 4 (no cuenta) está vacía.
+  t.escribirCampo("estudiante", "Prueba Faltan");
+  t.tecla("Enter");
+  casilla(t, 4).click();
+  t.escribir(CLAVE30.slice(0, 24).join(""));
+  t.escribir("5{Delete}{End}");
+  assert.equal($("titular").textContent, "Fin");
+  assert.match($("subtitular").textContent, /^Faltan 1: 5 /);
+  t.tecla("Enter");
+  assert.equal(t.filas().length, 1, "no se guarda");
+  assert.match($("mensaje").textContent, /^Faltan 1 ítems \(5\)\./);
+  assert.equal($("titular").textContent, "Ítem 5");
+  t.escribir("C{End}");
+  assert.equal($("titular").textContent, "Completa");
+  assert.match($("subtitular").textContent, /partes que no se contabilizan/);
+  t.tecla("Enter");
+  assert.equal(t.filas().length, 2);
+  t.dom.window.close();
+});
+
+test("parte no contabilizada cargada en parte: se guarda, conserva lo cargado y vuelve a ser obligatoria si se contabiliza", () => {
+  const t = abrir();
+  const { $, w } = t;
+  t.escribirCampo("curso", "F");
+  t.escribirCampo("estudiante", "Prueba Parcial");
+  t.tecla("Enter");
+  casilla(t, 3).click();
+  t.escribir(CLAVE30.slice(0, 16).join("") + "ABAA"); // 17–20 cargados (17 incorrecto), 21–24 vacíos
+  t.escribir("25" + CLAVE30.slice(24).join(""));
+  t.tecla("Enter");
+  assert.equal(t.filas().length, 1);
+  const r = almacenado(t).filas[0].respuestas;
+  assert.deepEqual(r.slice(16, 24), ["A", "B", "A", "A", null, null, null, null]);
+  assert.equal(t.resultados(0)[2], "faltan 4no se contabiliza");
+  assert.equal(sintesisFila(t, 0)[0], "22/22 · 100 %", "el 17 incorrecto de la parte excluida no cuenta");
+  // Volver a contabilizarla: sus vacíos vuelven a ser obligatorios.
+  boton(t, 0, "editar").click();
+  casilla(t, 3).click();
+  $("zona").focus();
+  t.tecla("Enter");
+  assert.match($("mensaje").textContent, /^Faltan 4 ítems \(21, 22, 23, 24\)\./);
+  assert.equal($("titular").textContent, "Ítem 21");
+  assert.deepEqual(almacenado(t).filas[0].cuentan, [T, T, F, T], "la fila guardada no cambió");
+  // Desmarcarla otra vez permite guardar, sin perder lo cargado.
+  casilla(t, 3).click();
+  $("zona").focus();
+  t.tecla("Enter");
+  assert.equal(w.confirmaciones.length, 0);
+  assert.deepEqual(almacenado(t).filas[0].respuestas.slice(16, 24), ["A", "B", "A", "A", null, null, null, null]);
+  t.dom.window.close();
+});
+
+test("ítems sin cargar de partes excluidas no afectan resultados, ejes, devolución ni la cuenta de blancos", () => {
+  const base = conCambios({ 1: "A", 9: "A", 14: "A" }); // incorrectos: 1, 9 y 14
+  const variante = (relleno) => base.map((v, i) => (i >= 16 ? relleno(i) : v));
+  const filas = [
+    { id: 1, curso: "F", estudiante: "Prueba Sin Cargar", respuestas: variante(() => null), cuentan: [T, T, F, F] },
+    { id: 2, curso: "F", estudiante: "Prueba En Blanco", respuestas: variante(() => "-"), cuentan: [T, T, F, F] },
+    { id: 3, curso: "F", estudiante: "Prueba Todo Mal", respuestas: variante((i) => (CLAVE30[i] === "A" ? "B" : "A")), cuentan: [T, T, F, F] },
+  ];
+  const t = abrir(almacenCon(filas));
+  const { $ } = t;
+  const vista = (n) => {
+    boton(t, n, "ver").click();
+    const d = { global: vivo(t).global, ejes: vivo(t).ejes, ...dev(t), sintesis: sintesisFila(t, n), blancos: $("resumen").textContent.match(/En blanco: (\d+)/)[1] };
+    $("btnCerrarVista").click();
+    return d;
+  };
+  const [sinCargar, enBlanco, todoMal] = [0, 1, 2].map(vista);
+  for (const otra of [enBlanco, todoMal]) {
+    for (const k of ["global", "ejes", "breve", "extendida", "niveles", "sintesis"]) assert.deepEqual(sinCargar[k], otra[k], k);
+  }
+  assert.equal(sinCargar.global, "13/16 · 81 %");
+  assert.equal(sinCargar.breve, "Volver a estudiar: hardware y software.", "hardware y software 2 de 3; estado sólo cuenta el 14: 1 de 1 no alcanza");
+  assert.equal(sinCargar.blancos, "0", "los ítems sin cargar no son blancos");
+  assert.equal(enBlanco.blancos, "14");
+  t.dom.window.close();
+});
+
+test("TSV con ítems sin cargar: exporta campos vacíos, importa exacto y rechaza vacíos en partes que cuentan", async () => {
+  const filas = [
+    { id: 1, curso: "F", estudiante: "Prueba Import Parcial", respuestas: conCambios({ 3: "D" }).map((v, i) => (i >= 20 ? null : v)), cuentan: [T, T, F, F] },
+    { id: 2, curso: "F", estudiante: "Prueba Import Completa", respuestas: [...CLAVE30], cuentan: [T, T, T, T] },
+  ];
+  const origen = abrir(almacenCon(filas));
+  const texto = origen.$("vista").textContent;
+  origen.dom.window.close();
+  assert.match(texto.split("\n")[1], /\tA\t{11}1\t1\t0\t0$/, "ítem 20 = A y 21–30 como campos vacíos");
+  // Recarga desde localStorage: conserva los vacíos.
+  const r = abrir(almacenCon(filas));
+  assert.deepEqual(almacenado(r).filas[0].respuestas.slice(20), Array(10).fill(null));
+  r.dom.window.close();
+  // Importar: restaura exacto.
+  const t = abrir();
+  await importarArchivo(t, texto);
+  assert.match(t.$("avisoImport").textContent, /Importadas 2/);
+  assert.equal(t.$("vista").textContent, texto);
+  assert.match(t.$("estadoExport").textContent, /sin cambios/);
+  assert.deepEqual(almacenado(t).filas[0].respuestas.slice(20), Array(10).fill(null));
+  assert.equal(almacenado(t).filas[0].respuestas[19], "A");
+  // Un vacío en una parte que se contabiliza es un error y no se importa nada.
+  const malo = texto.split("\n").map((l, k) => (k === 2 ? l.split("\t").map((c, i) => (i === 3 + 4 ? "" : c)).join("\t") : l)).join("\n");
+  await importarArchivo(t, malo);
+  assert.match(t.$("avisoImport").textContent, /^No se importó nada\. Línea 3: i05 está vacío y la parte 1 se contabiliza \(parte1_cuenta = 1\)\./);
+  t.dom.window.close();
+});
+
+// ---------- Esc en Ver: comando de la vista, independiente del foco ----------
+test("Ver: Esc vuelve a la carga esté donde esté el foco; el resto del teclado sigue en la grilla", () => {
+  const t = abrir(almacenCon(filasVer));
+  const { $, d, w } = t;
+  const esc = (el) => el.dispatchEvent(new w.KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }));
+  const lugares = [
+    ["la grilla", () => $("zona")],
+    ["un botón de la barra", () => $("btnEditarVista")],
+    ["un botón de una fila", () => boton(t, 1, "editar")],
+    ["un campo de sólo lectura", () => $("estudiante")],
+    ["el botón de copiar devolución", () => d.getElementById("btnCopiarBreve")],
+    ["nada (body)", () => d.body],
+  ];
+  for (const [donde, el] of lugares) {
+    boton(t, 0, "ver").click();
+    assert.equal($("barraVer").hidden, false);
+    const x = el();
+    x.focus?.();
+    esc(x);
+    assert.equal($("barraVer").hidden, true, `Esc con el foco en ${donde}`);
+    assert.equal(w.confirmaciones.length, 0);
+  }
+  // Si otra interacción ya atendió el Esc, no se intercepta.
+  boton(t, 0, "ver").click();
+  $("btnEditarVista").addEventListener("keydown", (e) => e.preventDefault(), { once: true });
+  esc($("btnEditarVista"));
+  assert.equal($("barraVer").hidden, false);
+  esc($("btnEditarVista"));
+  assert.equal($("barraVer").hidden, true);
+  // Fuera de Ver, Esc fuera de la grilla no hace nada y las letras no cargan nada.
+  t.escribirCampo("estudiante", "Prueba Esc");
+  esc($("estudiante"));
+  assert.equal($("estudiante").value, "Prueba Esc");
+  boton(t, 0, "editar").dispatchEvent(new w.KeyboardEvent("keydown", { key: "B", bubbles: true, cancelable: true }));
+  assert.equal(t.valores()[0], "·");
+  // En la grilla, Esc conserva su función (cancelar la composición).
+  $("zona").focus();
+  t.escribir("B+");
+  assert.equal(t.valores()[0], "B+");
+  t.tecla("Escape");
+  assert.equal(t.valores()[0], "B");
+  assert.equal($("titular").textContent, "Ítem 2");
+  t.dom.window.close();
+});
+
+test("no se guarda sin ninguna parte contabilizada; las respuestas no cambian", () => {
+  const t = abrir();
+  const { $ } = t;
+  t.escribirCampo("curso", "F");
+  t.escribirCampo("estudiante", "Prueba Ninguna Parte");
+  t.tecla("Enter");
+  t.escribir(CLAVE30.join(""));
+  [1, 2, 3, 4].forEach((n) => casilla(t, n).click());
+  const antes = [...almacenado(t).s.respuestas];
+  $("zona").focus();
+  t.tecla("Enter");
+  assert.equal(t.filas().length, 0, "Enter no guarda");
+  assert.equal($("mensaje").textContent, "Marcá al menos una parte para contabilizar antes de guardar.");
+  assert.equal($("mensaje").className, "error");
+  $("btnGuardar").click();
+  assert.equal(t.filas().length, 0, "el botón tampoco");
+  assert.deepEqual(almacenado(t).s.respuestas, antes, "respuestas intactas");
+  assert.deepEqual(t.valores(), CLAVE30);
+  assert.deepEqual([1, 2, 3, 4].map((n) => casilla(t, n).checked), [F, F, F, F]);
+  // Al volver a marcar una, se guarda.
+  casilla(t, 2).click();
+  $("zona").focus();
+  t.tecla("Enter");
+  assert.equal(t.filas().length, 1);
+  assert.deepEqual(almacenado(t).filas[0].cuentan, [F, T, F, F]);
+  assert.deepEqual(almacenado(t).filas[0].respuestas, CLAVE30);
+  // Sin respuestas cargadas también se bloquea.
+  t.escribirCampo("estudiante", "Prueba Vacía");
+  [1, 2, 3, 4].forEach((n) => casilla(t, n).click());
+  $("btnGuardar").click();
+  assert.equal(t.filas().length, 1);
+  assert.match($("mensaje").textContent, /Marcá al menos una parte/);
+  // Al editar una fila guardada, desmarcar todo tampoco permite guardar.
+  $("btnDescartar").click();
+  boton(t, 0, "editar").click();
+  casilla(t, 2).click();
+  $("zona").focus();
+  t.tecla("Enter");
+  assert.match($("mensaje").textContent, /Marcá al menos una parte/);
+  assert.deepEqual(almacenado(t).filas[0].cuentan, [F, T, F, F], "la fila guardada no cambió");
+  t.dom.window.close();
+});
+
+// ---------- Identidad nueva: clave aula-evaluacion-a-v1 y compatibilidad TSV ----------
+// TSV exportado (datos ficticios) por la versión anterior, «herramienta de
+// transcripción» con la clave aula-transcripcion-si-a-v1: el formato no cambió.
+const TSV_VERSION_ANTERIOR = "evaluacion\tcurso\testudiante\ti01\ti02\ti03\ti04\ti05\ti06\ti07\ti08\ti09\ti10\ti11\ti12\ti13\ti14\ti15\ti16\ti17\ti18\ti19\ti20\ti21\ti22\ti23\ti24\ti25\ti26\ti27\ti28\ti29\ti30\tparte1_cuenta\tparte2_cuenta\tparte3_cuenta\tparte4_cuenta\nSI-A\t3.º F\tFicticia Compat Uno\tA+B\tA\tC\t-\tC\tA\tB\tC\tD\tB?\tA\tD\tB\tC\tA\tC\tB\tB+D\tA\t?\tC\tB\tC\tD\tB+C+D\tB\tD\tA\tB\tA\t1\t1\t1\t0\nSI-A\t3.º F\tFicticio Compat Dos, «coma»\tB\tA\tD\tB\tC\tA\tB\tC\tD\tB\tA\tA\tB\tC\tA\tC\tB\tB\tA\tA\t\t\t\t\t\t\t\t\t\t\t1\t1\t0\t0\nSI-A\t\tFicticia Compat Tres\tB\tA\tC\tB\tC\tA\tB\tC\tD\tB\tA\tD\tB\tC\tA\tC\tB\tB\tA\tA\tC\tB\tC\tD\tC\tB\tD\tA\tB\tA\t1\t1\t1\t1\n";
+
+test("identidad: un TSV de la versión anterior se importa y queda bajo la clave nueva, sin migrar la vieja", async () => {
+  // Datos bajo la clave vieja: no se migran (primera apertura vacía).
+  const viejo = new JSDOM(html, {
+    url: "http://localhost/", runScripts: "dangerously", pretendToBeVisual: true,
+    beforeParse(w) { w.localStorage.setItem("aula-transcripcion-si-a-v1", JSON.stringify({ filas: [{ id: 1, curso: "F", estudiante: "Prueba Clave Vieja", respuestas: [...CLAVE30] }], proximoId: 2 })); },
+  });
+  assert.equal(viejo.window.document.querySelectorAll("#tabla tbody tr").length, 0, "sin migración automática");
+  viejo.window.close();
+  const t = abrir();
+  assert.equal(t.d.title, "Corrección y análisis · Evaluación A");
+  assert.equal(t.d.querySelector("h1").textContent, "Corrección y análisis · Evaluación A");
+  assert.match(t.d.querySelector(".bajada").textContent, /^Carga de respuestas, resultados y devolución pedagógica/);
+  await importarArchivo(t, TSV_VERSION_ANTERIOR);
+  assert.match(t.$("avisoImport").textContent, /Importadas 3/);
+  assert.equal(t.$("vista").textContent, TSV_VERSION_ANTERIOR, "se reexporta idéntico");
+  const guardado = JSON.parse(t.w.localStorage.getItem("aula-evaluacion-a-v1"));
+  assert.equal(guardado.filas.length, 3);
+  assert.deepEqual(guardado.filas.map((f) => f.cuentan.map(Number).join("")), ["1110", "1100", "1111"]);
+  assert.deepEqual(guardado.filas[1].respuestas.slice(20), Array(10).fill(null));
+  assert.equal(guardado.filas[0].respuestas[0], "A+B");
+  assert.equal(t.w.localStorage.getItem("aula-transcripcion-si-a-v1"), null, "no se escribe la clave vieja");
   t.dom.window.close();
 });

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Transcripción · Evaluación A</title>
+<title>Corrección y análisis · Evaluación A</title>
 <style>
   :root {
     --tinta: #1d232b;
@@ -32,6 +32,7 @@
   /* Ancho fluido; el tope sólo evita líneas y tablas desmedidas en pantallas muy anchas. */
   .pagina { max-width: 1800px; margin: 0 auto; }
   h1 { font-size: 18px; margin: 0 0 2px; }
+  .bajada { font-size: 14px; color: var(--tinta); margin: 0 0 2px; }
   h2 { font-size: 16px; margin: 0 0 10px; }
   .nota { color: var(--suave); font-size: 13px; margin: 0; }
   section {
@@ -112,7 +113,7 @@
     font-size: 17px; font-weight: 600; color: var(--suave);
     border-radius: 6px; pointer-events: none;
   }
-  #zona:not(:focus) #fuera { display: flex; }
+  .carga:not(.viendo) #zona:not(:focus) #fuera { display: flex; } /* en Ver no hay carga por teclado */
 
   /* Tamaño del casillero y del hueco según el ancho real de la zona; el hueco
      nunca baja de 26px porque ahí va la corrección roja (B/D en el 18). */
@@ -228,6 +229,18 @@
   }
   .vivo-ejes .rot-ejes { grid-column: 1 / -1; font-size: 12px; font-weight: 600; color: var(--tinta); }
   .ve b { color: var(--tinta); }
+  .ve .nivel { font-size: 11.5px; font-style: italic; }
+  .ve .nivel.volver { color: var(--error); }
+  .ve .nivel.repasar { color: var(--dudosa); }
+  /* Devoluciones: breve (a mano) y extendida (mail o Classroom). */
+  .devolucion { display: grid; gap: 6px; margin: 0 0 8px; padding: 6px 10px; border: 1px solid var(--linea); border-radius: 6px; background: #fff; }
+  .devolucion .dev { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; }
+  .devolucion .rot { flex: 0 0 100%; font-size: 12px; color: var(--suave); }
+  .devolucion .texto { flex: 1 1 280px; color: var(--tinta); }
+  #devolucionBreve { font-size: 17px; font-weight: 600; }
+  #devolucionExtendida { font-size: 14px; }
+  .devolucion button { font-size: 13px; padding: 2px 10px; }
+  .devolucion .provisoria { font-size: 12px; color: var(--dudosa); font-weight: 600; }
   .vp.incompleta { border-left-style: dashed; }
   .vivo .faltan { color: var(--suave); font-style: italic; font-size: 12.5px; }
   .vivo-ejes > .faltan { grid-column: 1 / -1; }
@@ -352,7 +365,8 @@
 </head>
 <body>
 <main class="pagina">
-<h1>Transcripción de respuestas · Evaluación A · Sistemas Informáticos</h1>
+<h1>Corrección y análisis · Evaluación A</h1>
+<p class="bajada">Carga de respuestas, resultados y devolución pedagógica · Sistemas Informáticos</p>
 <p class="nota">Herramienta local: no envía datos a ningún servidor. Lo cargado queda sólo en este navegador; al terminar, exportalo, guardalo fuera del repositorio y vaciá la sesión. Los nombres y respuestas reales son privados: nunca se versionan.</p>
 <p id="avisoAlmacen">Este navegador no permite guardado local: si cerrás o recargás la pestaña se pierde lo cargado. Exportá con frecuencia.</p>
 
@@ -404,7 +418,7 @@
       <div><span class="k"><kbd>?</kbd></span><span>en un ítem sin cargar: ilegible (<code>?</code>) y avanza. Sobre una letra ya cargada: la marca como dudosa (<code>B?</code>) o quita la marca.</span></div>
       <div><span class="k">número</span><span>ir a ese ítem (<kbd>1</kbd><kbd>8</kbd> salta al 18; <kbd>3</kbd> <kbd>Enter</kbd> al 3).</span></div>
       <div><span class="k"><kbd>←</kbd> <kbd>→</kbd> <kbd>↑</kbd> <kbd>↓</kbd></span><span>moverse por la grilla. <kbd>Retroceso</kbd> borra la respuesta anterior (o la actual si tiene valor); <kbd>Supr</kbd> borra la actual.</span></div>
-      <div><span class="k"><kbd>Enter</kbd></span><span>con los 30 ítems cargados, guarda y pasa a la siguiente evaluación. Si falta alguno, va al primero que falta.</span></div>
+      <div><span class="k"><kbd>Enter</kbd></span><span>con los ítems de las partes que se contabilizan cargados, guarda y pasa a la siguiente evaluación. Si falta alguno, va al primero que falta.</span></div>
       <div><span class="k"><kbd>Espacio</kbd></span><span>se ignora (podés separar letras con espacios).</span></div>
     </div>
  </aside>
@@ -460,13 +474,13 @@
   const TODAS = () => PARTES.map(() => true);
   const cuentanValidas = (c) => (Array.isArray(c) && c.length === PARTES.length && c.every((x) => typeof x === "boolean") ? c : TODAS());
   const EVALUACION = "SI-A";
-  const CLAVE_LOCAL = "aula-transcripcion-si-a-v1";
+  const CLAVE_LOCAL = "aula-evaluacion-a-v1";
   // Valor crudo de un ítem: "-" en blanco, "?" ilegible, o letras A–D
   // ordenadas y unidas con "+", con "?" final si la lectura es dudosa.
   const VALOR = /^(-|\?|[A-D](\+[A-D])*\??)$/;
   // Clave vigente de evaluaciones/sistemas-informaticos/evaluacion-a/clave-docente.md:
   // respuestas aceptadas por ítem (12: sólo D; 18: B, D o B+D).
-  // tests/transcripcion-evaluacion-a.test.mjs comprueba que coincida con ese archivo.
+  // tests/herramienta-evaluacion-a.test.mjs comprueba que coincida con ese archivo.
   const ACEPTADAS = [
     ["B"], ["A"], ["C"], ["B"], ["C"], ["A"], ["B"], ["C"],
     ["D"], ["B"], ["A"], ["D"], ["B"], ["C"], ["A"], ["C"],
@@ -475,18 +489,44 @@
   ];
   // Ejes de analisis-de-items.md («Cobertura»), sólo con los ítems principales:
   // sin los que figuran entre paréntesis como integrados. Cada ítem queda en un
-  // solo eje. «corto» es sólo el rótulo en pantalla. tests/transcripcion-
-  // evaluacion-a.test.mjs comprueba que nombres e ítems coincidan con ese archivo.
+  // solo eje. «corto» es el rótulo en pantalla; «foco», cómo se nombra el tema
+  // en la devolución al estudiante.
+  // tests/herramienta-evaluacion-a.test.mjs comprueba que nombres e ítems
+  // coincidan con ese archivo.
   const EJES = [
-    { "nombre": "Hardware, software, programa", "corto": "Hardware y software", "items": [1, 2, 9] },
-    { "nombre": "Instrucciones, datos, operaciones, resultados", "corto": "Instrucciones y datos", "items": [3, 10, 11, 24] },
-    { "nombre": "Entrada, procesamiento y salida", "corto": "Entrada y salida", "items": [4, 5, 12, 21, 25] },
-    { "nombre": "CPU y memoria / Von Neumann", "corto": "CPU y memoria", "items": [6, 20, 30] },
-    { "nombre": "RAM, almacenamiento y recorrido", "corto": "RAM y almacenamiento", "items": [7, 13, 22] },
-    { "nombre": "Estado", "corto": "Estado", "items": [14, 17, 18, 26] },
-    { "nombre": "SO y administración de recursos", "corto": "Sistema operativo", "items": [8, 15, 23, 28, 29] },
-    { "nombre": "Representaciones y miradas", "corto": "Representaciones", "items": [16, 19, 27] }
+    { "nombre": "Hardware, software, programa", "corto": "Hardware y software", "foco": "hardware y software", "items": [1, 2, 9] },
+    { "nombre": "Instrucciones, datos, operaciones, resultados", "corto": "Datos y operaciones", "foco": "datos y operaciones", "items": [3, 10, 11, 24] },
+    { "nombre": "Entrada, procesamiento y salida", "corto": "Entrada y salida", "foco": "entrada y salida", "items": [4, 5, 12, 21, 25] },
+    { "nombre": "CPU y memoria / Von Neumann", "corto": "CPU y memoria", "foco": "CPU y memoria", "items": [6, 20, 30] },
+    { "nombre": "RAM, almacenamiento y recorrido", "corto": "RAM y almacenamiento", "foco": "RAM y almacenamiento", "items": [7, 13, 22] },
+    { "nombre": "Estado", "corto": "Estado", "foco": "estado", "items": [14, 17, 18, 26] },
+    { "nombre": "SO y administración de recursos", "corto": "Sistema operativo", "foco": "sistema operativo", "items": [8, 15, 23, 28, 29] },
+    { "nombre": "Representaciones y miradas", "corto": "Representaciones", "foco": "representaciones", "items": [16, 19, 27] }
   ];
+  // Qué revisar dentro de cada tema según los ítems fallados (para la
+  // devolución extendida), a partir de «Qué mide» en analisis-de-items.md.
+  // Ítems que miden lo mismo comparten texto.
+  const IDEAS = {
+    1: "la diferencia entre hardware (lo físico) y software (programas y datos)", 9: "la diferencia entre hardware (lo físico) y software (programas y datos)",
+    2: "por qué la misma computadora puede hacer tareas distintas",
+    3: "la diferencia entre dato, operación y resultado", 10: "la diferencia entre dato, operación y resultado",
+    11: "cómo un resultado puede volver a usarse como dato", 24: "de qué datos depende cada resultado en un cálculo",
+    4: "cuáles son los dispositivos de entrada y de salida", 5: "cuáles son los dispositivos de entrada y de salida",
+    12: "qué información entra al sistema en cada momento", 21: "cómo la salida de un sistema puede ser la entrada de otro",
+    25: "la diferencia entre lo que entra al sistema y lo que guarda como estado",
+    6: "qué hace la CPU y qué hace la RAM mientras se ejecuta un programa", 20: "qué hace la CPU y qué hace la RAM mientras se ejecuta un programa",
+    30: "cómo la RAM mantiene los datos disponibles durante una tarea",
+    7: "qué información está en uso (RAM) y qué información queda guardada (almacenamiento)",
+    22: "qué información está en uso (RAM) y qué información queda guardada (almacenamiento)",
+    13: "el recorrido de un programa al abrirlo, del almacenamiento a la RAM y a la CPU",
+    14: "qué datos forman el estado de un sistema", 17: "qué cambia y qué se mantiene en el estado", 26: "qué cambia y qué se mantiene en el estado",
+    18: "la diferencia entre lo que entra al sistema y lo que el sistema hace",
+    8: "cómo administra los recursos", 23: "cómo administra los recursos",
+    15: "el papel de los drivers", 28: "cómo alterna entre programas sin perder su estado",
+    29: "qué pasa al encender, cuando lo guardado se carga en la RAM",
+    16: "qué muestra y qué no muestra cada representación", 19: "qué muestra y qué no muestra cada representación",
+    27: "cómo una salida puede cambiar la próxima entrada",
+  };
 
   const $ = (id) => document.getElementById(id);
   const parteDe = (i) => PARTES.find((p) => i + 1 >= p.desde && i + 1 <= p.hasta);
@@ -556,8 +596,80 @@
     });
   }
 
+  // ---------- devolución para el estudiante ----------
+  // Por eje, sólo con ítems de partes contabilizadas. Errores firmes: lo que
+  // no es acierto ni «a revisar» (incorrectas, en blanco, múltiples
+  // incorrectas). Un solo error nunca marca un tema.
+  //   con 2 errores firmes o más: «volver» si el eje tiene al menos 3 ítems y
+  //   los errores son mayoría (más errores que ítems no errados); si no,
+  //   «repasar» (con 1–2 ítems, como mucho «repasar»).
+  function nivelEje(e) {
+    const errores = e.total - e.aciertos - e.revisar;
+    if (errores < 2) return null;
+    return e.total >= 3 && 2 * errores > e.total ? "volver" : "repasar";
+  }
+
+  // Unidades de estudio de la devolución, en orden pedagógico fijo (índices de
+  // EJES): hardware y software → CPU, RAM y almacenamiento → sistema operativo
+  // (la máquina) → datos y operaciones → entrada, salida y estado (el
+  // procesamiento de información) → representaciones. Una unidad de dos ejes
+  // se nombra junta sólo si ambos tienen la misma indicación; si no, cada eje
+  // va con su nombre en su intensidad. Así toda indicación queda cubierta, con
+  // su intensidad, y nunca se nombra un eje sin indicación.
+  const UNIDADES = [
+    { ejes: [0] },
+    { ejes: [3, 4], juntos: "CPU, RAM y almacenamiento" },
+    { ejes: [6] },
+    { ejes: [1] },
+    { ejes: [2, 5], juntos: "entrada, salida y estado" },
+    { ejes: [7] },
+  ];
+
+  // Dos versiones de la misma clasificación, con las mismas unidades en el
+  // mismo orden: la breve las enumera («Volver a estudiar: u; u. Repasar: u.»);
+  // la extendida agrega qué revisar según los ítems fallados. La evidencia
+  // decide la intensidad, no el orden. Las unidades van marcadas en el HTML
+  // (data-ejes, data-nivel); el texto copiado es texto plano.
+  function devolucion(respuestas, cuentan) {
+    const ejes = resultadosEjes(respuestas, cuentan).map((e) => ({ ...e, nivel: nivelEje(e) }));
+    const items = itemsQueCuentan(cuentan);
+    const revisar = items.filter((n) => revisa(respuestas[n - 1])).length;
+    const fallado = (n) => !acierto(n - 1, respuestas[n - 1]) && !revisa(respuestas[n - 1]);
+    const base = { revisar, ejes };
+    if (!items.length) return { ...base, breve: "", extendida: "" };
+    const unidades = (nivel) => UNIDADES.flatMap((u) => {
+      const sub = u.ejes.filter((k) => ejes[k].nivel === nivel);
+      if (!sub.length) return [];
+      if (u.juntos && sub.length === u.ejes.length) return [{ ks: sub, nombre: u.juntos, nivel }];
+      return sub.map((k) => ({ ks: [k], nombre: ejes[k].foco, nivel }));
+    });
+    const volver = unidades("volver"), repasar = unidades("repasar");
+    if (!volver.length && !repasar.length) {
+      return items.some(fallado)
+        ? { ...base, breve: "Revisar los errores marcados.", extendida: "No aparece un tema con dificultades claras: conviene revisar las preguntas que estuvieron mal." }
+        : { ...base, breve: "Bien: seguir así.", extendida: "Muy buen trabajo: los temas evaluados están bien encaminados." };
+    }
+    const marca = (u, html) => `<span class="foco" data-ejes="${u.ks.join(" ")}" data-nivel="${u.nivel}">${html}</span>`;
+    // «Etiqueta: unidad; unidad.»: cada unidad se lee como un todo.
+    const breve = [
+      volver.length ? `Volver a estudiar: ${volver.map((u) => marca(u, u.nombre)).join("; ")}.` : "",
+      repasar.length ? `Repasar: ${repasar.map((u) => marca(u, u.nombre)).join("; ")}.` : "",
+    ].filter(Boolean).join(" ");
+    // Extendida: una oración por unidad, con hasta dos ideas por eje fallado.
+    const extendida = [...volver, ...repasar].map((u, i) => {
+      const ideas = [...new Set(u.ks.flatMap((k) => [...new Set(ejes[k].contados.filter(fallado).map((n) => IDEAS[n]))].slice(0, 2)))].join("; ");
+      const texto = u.nivel === "volver"
+        ? `${i ? "También conviene" : "Conviene"} volver a estudiar ${u.nombre}, especialmente: ${ideas}.`
+        : (i ? `También repasá ${u.nombre}: ${ideas}.` : `Conviene repasar ${u.nombre}: ${ideas}.`);
+      return marca(u, texto);
+    }).join(" ");
+    return { ...base, breve, extendida };
+  }
+
   const textoGlobal = (g) => (g.total ? `<b>${g.aciertos}/${g.total}</b> · ${g.porcentaje} %` : `<span class="sin">sin partes contabilizadas</span>`);
-  const textoEje = (e) => (e.total ? `<b>${e.aciertos}/${e.total}</b> · ${e.porcentaje} %` : `<b>—</b> <span class="sin">sin ítems contabilizados</span>`);
+  // Ejes de 3–5 ítems: aciertos/ítems, sin porcentaje (evitar falsa precisión).
+  const textoEje = (e) => (!e.total ? `<b>—</b> <span class="sin">sin ítems contabilizados</span>`
+    : `<b>${e.aciertos}/${e.total}</b>${e.total <= 2 ? ` <span class="sin">pocos ítems</span>` : ""}`);
   const tituloEje = (e) => `${e.nombre} · ítems ${e.items.join(", ")}` +
     (e.contados && e.contados.length < e.items.length ? ` · contabilizados: ${e.contados.join(", ") || "ninguno"}` : "");
 
@@ -569,6 +681,12 @@
     return ACEPTADAS[i].filter((a) => !a.includes("+")).join("/");
   }
   const tituloCorreccion = (i) => `Clave del ítem ${i + 1}: ${ACEPTADAS[i].join(", ").replace(/, ([^,]*)$/, " o $1")}`;
+  // Marca roja fuera del casillero: «✓» (carácter de texto) sólo si la respuesta
+  // coincide con una aceptada por la clave (la misma regla que los resultados:
+  // nunca en blanco, ilegibles ni dudosas); si no, la corrección de siempre.
+  const TILDE = "\u2713";
+  const marcaClave = (i, v) => (acierto(i, v) ? TILDE : correccion(i, v));
+  const tituloMarca = (i, v) => (acierto(i, v) ? "Coincide con la clave" : tituloCorreccion(i));
 
   let s = nuevo("");
   let filas = [];
@@ -610,8 +728,9 @@
       const ok = (r) => Array.isArray(r) && r.length === N && r.every((v) => v === null || VALOR.test(v));
       if (d.s && ok(d.s.respuestas)) s = { ...d.s, cuentan: cuentanValidas(d.s.cuentan) };
       if (Array.isArray(d.filas)) {
-        filas = d.filas.filter((f) => ok(f.respuestas) && f.respuestas.every((v) => v !== null))
-          .map((f) => ({ ...f, cuentan: cuentanValidas(f.cuentan) }));
+        // Una fila guardada puede tener ítems sin cargar sólo en partes que no se contabilizan.
+        filas = d.filas.map((f) => ({ ...f, cuentan: cuentanValidas(f.cuentan) }))
+          .filter((f) => ok(f.respuestas) && f.respuestas.every((v, i) => v !== null || !cuentaItem(f.cuentan, i)));
       }
       proximoId = d.proximoId || filas.length + 1;
       exportado = d.exportado || "";
@@ -739,6 +858,11 @@
   }
 
   const faltantes = (r = s.respuestas) => r.flatMap((v, i) => (v === null ? [i + 1] : []));
+  // Ítems sin cargar que impiden guardar: sólo los de partes contabilizadas.
+  // En una parte que no se contabiliza, un ítem vacío es «no transcripto»
+  // (null), distinto de «-» (casillero en blanco del estudiante).
+  const cuentaItem = (cuentan, i) => cuentan[parteDe(i).n - 1];
+  const obligatorios = (r = s.respuestas, cuentan = s.cuentan) => faltantes(r).filter((n) => cuentaItem(cuentan, n - 1));
   const enCurso = () => s.estudiante !== "" || s.respuestas.some((v) => v !== null);
   // Hay trabajo que se perdería: en una edición, si difiere de la fila
   // guardada; en una evaluación nueva, si ya tiene estudiante o respuestas.
@@ -765,13 +889,14 @@
       // cambia hasta Enter.
       c.querySelector(".val").textContent = compone ? `${[...multi.letras].sort().join("+")}+` : v === null ? "·" : v === "-" ? "–" : v;
       const corr = c.querySelector(".corr");
-      corr.textContent = compone ? "" : correccion(i, v);
-      corr.className = `corr${corr.textContent.includes("/") ? " varias" : ""}`;
-      corr.title = corr.textContent ? tituloCorreccion(i) : "";
+      corr.textContent = compone ? "" : marcaClave(i, v);
+      corr.className = `corr${corr.textContent.includes("/") ? " varias" : ""}${corr.textContent === TILDE ? " tilde" : ""}`;
+      corr.title = corr.textContent ? tituloMarca(i, v) : "";
     });
     celdaFin.className = `celda fin${e.cursor === N ? " actual" : ""}`;
 
     const falta = faltantes(e.respuestas);
+    const faltaObligatorio = obligatorios(e.respuestas, e.cuentan);
     const cargados = N - falta.length;
     if (viendo) {
       $("titular").textContent = "Viendo";
@@ -787,9 +912,10 @@
       $("titular").textContent = `Ítem ${s.cursor + 1}`;
       $("subtitular").textContent = `Parte ${p.n} · ${p.nombre} · opciones ${p.letras[0]}–${p.letras.at(-1)}`;
     } else {
-      $("titular").textContent = falta.length ? "Fin" : "Completa";
-      $("subtitular").textContent = falta.length
-        ? `Faltan ${falta.length}: ${falta.join(", ")} · Enter va al primero`
+      $("titular").textContent = faltaObligatorio.length ? "Fin" : "Completa";
+      $("subtitular").textContent = faltaObligatorio.length
+        ? `Faltan ${faltaObligatorio.length}: ${faltaObligatorio.join(", ")} · Enter va al primero`
+        : falta.length ? "Enter guarda (los ítems sin cargar son de partes que no se contabilizan)"
         : "Enter guarda y pasa a la siguiente";
     }
     $("progreso").textContent = `${cargados} de ${N} cargados`;
@@ -843,6 +969,7 @@
     const nombres = PARTES.filter((p, k) => e.cuentan[k]).map((p) => p.n);
     const cuales = nombres.length === PARTES.length ? "las 4 partes" : `parte${nombres.length > 1 ? "s" : ""} ${nombres.join(", ").replace(/, (\d)$/, " y $1")}`;
     let global, ejes;
+    let devolucionHtml = "";
     if (!items.length) {
       global = `<div class="vp global incompleta"><span class="rot">Resultado global</span><span class="faltan">sin partes contabilizadas</span></div>`;
       ejes = `<span class="faltan">sin partes contabilizadas</span>`;
@@ -855,14 +982,25 @@
       global = `<div class="vp global" title="Aciertos sobre los ${g.total} ítems de las partes que cuentan; no es nota. La clave registra los resultados por parte.">` +
         `<span class="rot">Resultado global</span><b>${g.aciertos}/${g.total} · ${g.porcentaje} %</b>` +
         `<span class="resp-n">sobre ${g.total} ítems (${cuales})${textoRevisar(g.revisar)}</span></div>`;
-      ejes = resultadosEjes(e.respuestas, e.cuentan).map((e) =>
+      const d = devolucion(e.respuestas, e.cuentan);
+      ejes = d.ejes.map((e) =>
         `<span class="ve${e.revisar ? " provisorio" : ""}${e.total ? "" : " vacio"}" title="${tituloEje(e)}${e.revisar ? ` · ${e.revisar} a revisar` : ""}">` +
-        `<span class="rot">${e.corto}</span> ${textoEje(e)}</span>`).join("");
+        `<span class="rot">${e.corto}</span> ${textoEje(e)}` +
+        `${e.nivel ? ` <span class="nivel ${e.nivel}">${e.nivel === "volver" ? "volver a estudiar" : "repasar"}</span>` : ""}</span>`).join("");
+      const bloque = (rot, id, texto, boton, idBoton) =>
+        `<div class="dev"><span class="rot">${rot}</span><span class="texto" id="${id}">${texto}</span>` +
+        `<button type="button" id="${idBoton}">${boton}</button></div>`;
+      devolucionHtml = `<div class="devolucion">` +
+        bloque("Devolución breve (para escribir a mano)", "devolucionBreve", d.breve, "Copiar breve", "btnCopiarBreve") +
+        bloque("Devolución extendida (para mail o Classroom)", "devolucionExtendida", d.extendida, "Copiar extendida", "btnCopiarExtendida") +
+        (d.revisar ? `<span class="provisoria">Provisoria: hay ${d.revisar} respuesta${d.revisar > 1 ? "s" : ""} a revisar en el papel; ` +
+          "no cuentan como error ni como acierto. Conviene resolverlas antes de copiar.</span>" : "") + `</div>`;
     }
     $("vivo").innerHTML = (viendo
       ? `<div class="vivo-cab"><b>Resultados</b> <span class="nota">global y por eje de la evaluación vista (sólo lectura); los de cada parte, junto a su banda.</span></div>`
       : `<div class="vivo-cab"><b>Resultados en vivo</b> <span class="nota">global y por eje; los de cada parte, junto a su banda. Se recalculan con cada cambio` +
         `${e.editando ? "; la fila guardada se actualiza al guardar" : ""}.</span></div>`) +
+      devolucionHtml +
       `<div class="vivo-cuerpo">${global}<div class="vivo-ejes"><span class="rot-ejes">Por eje</span>${ejes}</div></div>`;
   }
 
@@ -1006,13 +1144,19 @@
     }
   }
 
+  // Comandos de la vista, independientes del foco: en Ver, Esc vuelve a la
+  // carga desde cualquier lugar. Si otra interacción ya atendió el Esc
+  // (defaultPrevented), no se interviene. Las teclas de navegación y edición
+  // siguen en «tecla», sólo con el foco en la grilla.
+  function teclaGlobal(e) {
+    if (viendo == null || e.key !== "Escape" || e.defaultPrevented) return;
+    e.preventDefault();
+    cerrarVista();
+  }
+
   function tecla(e) {
     if (e.target !== e.currentTarget) return; // p. ej. Espacio sobre «Contabilizar»
-    if (viendo) {
-      // Sólo lectura: ninguna tecla modifica; Esc vuelve a la carga.
-      if (e.key === "Escape") { e.preventDefault(); cerrarVista(); }
-      return;
-    }
+    if (viendo) return; // sólo lectura: ninguna tecla de la grilla modifica (Esc es global: teclaGlobal)
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     const k = e.key;
     // Espacio: separador transparente («B + C»); no cambia ningún estado.
@@ -1048,9 +1192,15 @@
   // ---------- guardar / editar / descartar ----------
   function guardar() {
     if (viendo) return;
+    // Una evaluación guardada debe tener al menos una parte contabilizada. Sólo
+    // se bloquea el guardado: respuestas y casillas quedan como están.
+    if (!s.cuentan.some(Boolean)) {
+      mensaje("Marcá al menos una parte para contabilizar antes de guardar.", "error");
+      return render();
+    }
     s.curso = limpiar($("curso").value);
     s.estudiante = limpiar($("estudiante").value);
-    const falta = faltantes();
+    const falta = obligatorios();
     if (falta.length) {
       s.cursor = falta[0] - 1;
       mensaje(`Faltan ${falta.length} ítems (${falta.join(", ")}). Estás en el ${falta[0]}.`, "error");
@@ -1163,12 +1313,12 @@
           const v = document.createElement("span");
           v.className = `v ${clase(i, f.respuestas[i])}${i === 17 ? " i18" : ""}`;
           v.textContent = f.respuestas[i];
-          const corr = correccion(i, f.respuestas[i]);
+          const corr = marcaClave(i, f.respuestas[i]);
           if (corr) {
             const c = document.createElement("span");
-            c.className = "corr";
+            c.className = `corr${corr === TILDE ? " tilde" : ""}`;
             c.textContent = corr;
-            c.title = tituloCorreccion(i);
+            c.title = tituloMarca(i, f.respuestas[i]);
             v.append(c);
           }
           v.title = `Ítem ${i + 1}`;
@@ -1179,9 +1329,14 @@
         const rs = document.createElement("span");
         rs.className = "res";
         rs.dataset.parte = p.n;
-        rs.innerHTML = `<b>${r.aciertos}/${r.total}</b> · ${r.porcentaje} %<br>` +
-          `<span class="resp-n">resp. ${r.respondidas}/${r.total}</span>` +
-          (r.revisar ? ` · <span class="revisar">${r.revisar} a revisar</span>` : "") +
+        // Una parte que no se contabiliza puede quedar sin cargar del todo o en parte:
+        // entonces muestra su estado, no cifras (como en la grilla).
+        const sinCargar = f.respuestas.slice(p.desde - 1, p.hasta).filter((v) => v === null).length;
+        rs.innerHTML = (sinCargar
+          ? `<span class="faltan">${sinCargar === r.total ? "sin cargar" : `falta${sinCargar > 1 ? "n" : ""} ${sinCargar}`}</span>`
+          : `<b>${r.aciertos}/${r.total}</b> · ${r.porcentaje} %<br>` +
+            `<span class="resp-n">resp. ${r.respondidas}/${r.total}</span>` +
+            (r.revisar ? ` · <span class="revisar">${r.revisar} a revisar</span>` : "")) +
           (f.cuentan[p.n - 1] ? "" : `<br><span class="no-cuenta-txt">no se contabiliza</span>`);
         rs.title = `Parte ${p.n} · ${p.nombre}: ${r.aciertos} aciertos y ${r.respondidas} respondidas sobre ${r.total}` +
           (r.revisar ? `; ${r.revisar} ilegibles o dudosas sin contar como acierto` : "");
@@ -1224,9 +1379,10 @@
     ...PARTES.map((p) => `parte${p.n}_cuenta`)];
 
   function tsv() {
-    const lineas = [CABECERA_TSV, ...filas.map((f) => [EVALUACION, limpiar(f.curso), limpiar(f.estudiante), ...f.respuestas, ...f.cuentan.map((c) => (c ? "1" : "0"))])];
+    // Un ítem sin cargar (sólo posible en una parte que no se contabiliza) va como campo vacío.
+    const lineas = [CABECERA_TSV, ...filas.map((f) => [EVALUACION, limpiar(f.curso), limpiar(f.estudiante), ...f.respuestas.map((v) => v ?? ""), ...f.cuentan.map((c) => (c ? "1" : "0"))])];
     for (const f of filas) {
-      if (!f.respuestas.every((v) => v !== null && VALOR.test(v))) throw new Error(`Fila inválida: ${f.estudiante}`);
+      if (!f.respuestas.every((v, i) => (v === null ? !cuentaItem(f.cuentan, i) : VALOR.test(v)))) throw new Error(`Fila inválida: ${f.estudiante}`);
       if (!(f.cuentan.length === PARTES.length && f.cuentan.every((c) => typeof c === "boolean"))) throw new Error(`Partes inválidas: ${f.estudiante}`);
     }
     return lineas.map((l) => l.join("\t")).join("\n") + "\n";
@@ -1257,13 +1413,19 @@
       if (c[0] !== EVALUACION) err(`evaluacion es «${c[0]}»; se esperaba «${EVALUACION}».`);
       const estudiante = limpiar(c[2]);
       if (!estudiante) err("falta el estudiante.");
-      const respuestas = c.slice(3, 3 + N);
-      respuestas.forEach((v, i) => {
-        if (!valorImportable(v)) err(`${CABECERA_TSV[3 + i]} es «${v}», que no es un valor de la herramienta (A–D; varias letras en orden, como A+B; -; ?; o con ? final).`);
-      });
       const cuentan = c.slice(3 + N).map((x, p) => {
         if (x !== "1" && x !== "0") err(`parte${p + 1}_cuenta es «${x}»; debe ser 1 o 0.`);
         return x === "1";
+      });
+      // Campo vacío = ítem sin cargar: sólo se acepta si su parte no se contabiliza.
+      const respuestas = c.slice(3, 3 + N).map((v, i) => {
+        if (v === "") {
+          const parte = parteDe(i).n;
+          if (cuentan[parte - 1]) err(`${CABECERA_TSV[3 + i]} está vacío y la parte ${parte} se contabiliza (parte${parte}_cuenta = 1).`);
+          return null;
+        }
+        if (!valorImportable(v)) err(`${CABECERA_TSV[3 + i]} es «${v}», que no es un valor de la herramienta (A–D; varias letras en orden, como A+B; -; ?; o con ? final).`);
+        return v;
       });
       return { curso: limpiar(c[1]), estudiante, respuestas, cuentan };
     });
@@ -1336,6 +1498,23 @@
     marcarExportado(t, `Copiadas ${filas.length} filas. Pegalas en la celda A1 de una planilla.`);
   }
 
+  // Copia sólo el texto de la devolución elegida; no modifica la evaluación.
+  async function copiarDevolucion(id, cual) {
+    const el = $(id);
+    const texto = (el && el.textContent) || "";
+    if (!texto) return;
+    try {
+      await navigator.clipboard.writeText(texto);
+    } catch {
+      const r = document.createRange();
+      r.selectNodeContents(el);
+      getSelection().removeAllRanges();
+      getSelection().addRange(r);
+      if (!document.execCommand("copy")) return mensaje("No se pudo copiar: seleccioná el texto y copialo a mano.", "error");
+    }
+    mensaje(`Devolución ${cual} copiada.`, "ok");
+  }
+
   function descargar() {
     if (!filas.length) return mensaje("No hay evaluaciones guardadas para exportar.", "error");
     const t = tsv();
@@ -1369,6 +1548,7 @@
   construirCabecera();
   cargarLocal();
   $("zona").addEventListener("keydown", tecla);
+  document.addEventListener("keydown", teclaGlobal);
   $("zona").addEventListener("blur", () => { pendiente = -1; recien = -1; });
   $("curso").addEventListener("input", (e) => { s.curso = e.target.value; guardarLocal(); });
   $("estudiante").addEventListener("input", (e) => { s.estudiante = e.target.value; guardarLocal(); });
@@ -1384,6 +1564,11 @@
   $("btnDescargar").addEventListener("click", descargar);
   $("btnVaciar").addEventListener("click", vaciar);
   $("btnImportar").addEventListener("click", () => $("archivoImport").click());
+  // El panel se vuelve a dibujar en cada cambio: el botón se atiende por delegación.
+  $("vivo").addEventListener("click", (e) => {
+    if (e.target.id === "btnCopiarBreve") copiarDevolucion("devolucionBreve", "breve");
+    if (e.target.id === "btnCopiarExtendida") copiarDevolucion("devolucionExtendida", "extendida");
+  });
   $("archivoImport").addEventListener("change", async (e) => {
     const archivo = e.target.files && e.target.files[0];
     if (!archivo) return;

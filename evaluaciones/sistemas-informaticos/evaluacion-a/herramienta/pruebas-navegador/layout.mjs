@@ -49,7 +49,7 @@ const almacen = JSON.stringify({
 });
 
 await cdp("Page.enable");
-await evaluar(`localStorage.setItem("aula-transcripcion-si-a-v1", ${JSON.stringify(almacen)})`);
+await evaluar(`localStorage.setItem("aula-evaluacion-a-v1", ${JSON.stringify(almacen)})`);
 const fallas = [];
 const verificar = (cond, que) => { console.log(`${cond ? "ok  " : "FALLA"} ${que}`); if (!cond) fallas.push(que); };
 

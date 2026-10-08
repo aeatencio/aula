@@ -1,4 +1,6 @@
-# Herramienta de transcripción · Evaluación A
+# Corrección y análisis · Evaluación A
+
+Carga de respuestas, resultados y devolución pedagógica.
 
 Página local para pasar a digital, ítem por ítem, lo que cada estudiante
 marcó en el papel de la [Evaluación A](../). Conserva la respuesta cruda de
@@ -12,7 +14,7 @@ No forma parte del sitio Aula: no se publica ni se enlaza desde él.
 Recomendado, con el servidor de desarrollo del repositorio (`npm run dev`):
 
 ```
-http://localhost:4321/herramientas/transcripcion-evaluacion-a/
+http://localhost:4321/herramientas/evaluacion-a/
 ```
 
 La home local muestra un enlace en «Herramientas locales». Esa ruta y ese
@@ -20,7 +22,7 @@ enlace existen sólo en `astro dev` (un plugin de Vite en `astro.config.mjs`
 sirve este `index.html`): no se publican ni entran en `dist/`.
 
 También se puede abrir `index.html` directamente con Chrome o Edge (desde WSL,
-`\\wsl.localhost\<distribución>\…\herramienta-transcripcion\index.html`). No
+`\\wsl.localhost\<distribución>\…\evaluacion-a\herramienta\index.html`). No
 necesita servidor, dependencias ni conexión.
 
 **`file://` y `localhost` guardan por separado.** El navegador tiene un
@@ -51,7 +53,8 @@ a otro: «Descargar .tsv» en uno e «Importar TSV…» en el otro (ver
 1. Curso / división (se conserva entre evaluaciones) → `Enter`.
 2. Estudiante → `Enter`: el teclado pasa a la grilla.
 3. Tipear las respuestas: cada letra carga el ítem actual y avanza.
-4. Con los 30 cargados, `Enter` guarda y vuelve a «Estudiante».
+4. Con los ítems de las partes que se contabilizan cargados, `Enter` guarda y
+   vuelve a «Estudiante».
 
 | Tecla | Efecto |
 |---|---|
@@ -75,7 +78,8 @@ Cada fila guardada tiene tres acciones:
 - **Ver:** muestra esa evaluación completa en sólo lectura (respuestas,
   corrección, partes contabilizadas, resultados por parte, global y ejes). No
   modifica nada, no la abre para edición y no pide confirmaciones: se puede
-  pasar a otra con «Ver», volver a la carga («Volver a la carga» o `Esc`) o
+  pasar a otra con «Ver», volver a la carga («Volver a la carga» o `Esc`, que
+  funciona esté donde esté el foco) o
   pasar a «Editar esta evaluación». Lo que se estaba cargando queda intacto.
 - **Editar:** reabre la transcripción en la grilla; `Enter` guarda en el mismo
   lugar, con sus resultados recalculados. Sólo se pide confirmación si se
@@ -123,14 +127,17 @@ Criterios, según [`clave-docente.md`](../clave-docente.md):
   principales (sin los integrados entre paréntesis). Cada ítem queda en un único
   eje. Sólo entran sus ítems de partes contabilizadas: numerador = aciertos
   entre ellos, denominador = cuántos son (varía por estudiante). Se muestra
-  `aciertos/ítems · %`; con denominador 0, «— sin ítems contabilizados». Un eje
-  con ítems a revisar aparece subrayado en punteado; su detalle está en el
-  título (mouse).
+  `aciertos/ítems`, **sin porcentaje**: con 3 a 5 ítems por eje, un porcentaje
+  aparenta una precisión que no hay (un ítem lo mueve 20 a 33 puntos). Con 1 o 2
+  ítems contabilizados se agrega «pocos ítems»; con 0, «— sin ítems
+  contabilizados». Un eje con ítems a revisar aparece subrayado en punteado; su
+  detalle está en el título (mouse). Son indicios para orientar el repaso, no
+  una medición de la competencia.
 
 | Eje (`analisis-de-items.md`) | Rótulo en pantalla | Ítems | n |
 |---|---|---|---|
 | Hardware, software, programa | Hardware y software | 1, 2, 9 | 3 |
-| Instrucciones, datos, operaciones, resultados | Instrucciones y datos | 3, 10, 11, 24 | 4 |
+| Instrucciones, datos, operaciones, resultados | Datos y operaciones | 3, 10, 11, 24 | 4 |
 | Entrada, procesamiento y salida | Entrada y salida | 4, 5, 12, 21, 25 | 5 |
 | CPU y memoria / Von Neumann | CPU y memoria | 6, 20, 30 | 3 |
 | RAM, almacenamiento y recorrido | RAM y almacenamiento | 7, 13, 22 | 3 |
@@ -152,9 +159,89 @@ múltiple, `-`, `?` o dudosa). Cada parte muestra sus cifras en cuanto todos sus
 «sin cargar»), sin porcentaje. Global y ejes aparecen cuando están cargados
 todos los ítems de las partes contabilizadas (p. ej., si cuentan 1 y 2, al
 completar el 16); activar una parte incompleta los vuelve a ocultar hasta
-completarla. Guardar pide los 30 ítems con valor aunque alguna parte no se
-contabilice (una parte no rendida se transcribe con `-`); es una limitación
-conocida. La fila guardada se actualiza recién al guardar.
+completarla. La fila guardada se actualiza recién al guardar.
+
+**Qué hace falta para guardar.** Al menos una parte marcada para
+contabilizar (si se desmarcan las cuatro, no se guarda: «Marcá al menos una
+parte para contabilizar antes de guardar.»; las respuestas no se tocan). Y sólo
+los ítems de las partes que se contabilizan tienen que tener un valor. Una parte que no se contabiliza puede
+quedar sin cargar, del todo o en parte: esos ítems quedan como «no
+transcriptos», que no es lo mismo que `-` (casillero en blanco del estudiante),
+y no se convierten en `-`. Las respuestas que sí se cargaron se conservan. Los
+ítems sin cargar no entran en denominadores, no cuentan como en blanco y no
+afectan ejes ni devolución. Si después se vuelve a contabilizar esa parte, sus
+ítems vacíos vuelven a ser obligatorios y no se puede guardar hasta
+completarlos. El aviso «Faltan N ítems» cuenta sólo los obligatorios.
+
+### Devolución al estudiante
+
+Junto a los resultados (al cargar, en Ver y en Editar), cuando están completas
+las partes contabilizadas, la herramienta propone dos textos derivados de la
+misma clasificación. Se recalculan desde las respuestas con cada cambio; no se
+guardan en `localStorage` ni se exportan en el TSV.
+
+**Intensidad por eje (la evidencia).** Cuenta los errores firmes del eje entre
+sus ítems de partes contabilizadas: respuestas incorrectas, en blanco o con
+varias letras incorrectas. Las ilegibles y dudosas (`?`, `B?`) no son error ni
+acierto. Un eje necesita al menos 2 errores firmes para tener indicación. Con
+al menos 3 ítems contabilizados, es **volver a estudiar** si los errores son
+mayoría (más errores que ítems no errados); si no, **repasar**. Con 1 o 2
+ítems, como mucho repasar.
+
+| Ítems contabilizados en el eje | Volver a estudiar | Repasar | Sin indicación |
+|---|---|---|---|
+| 5 | 3 errores o más | 2 | 0 o 1 |
+| 4 | 3 o 4 | 2 | 0 o 1 |
+| 3 | 2 o 3 | nunca (2 de 3 ya es mayoría) | 0 o 1 |
+| 2 | nunca | los 2 | 0 o 1 |
+| 1 | nunca | nunca | siempre |
+
+Un solo error nunca marca un tema. No hay umbrales de porcentaje. En el panel,
+cada eje marcado muestra «volver a estudiar» o «repasar».
+
+**Unidades de estudio (lo que se comunica).** Los ocho ejes se comunican en
+seis unidades, siempre en este orden pedagógico fijo (el orden no depende de
+la cantidad de errores):
+
+1. hardware y software;
+2. CPU, RAM y almacenamiento (ejes CPU y memoria + RAM y almacenamiento);
+3. sistema operativo;
+4. datos y operaciones;
+5. entrada, salida y estado (ejes entrada y salida + estado);
+6. representaciones.
+
+Las tres primeras forman la familia «la máquina» y la cuarta y la quinta, «el
+procesamiento de información»; las familias sólo ordenan, no se nombran. Una
+unidad de dos ejes se nombra junta sólo si ambos tienen la misma indicación; si
+no, cada eje va con su nombre propio («CPU y memoria», «RAM y almacenamiento»,
+«entrada y salida», «estado») en su intensidad. Así, todo eje con indicación
+queda cubierto con su intensidad y ningún eje sin indicación aparece por una
+agrupación demasiado amplia. Nunca se reemplazan contenidos por cantidades
+(«varios», «la mayoría», «todos los contenidos»…): si una combinación no se
+deja comprimir, la frase es más larga.
+
+- **Devolución breve** (para escribir a mano): «Volver a estudiar: unidad;
+  unidad. Repasar: unidad; unidad.», sin cifras ni explicaciones. Por ejemplo:
+  «Repasar: estado.», «Volver a estudiar: CPU, RAM y almacenamiento; sistema
+  operativo.», «Volver a estudiar: sistema operativo. Repasar: estado.». Con
+  los ocho ejes para volver a estudiar: «Volver a estudiar: hardware y
+  software; CPU, RAM y almacenamiento; sistema operativo; datos y operaciones;
+  entrada, salida y estado; representaciones.».
+- **Devolución extendida** (para mail o Classroom): las mismas unidades en el
+  mismo orden, una oración por unidad con qué revisar según los ítems fallados
+  (hasta dos ideas por eje, derivadas de «Qué mide» en
+  `analisis-de-items.md`). Por ejemplo: «Conviene volver a estudiar CPU, RAM y
+  almacenamiento, especialmente: qué hace la CPU y qué hace la RAM mientras se
+  ejecuta un programa; qué información está en uso (RAM) y qué información queda
+  guardada (almacenamiento). También repasá estado: qué datos forman el estado
+  de un sistema; qué cambia y qué se mantiene en el estado.».
+- Sin temas marcados: «Revisar los errores marcados.» si hay errores sueltos;
+  «Bien: seguir así.» si no hay errores.
+
+«Copiar breve» y «Copiar extendida» copian sólo ese texto y no modifican la
+evaluación. Si en las partes contabilizadas hay respuestas a revisar, el panel
+avisa que la devolución es **provisoria** (el aviso no se copia): conviene
+resolverlas en el papel antes de usarla.
 
 ### Corrección visible
 
@@ -163,19 +250,19 @@ el estudiante y, afuera, en rojo, lo que acepta la clave. En la grilla aparece
 a la derecha del casillero; en las filas guardadas, como superíndice. Es sólo
 presentación: no cambia la respuesta cruda, el TSV ni los resultados.
 
-| Respuesta | Corrección roja |
+| Respuesta | Marca roja |
 |---|---|
-| correcta | ninguna |
+| correcta (coincide con una respuesta aceptada; en el 18, `B`, `D` o `B+D`) | `✓` (carácter de texto, no emoji) |
 | incorrecta, en blanco o varias letras incorrectas | la letra de la clave |
 | ítem 18 incorrecto (incluido en blanco) | `B/D` (el título aclara: B, D o B+D) |
-| `?` o dudosa (`B?`, `B+D?`) | ninguna: queda «a revisar» |
+| `?` o dudosa (`B?`, `B+D?`) | ninguna: queda «a revisar» (sin `✓` aunque la letra coincida) |
 
 Una `D` en 1–8 se señala con borde u ondulado rojo (aviso de transcripción) y
 lleva su corrección afuera, como cualquier incorrecta.
 
 La clave está copiada en `index.html` (`ACEPTADAS`) y los ejes en `EJES`,
 porque un archivo abierto desde el disco no puede leer otro archivo.
-`tests/transcripcion-evaluacion-a.test.mjs` los compara con `clave-docente.md`
+`tests/herramienta-evaluacion-a.test.mjs` los compara con `clave-docente.md`
 y `analisis-de-items.md` y falla si difieren: si cambia alguno de esos
 documentos, actualizar también `index.html`.
 
@@ -189,7 +276,8 @@ documentos, actualizar también `index.html`.
 | `?` | Ilegible: hay que volver al papel. |
 | `B?` / `B+D?` | Lectura dudosa: lo más probable es eso, pero conviene revisar. |
 
-No hay valor para «no cargado»: no se puede guardar una evaluación incompleta.
+Un ítem sin cargar sólo puede guardarse si su parte no se contabiliza (ver
+«Qué hace falta para guardar»); en el TSV va como campo vacío.
 Una `D` en 1–8 se conserva tal cual (con borde rojo de aviso) porque es lo que
 dice el papel; no se reinterpreta.
 
@@ -206,7 +294,9 @@ SI-A	3.º A	Nombre Ficticio	B	A	C	…	A	1	1	1	0
 - `evaluacion` vale siempre `SI-A`, para no mezclar archivos al pegar.
 - `curso` y `estudiante` se guardan como se escribieron, sin tabulaciones ni
   saltos de línea (se reemplazan por un espacio) y sin espacios en los extremos.
-- `i01`…`i30` siguen la tabla de valores anterior.
+- `i01`…`i30` siguen la tabla de valores anterior. Un campo vacío es un ítem
+  sin cargar y sólo puede aparecer en una parte con `parteN_cuenta` = `0`
+  (distinto de `-`, que es un casillero en blanco).
 - `parte1_cuenta`…`parte4_cuenta`: `1` si la parte se contabiliza en el global
   y los ejes de ese estudiante, `0` si no. Con estas columnas y la clave se
   reconstruyen todos los resultados.
@@ -238,7 +328,9 @@ Se valida todo antes de cambiar nada:
 - cada `i01`–`i30` debe ser un valor que la herramienta registra, tal cual: `A`–`D`,
   varias letras en orden alfabético sin repetir (`A+B`, `B+C+D`), `-`, `?` o con
   `?` final (`B?`, `B+D?`). Las respuestas no se recalculan ni se transforman:
-  `B+A`, por ejemplo, se rechaza en lugar de reordenarse;
+  `B+A`, por ejemplo, se rechaza en lugar de reordenarse. Un campo vacío
+  (ítem sin cargar) se acepta sólo si su parte tiene `parteN_cuenta` = `0`; en
+  una parte que se contabiliza, es un error;
 - `parte1_cuenta`–`parte4_cuenta` deben ser `1` (se contabiliza) o `0` (no).
 
 Se toleran el final de línea `\r\n` y una marca BOM inicial, que suelen agregar
@@ -262,21 +354,26 @@ archivo. El `.tsv` es privado: guardarlo fuera del repositorio.
 
 ## Compatibilidad
 
-Datos guardados en `localStorage` por versiones anteriores (sin la
-configuración de partes) se abren con las cuatro partes contabilizadas. La
-clave de almacenamiento (`aula-transcripcion-si-a-v1`) es la misma que usaba el
-prototipo.
+Lo guardado en el navegador está bajo la clave `aula-evaluacion-a-v1`. Las
+versiones anteriores, con el nombre «herramienta de transcripción», usaban
+`aula-transcripcion-si-a-v1`. No hay migración automática entre las dos claves:
+para recuperar esos datos, exportar el TSV con la versión anterior e importarlo
+aquí, porque el formato TSV es el mismo. Datos sin la configuración de partes
+se abren con las cuatro partes contabilizadas.
 
 ## Pruebas (sólo datos ficticios)
 
-`npm test` incluye `tests/transcripcion-evaluacion-a.test.mjs`, que carga
+`npm test` incluye `tests/herramienta-evaluacion-a.test.mjs`, que carga
 `index.html` en jsdom y lo maneja con el teclado: carga y autoavance, `B+C
 Enter`, blanco, ilegible, dudosa, D fuera de opciones, correcciones, edición,
 corrección roja, resultados por parte (también parciales), global con
 denominadores 30, 24, 22, 16, 6 y sin partes, ejes con denominadores variables,
 configuración independiente por evaluación, resultados en vivo, recarga, datos
 del formato anterior, TSV de 37 columnas, Ver en sólo lectura (sin cambios ni
-advertencias) frente a Editar, importación (ida y vuelta exacta con partes
+advertencias) frente a Editar, devolución breve y extendida (regla de
+mayoría, unidades de estudio en orden fijo, correspondencia con la
+clasificación, dudosas, partes excluidas, evidencia insuficiente y copiar),
+importación (ida y vuelta exacta con partes
 `1110`, `1011` y `0001`, confirmación al reemplazar, archivos inválidos sin
 importación parcial, `\r\n` y BOM) y coincidencia de la clave y los ejes con
 sus documentos.
@@ -290,10 +387,10 @@ y Node.js de Windows, como `fuente/generar-pdf.mjs`):
 ```
 
 `flujo.mjs` usa teclas y clics nativos (incluidas la descarga del `.tsv`, Ver
-/ Editar y la importación de un `.tsv` con partes `1011` y de uno inválido). Con `URL_HERRAMIENTA=http://localhost:4321/herramientas/transcripcion-evaluacion-a/`
+/ Editar y la importación de un `.tsv` con partes `1011` y de uno inválido). Con `URL_HERRAMIENTA=http://localhost:4321/herramientas/evaluacion-a/`
 prueba la ruta de `npm run dev` en lugar del archivo.
 `layout.mjs` comprueba, en cada ancho, que no haya desborde horizontal, que
 nada sobresalga de su columna, que las correcciones y los resultados de cada
 parte no pisen casilleros, y que las respuestas queden alineadas con la
 cabecera. Perfil del navegador, descargas y capturas quedan en
-`tmp/transcripcion-evaluacion-a-navegador/`, fuera de Git.
+`tmp/herramienta-evaluacion-a-navegador/`, fuera de Git.

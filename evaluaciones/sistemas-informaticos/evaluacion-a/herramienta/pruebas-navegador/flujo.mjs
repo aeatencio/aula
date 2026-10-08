@@ -141,8 +141,14 @@ e = await estado();
 verificar(e.filas === 2 && e.resultados[0].endsWith("5/6 · 83 %resp. 6/6"), `tras editar el 30, la parte 4 se recalcula → ${e.resultados[0]}`);
 verificar(/cambios sin exportar/.test(e.export), "la edición deja cambios sin exportar");
 // Corrección roja en las filas guardadas.
+// Corrección (la clave) en incorrectas y blancos; ✓ en las que coinciden con la clave.
 const corrFilas = await evaluar(`[...document.querySelectorAll("#tabla tbody tr")].map((tr) =>
-  Object.fromEntries([...tr.querySelectorAll("td.resp .v")].flatMap((v, i) => { const c = v.querySelector(".corr"); return c ? [[i + 1, c.textContent]] : []; })))`);
+  Object.fromEntries([...tr.querySelectorAll("td.resp .v")].flatMap((v, i) => { const c = v.querySelector(".corr"); return c && c.textContent !== "✓" ? [[i + 1, c.textContent]] : []; })))`);
+const tildesFilas = await evaluar(`[...document.querySelectorAll("#tabla tbody tr")].map((tr) =>
+  [...tr.querySelectorAll("td.resp .v")].flatMap((v, i) => (v.querySelector(".corr")?.textContent === "✓" ? [i + 1] : [])))`);
+verificar(JSON.stringify(tildesFilas[0]) === JSON.stringify(Array.from({ length: 29 }, (_, i) => i + 1)), `fila 1: ✓ en las 29 correctas`);
+verificar(JSON.stringify(tildesFilas[1]) === JSON.stringify([1, 2, 3, 8, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 23, 26, 28, 29]),
+  `fila 2: ✓ en las correctas (incluido B+D en el 18), no en ?, B? ni blancos → ${JSON.stringify(tildesFilas[1])}`);
 verificar(JSON.stringify(corrFilas[0]) === JSON.stringify({ 30: "A" }), `fila 1: corrección sólo en el 30 → ${JSON.stringify(corrFilas[0])}`);
 verificar(JSON.stringify(corrFilas[1]) === JSON.stringify({ 4: "B", 6: "A", 7: "B", 22: "B", 24: "D", 25: "C", 27: "D", 30: "A" }),
   `fila 2: incorrectas y blancos corregidos; ? y B? sin corrección → ${JSON.stringify(corrFilas[1])}`);
@@ -304,7 +310,7 @@ const filasAntes = e.filas;
 await escribir("{Enter}");
 e = await estado();
 const sint = await evaluar(`[...document.querySelectorAll("#tabla tbody tr:last-child .sintesis .s")].map((s) => s.textContent)`);
-verificar(e.filas === filasAntes + 1 && sint[0] === "29/30 · 97 %" && sint[4] === "2/3 · 67 %", `fila guardada con global y ejes → ${sint.slice(0, 5).join(" | ")}`);
+verificar(e.filas === filasAntes + 1 && sint[0] === "29/30 · 97 %" && sint[4] === "2/3", `fila guardada con global y ejes → ${sint.slice(0, 5).join(" | ")}`);
 // ---- Partes contabilizadas (séptima iteración) ----
 const casillaSel = (n) => `#grilla .parte[data-parte="${n}"] .cuenta input`;
 await evaluar('document.getElementById("estudiante").focus()');
@@ -343,7 +349,7 @@ verificar(ultima.length === 37 && ultima.slice(33).join("") === "1011" && ultima
 await evaluar("window.__confirmaciones = 0; window.confirm = () => { window.__confirmaciones++; return true; }");
 const filasAntesVer = (await estado()).filas;
 const tsvAntesVer = (await estado()).vista;
-const almacenAntesVer = await evaluar('localStorage.getItem("aula-transcripcion-si-a-v1")');
+const almacenAntesVer = await evaluar('localStorage.getItem("aula-evaluacion-a-v1")');
 await clic('#tabla tbody tr:nth-child(1) button[data-accion="ver"]');
 let barra = await evaluar('!document.getElementById("barraVer").hidden && document.getElementById("accionesCarga").hidden');
 const valoresVer = (await estado()).valores;
@@ -355,7 +361,7 @@ verificar(barra && e.valores === valoresVer && e.vista === tsvAntesVer && (await
 await clic('#tabla tbody tr:nth-child(2) button[data-accion="ver"]');
 await escribir("{Escape}");
 barra = await evaluar('document.getElementById("barraVer").hidden');
-const almacenTrasVer = await evaluar('localStorage.getItem("aula-transcripcion-si-a-v1")');
+const almacenTrasVer = await evaluar('localStorage.getItem("aula-evaluacion-a-v1")');
 verificar(barra && almacenTrasVer === almacenAntesVer && (await evaluar("window.__confirmaciones")) === 0,
   "Ver → otra con Ver → Esc: sin confirmaciones y localStorage intacto");
 await clic('#tabla tbody tr:nth-child(2) button[data-accion="ver"]');
@@ -401,6 +407,62 @@ await evaluar('document.getElementById("btnDescartar").click()');
 await evaluar("window.__confirmaciones = 0");
 await elegirArchivo(join(salida, "importar-ficticio.tsv"));
 verificar((await evaluar("window.__confirmaciones")) === 1 && (await estado()).filas === filasExportadas, "con filas existentes, importar pide confirmación antes de reemplazar");
+// ---- Devolución breve y extendida ----
+const claveDev = "BACBCABCDBADBCACBBAACBCDCBDABA".split("");
+for (const n of [8, 15, 23, 14, 17]) claveDev[n - 1] = claveDev[n - 1] === "A" ? "B" : "A";
+await evaluar('document.getElementById("estudiante").focus()');
+await texto("Ficticia Devolución");
+await escribir(`{Enter}${claveDev.join("")}`);
+const devTxt = () => evaluar('({ breve: document.getElementById("devolucionBreve")?.textContent, extendida: document.getElementById("devolucionExtendida")?.textContent })');
+let dv = await devTxt();
+verificar(dv.breve === "Volver a estudiar: sistema operativo. Repasar: estado." &&
+  /^Conviene volver a estudiar sistema operativo, especialmente: cómo administra los recursos; el papel de los drivers\. También repasá estado/.test(dv.extendida),
+  `devolución al cargar → ${dv.breve}`);
+const almacenDev = await evaluar('localStorage.getItem("aula-evaluacion-a-v1")');
+await clic("#btnCopiarBreve");
+await espera(200);
+const msgBreve = await evaluar('document.getElementById("mensaje").textContent');
+await clic("#btnCopiarExtendida");
+await espera(200);
+const msgExt = await evaluar('document.getElementById("mensaje").textContent');
+verificar(/Devolución breve copiada/.test(msgBreve) && /Devolución extendida copiada/.test(msgExt) &&
+  (await evaluar('localStorage.getItem("aula-evaluacion-a-v1")')) === almacenDev, "Copiar breve y Copiar extendida no modifican la evaluación");
+await evaluar('document.getElementById("zona").focus()');
+await escribir("{Enter}");
+const nDev = (await estado()).filas;
+await clic(`#tabla tbody tr:nth-child(${nDev}) button[data-accion="ver"]`);
+dv = await devTxt();
+verificar(dv.breve === "Volver a estudiar: sistema operativo. Repasar: estado.", "la misma devolución en Ver");
+verificar(!/Volver a estudiar|Conviene/.test((await estado()).vista), "la devolución no está en el TSV");
+await evaluar('document.getElementById("btnCerrarVista").click()');
+// ---- Esc en Ver: comando de la vista, esté donde esté el foco ----
+const abiertaVer = () => evaluar('!document.getElementById("barraVer").hidden');
+await clic('#tabla tbody tr:nth-child(1) button[data-accion="ver"]');
+await evaluar('document.getElementById("btnEditarVista").focus()');
+const avisoEnVer = await evaluar('getComputedStyle(document.getElementById("fuera")).display');
+await escribir("{Escape}");
+verificar(avisoEnVer === "none" && !(await abiertaVer()), `Ver con el foco en un botón: sin aviso de la grilla (${avisoEnVer}) y Esc vuelve a la carga`);
+await clic('#tabla tbody tr:nth-child(2) button[data-accion="ver"]');
+await evaluar("document.activeElement.blur()");
+await escribir("{Escape}");
+verificar(!(await abiertaVer()), "Ver sin foco: Esc vuelve a la carga");
+await clic('#tabla tbody tr:nth-child(1) button[data-accion="ver"]');
+await evaluar('document.getElementById("zona").focus()');
+await escribir("{Escape}");
+verificar(!(await abiertaVer()), "Ver con el foco en la grilla: Esc vuelve a la carga");
+
+// ---- Guardar con partes que no se contabilizan sin cargar ----
+const filasAntesParcial = (await estado()).filas;
+await evaluar('document.getElementById("estudiante").focus()');
+await texto("Ficticia Sin Partes 3 y 4");
+await escribir("{Enter}");
+await clic(casillaSel(3));
+await clic(casillaSel(4));
+await escribir("BACBCABCDBADBCAC{Enter}");
+e = await estado();
+const lineaParcial = e.vista.trimEnd().split("\n").at(-1).split("\t");
+verificar(e.filas === filasAntesParcial + 1 && lineaParcial.slice(19, 33).every((c) => c === "") && lineaParcial.slice(33).join("") === "1100",
+  "se guarda con las partes 3 y 4 sin cargar: campos vacíos en el TSV, no «-»");
 const desborde = await evaluar("document.documentElement.scrollWidth <= document.documentElement.clientWidth");
 verificar(desborde, "sin desborde horizontal tras las múltiples");
 
