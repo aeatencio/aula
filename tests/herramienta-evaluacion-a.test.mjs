@@ -242,17 +242,15 @@ test("una evaluación en curso sobrevive a recargar la pestaña", () => {
 
 test("la clave del prototipo coincide con clave-docente.md versionada", () => {
   const md = readFileSync(join(EVALUACION, "clave-docente.md"), "utf8");
-  const tabla = md.split("## Clave")[1];
-  const desdeMd = [];
-  for (const fila of tabla.matchAll(/^\| \d · [^|]+\| [\d–]+ \| ([^|]+) \|$/gm)) {
-    const celda = fila[1].trim();
-    const items = celda.includes("·") ? celda.split("·") : celda.split(/\s+/);
-    for (const item of items) desdeMd.push([...item.matchAll(/\b[A-D](?:\+[A-D])*\b/g)].map((m) => m[0]));
-  }
-  assert.equal(desdeMd.length, 30);
+  // Tablas por ítem: «| n | **B**, **D**, **B+D** | opción | por qué |».
+  const filas = [...md.matchAll(/^\| (\d+) \| ((?:\*\*[A-D](?:\+[A-D])*\*\*(?:, )?)+) \|/gm)];
+  const desdeMd = filas.map((f) => [...f[2].matchAll(/\*\*([A-D](?:\+[A-D])*)\*\*/g)].map((m) => m[1]));
+  assert.deepEqual(filas.map((f) => Number(f[1])), Array.from({ length: 30 }, (_, i) => i + 1));
+  assert.deepEqual(desdeMd[11], ["D"]);
   assert.deepEqual(desdeMd[17], ["B", "D", "B+D"]);
-  assert.match(md, /Ítem 12:\*\* sólo D/);
-  assert.match(md, /Un casillero vacío o con dos letras no suma, salvo \*\*B\+D en el ítem 18\*\*/);
+  assert.match(md, /### Ítem 12 · sólo D/);
+  assert.match(md, /### Ítem 18 · B, D o B\+D/);
+  assert.match(md, /Más de una letra en el casillero: no suma, salvo que esa combinación figure en \*\*Aceptadas\*\* \(sólo \*\*B\+D\*\* en el ítem 18\)/);
   const embebida = JSON.parse(html.match(/const ACEPTADAS = (\[[\s\S]*?\]\s*\]);/)[1]);
   assert.deepEqual(embebida, desdeMd);
 });

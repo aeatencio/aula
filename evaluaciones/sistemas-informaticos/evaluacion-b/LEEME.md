@@ -4,7 +4,7 @@ Instrumento individual, escrito, a libro cerrado y de opción múltiple sobre Si
 
 Uso registrado: se preparó como recuperatorio de la Evaluación A para 3.º año de la escuela Gabriela Mistral, para tomarse el 06/10/2026; el recorrido de referencia fue el que siguió ese curso (Gabriela Mistral · 3.º año · 3.er bimestre 2026).
 
-Tiene 30 ítems en cuatro partes —Reconocer (1–8), Relacionar (9–16), Interpretar (17–24) y Usar lo que sabés (25–30)—, una por cara. Los resultados se registran por parte (sobre 8, 8, 8 y 6), sin puntaje total.
+Tiene 30 ítems en cuatro partes —Reconocer (1–8), Relacionar (9–16), Interpretar (17–24) y Usar lo que sabés (25–30)—, una por cara. Los resultados se registran por parte (sobre 8, 8, 8 y 6): son el resultado principal. Como síntesis puede mostrarse un resultado global con las partes que se contabilicen, que no reemplaza las partes ni es una nota (criterio completo en `clave-docente.md`).
 
 ## Archivos
 
