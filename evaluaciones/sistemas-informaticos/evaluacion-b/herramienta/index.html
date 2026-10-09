@@ -242,6 +242,9 @@
   .devolucion button { font-size: 13px; padding: 2px 10px; }
   .devolucion .provisoria { font-size: 12px; color: var(--dudosa); font-weight: 600; }
   .vp.incompleta { border-left-style: dashed; }
+  .vivo details.intento > summary { cursor: pointer; font-size: 13px; }
+  .vivo details.intento[open] > summary { margin-bottom: 6px; }
+  .vivo .aviso-intento { margin: 0 0 6px; }
   .vivo .faltan { color: var(--suave); font-style: italic; font-size: 12.5px; }
   .vivo-ejes > .faltan { grid-column: 1 / -1; }
   .ve .rot { color: var(--tinta); }
@@ -338,6 +341,47 @@
   .carga.viendo input[readonly] { background: var(--fondo); }
   #sinFilas { color: var(--suave); }
   #leyenda { max-width: 120ch; margin-top: 8px; }
+  /* Cierre A+B (en Ver): mejor evidencia por parte y decisión docente. */
+  .cierre { margin: 2px 0 8px; padding: 8px 10px; border: 2px solid var(--tinta); border-radius: 6px; background: #fff; font-size: 14px; overflow-x: auto; }
+  .cierre[hidden] { display: none; }
+  .cierre-cab { font-size: 13px; margin-bottom: 4px; }
+  .cierre-par { font-size: 13px; margin: 0 0 6px; color: var(--tinta); }
+  .cierre-par.alerta { color: var(--error); font-weight: 600; }
+  .cierre-par button { font-size: 13px; padding: 1px 8px; }
+  .cierre-par .vincular { display: inline; font-size: 13px; color: var(--tinta); }
+  .cierre-par select { font: inherit; max-width: 100%; }
+  .cierre table { width: auto; font-size: 14px; }
+  .cierre th, .cierre td { padding: 3px 10px 3px 0; }
+  .cierre td.num { font-variant-numeric: tabular-nums; }
+  .cierre td:last-child { text-align: center; width: auto; }
+  .cierre .sin { color: var(--suave); }
+  .cierre .revisar { color: var(--dudosa); font-weight: 600; }
+  .cierre-res { margin-top: 6px; display: grid; gap: 2px; }
+  .cierre-sec { display: inline; font-size: 13px; margin: 0; color: var(--tinta); }
+  .cierre h4.cierre-sec { display: block; margin: 10px 0 2px; }
+  .cierre summary h4.cierre-sec { display: inline; }
+  .cierre summary { cursor: pointer; margin-top: 10px; }
+  .cierre-rapida { margin: 0 0 4px; font-size: 13px; }
+  .cierre .pct { color: var(--suave); font-size: 12px; }
+  .cierre td.lectura { font-size: 13px; }
+  .cierre td.lectura.nivel-1 { color: var(--dudosa); }
+  .cierre td.lectura.nivel-2 { color: var(--error); font-weight: 600; }
+  .cierre-orientacion { display: grid; gap: 2px; margin-top: 4px; }
+  .cierre-orientacion .orienta { font-size: 14px; }
+  .cierre-res b { font-size: 16px; }
+  .cierre-res .provisoria { color: var(--dudosa); font-weight: 600; }
+  .cierre-res .p1-no { color: var(--error); font-weight: 600; }
+  .cierre-decision { margin-top: 6px; font-size: 13px; color: var(--suave); display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+  .cierre-decision button { font-size: 13px; padding: 2px 10px; }
+  .cierre-modo { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 0 0 6px; font-size: 14px; }
+  .cierre-modo label { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; font-size: 14px; color: var(--tinta); }
+  .cierre-manual { display: grid; gap: 6px; margin-top: 6px; }
+  .cierre-manual label { display: grid; gap: 2px; font-size: 13px; color: var(--suave); }
+  .cierre-manual select { justify-self: start; font: inherit; font-size: 14px; padding: 2px 4px; }
+  .cierre-manual textarea { font: inherit; font-size: 14px; width: 100%; min-height: 5em; resize: vertical; padding: 4px 6px; }
+  td .cierre-fila { display: block; font-size: 12px; color: var(--suave); margin-top: 2px; }
+  td .cierre-fila b { color: var(--tinta); font-weight: 600; }
+  td .cierre-fila .provisoria { color: var(--dudosa); }
   /* Angosto: cada evaluación como tarjeta; cada parte lleva su rótulo. */
   @media (max-width: 760px) {
     #tabla thead { display: none; }
@@ -361,6 +405,46 @@
     padding: 8px; font-size: 12px; overflow-x: auto; max-height: 14em; tab-size: 6;
   }
   #avisoAlmacen { display: none; color: var(--error); font-weight: 600; }
+  /* Devoluciones de cierre para imprimir (Oficio). En pantalla, una vista
+     previa con el ancho útil de la hoja; al imprimir, sólo los bloques. */
+  .impresion { max-width: 1800px; margin: 14px auto 0; }
+  .impresion[hidden] { display: none; }
+  .impresion-barra { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin-bottom: 12px; }
+  .impresion-barra h2 { margin: 0; }
+  .impresion-export { flex: 1 1 100%; }
+  .impresion-curso { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; color: var(--tinta); }
+  .hoja { max-width: 192mm; margin: 0 auto; background: #fff; color: #111; }
+  .final { border: 1px solid #8a939e; border-radius: 4px; padding: 3mm 4mm; margin: 0 0 5mm; font-size: 10.5pt; line-height: 1.3;
+    break-inside: avoid; page-break-inside: avoid; }
+  .final-cab { display: flex; flex-wrap: wrap; align-items: baseline; gap: 1mm 4mm; border-bottom: 1px solid #c9d0d8; padding-bottom: 1.5mm; }
+  .final-nombre { font-size: 12.5pt; font-weight: 700; }
+  .final-cat { margin-left: auto; font-size: 11.5pt; }
+  .final .nota { font-size: 9pt; }
+  .final h3 { font-size: 10pt; margin: 2.5mm 0 .5mm; }
+  .final p { margin: .5mm 0; }
+  .final table { width: auto; font-size: 10pt; }
+  .final th, .final td { padding: .3mm 4mm .3mm 0; border-bottom: 1px solid #e3e7ec; }
+  .final .pct { color: #555; font-size: 9pt; }
+  .final .sin { color: #555; }
+  .final .revisar { color: #7a4600; }
+  .final-texto { white-space: pre-wrap; border-left: 2px solid #8a939e; padding-left: 2.5mm; }
+  .clave-compacta { margin-top: 2.5mm; padding-top: 1.5mm; border-top: 1px dashed #8a939e; color: #222; }
+  .clave-tit { display: block; font-size: 8.5pt; color: #444; margin-bottom: .5mm; }
+  .clave-linea { display: flex; flex-wrap: wrap; align-items: baseline; gap: .5mm 0; font-size: 9pt; line-height: 1.35; }
+  .clave-ev { font-weight: 700; margin-right: 1.2mm; }
+  .clave-parte { display: inline-flex; align-items: baseline; gap: 0 .8mm; padding: 0 1.3mm; border-left: 1px solid #8a939e; white-space: nowrap; }
+  .clave-p { font-size: 7pt; color: #555; }
+  .clave-item { font-weight: 600; letter-spacing: -.01em; }
+  .clave-item small { font-size: 6.5pt; font-weight: 400; color: #555; margin-right: .1mm; }
+  .clave-nota { font-size: 8.5pt; color: #333; margin-top: .5mm; }
+  @media print {
+    @page { size: 216mm 356mm; margin: 12mm; }
+    body:has(.impresion:not([hidden])) { background: #fff; padding: 0; }
+    body:has(.impresion:not([hidden])) .pagina { display: none; }
+    .impresion { border: 0; padding: 0; margin: 0; max-width: none; background: #fff; }
+    .impresion-barra { display: none; }
+    .hoja { max-width: none; }
+  }
 </style>
 </head>
 <body>
@@ -376,6 +460,8 @@
   <div id="barraVer" class="barra-ver" hidden>
     <span>Sólo lectura: <b id="verNombre"></b></span>
     <span class="barra-ver-acciones">
+      <button type="button" id="btnAnteriorVista" title="Ver la evaluación guardada anterior">← Anterior</button>
+      <button type="button" id="btnSiguienteVista" title="Ver la evaluación guardada siguiente">Siguiente →</button>
       <button type="button" id="btnEditarVista">Editar esta evaluación</button>
       <button type="button" id="btnCerrarVista">Volver a la carga</button>
     </span>
@@ -401,6 +487,7 @@
   </div>
 
   <div id="mensaje" role="status" aria-live="assertive"></div>
+  <div id="cierre" class="cierre" hidden></div>
   <div id="vivo" class="vivo"></div>
   <div class="resumen" id="resumen"></div>
   <div class="acciones" id="accionesCarga">
@@ -433,6 +520,8 @@
     <button type="button" id="btnImportar" title="Restaurar evaluaciones desde un .tsv exportado por esta herramienta (se lee en el navegador; no se envía)">Importar TSV…</button>
     <input type="file" id="archivoImport" accept=".tsv,.txt,text/tab-separated-values,text/plain" hidden>
     <button type="button" class="peligro" id="btnVaciar">Vaciar sesión</button>
+    <button type="button" id="btnImpresion" title="Devoluciones de cierre por estudiante (A y B) para imprimir en Oficio, y datos anonimizados del curso para análisis">Cierre del curso: imprimir o exportar…</button>
+    <button type="button" class="peligro" id="btnBorrarCierre" title="Borra de este navegador las decisiones de cierre A+B (modo, partes elegidas, categoría y devolución manuales, vínculos manuales), compartidas por las herramientas de A y B">Borrar decisiones de cierre</button>
     <span class="nota" id="estadoExport"></span>
   </div>
  </div>
@@ -456,6 +545,20 @@
   <pre id="vista"></pre>
 </section>
 </main>
+
+<section id="impresion" class="impresion" hidden aria-labelledby="t-impresion">
+  <div class="impresion-barra">
+    <h2 id="t-impresion">Cierre del curso</h2>
+    <label class="impresion-curso">Curso <select id="impresionCurso"></select></label>
+    <button type="button" class="principal" id="btnImprimir">Imprimir devoluciones</button>
+    <button type="button" id="btnExportarAnonimo">Exportar datos anonimizados para análisis (.json)</button>
+    <button type="button" id="btnCerrarImpresion">Cerrar</button>
+    <span class="nota"><span id="impresionCantidad"></span> Impresión: hoja Oficio (216 × 356 mm), al 100 %; cada devolución entera en una página.</span>
+    <span class="nota impresion-export">El archivo incluye resultados por curso, partes y contenidos del curso elegido (o de todos). No incluye nombres,
+      respuestas individuales ni devoluciones escritas.</span>
+  </div>
+  <div class="hoja" id="impresionBloques"></div>
+</section>
 
 <script>
 "use strict";
@@ -535,6 +638,30 @@
     19: "qué muestra y qué no muestra una representación",
     23: "que un esquema de entrada, procesamiento y salida no muestra el estado",
   };
+  // Cierre A+B: esta herramienta es el intento B; lee en sólo lectura los
+  // registros guardados del intento A (su clave de localStorage y su clave de
+  // respuestas). tests/herramienta-evaluacion-b.test.mjs comprueba que coincidan
+  // con la otra herramienta.
+  const LETRA = "B";
+  const OTRA = { letra: "A", claveLocal: "aula-evaluacion-a-v1" };
+  const OTRA_ACEPTADAS = [
+    ["B"], ["A"], ["C"], ["B"], ["C"], ["A"], ["B"], ["C"],
+    ["D"], ["B"], ["A"], ["D"], ["B"], ["C"], ["A"], ["C"],
+    ["B"], ["B", "D", "B+D"], ["A"], ["A"], ["C"], ["B"], ["C"], ["D"],
+    ["C"], ["B"], ["D"], ["A"], ["B"], ["A"]
+  ];
+  // Ejes de la Evaluación A (ids comunes; sus ítems principales), para la
+  // lectura por contenido del cierre A+B.
+  const OTRA_EJES = [
+    { "id": "hw", "items": [1, 2, 9] },
+    { "id": "datos", "items": [3, 10, 11, 24] },
+    { "id": "es", "items": [4, 5, 12, 21, 25] },
+    { "id": "cpu", "items": [6, 20, 30] },
+    { "id": "ram", "items": [7, 13, 22] },
+    { "id": "estado", "items": [14, 17, 18, 26] },
+    { "id": "so", "items": [8, 15, 23, 28, 29] },
+    { "id": "repr", "items": [16, 19, 27] }
+  ];
   // </CONFIG> ················································
 
   const N = PARTES.at(-1).hasta;
@@ -713,6 +840,311 @@
   const TILDE = "\u2713";
   const marcaClave = (i, v) => (acierto(i, v) ? TILDE : correccion(i, v));
   const tituloMarca = (i, v) => (acierto(i, v) ? "Coincide con la clave" : tituloCorreccion(i));
+
+  // ---------- cierre A+B (lectura derivada) ----------
+  // Dos capas separadas. Evidencia: cada parte toma el mejor resultado válido
+  // entre los dos intentos (válido = la parte se contabiliza en ese intento y
+  // está completa). Decisión docente, por estudiante, en uno de dos modos:
+  // «procesado» (elige qué partes con evidencia cuentan; si una parte cuenta,
+  // cuenta con su mejor resultado, y la categoría se calcula) o «manual»
+  // (elige la categoría y escribe la devolución; no se calcula nada). Sólo se
+  // guardan esas decisiones, en CLAVE_CIERRE; los registros de A y de B se leen
+  // y nunca se escriben desde aquí.
+  const CLAVE_CIERRE = "aula-evaluacion-cierre-v1";
+  const CATEGORIAS = ["En proceso", "Suficiente", "Avanzado"];
+  const INTENTOS = [LETRA, OTRA.letra].sort();
+  const NOMBRE = (l) => `Evaluación ${l}`;
+  // Emparejamiento local por curso y estudiante: sin espacios de más, sin
+  // mayúsculas ni tildes. No se guarda ningún vínculo entre A y B.
+  const normalizar = (t) => String(t ?? "").normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().replace(/\s+/g, " ").trim();
+  const claveEstudiante = (f) => `${normalizar(f.curso)}\t${normalizar(f.estudiante)}`;
+  const decimal = (a, n) => String(Math.round((1000 * a) / n) / 10).replace(".", ",");
+  const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const listaPartes = (ns) => ns.join(", ").replace(/, (\d+)$/, " y $1");
+
+  // Filas guardadas del otro intento, en sólo lectura; null si no se pueden leer.
+  function filasOtra() {
+    try {
+      const d = JSON.parse(localStorage.getItem(OTRA.claveLocal) || "null");
+      if (!d || !Array.isArray(d.filas)) return [];
+      return d.filas.filter((f) => f && typeof f.estudiante === "string" && Array.isArray(f.respuestas) && f.respuestas.length === N &&
+        f.respuestas.every((v) => v === null || VALOR.test(v))).map((f) => ({ ...f, curso: f.curso ?? "", cuentan: cuentanValidas(f.cuentan) }));
+    } catch {
+      return null;
+    }
+  }
+  // Decisiones docentes, en CLAVE_CIERRE:
+  //   { estudiantes: { "<curso>\t<estudiante>": { modo, partes?, categoria?, devolucion? } },
+  //     vinculos?: [{ A: "<curso>\t<estudiante>", B: "<curso>\t<estudiante>" }] }
+  // estudiantes: por curso y estudiante normalizados (de la A si el estudiante
+  // tiene A emparejada; si no, del intento propio). modo: "procesado" o
+  // "manual"; partes: [bool × 4] elegidas en procesado; categoria y devolucion:
+  // lo elegido y escrito en manual. Lo del modo que no está activo se conserva
+  // (volver a él no pierde lo escrito) y no se usa. vinculos: parejas A ↔ B que
+  // el docente consolidó a mano porque los nombres no coinciden; cada registro,
+  // en un solo vínculo.
+  function leerDecisiones() {
+    const vacio = { estudiantes: {}, vinculos: [] };
+    try {
+      const d = JSON.parse(localStorage.getItem(CLAVE_CIERRE) || "null");
+      if (!d || typeof d !== "object") return vacio;
+      const valida = (v) => v && ["procesado", "manual"].includes(v.modo) &&
+        (v.partes === undefined || (Array.isArray(v.partes) && v.partes.length === PARTES.length && v.partes.every((x) => typeof x === "boolean"))) &&
+        (v.categoria === undefined || v.categoria === null || CATEGORIAS.includes(v.categoria)) &&
+        (v.devolucion === undefined || typeof v.devolucion === "string");
+      const estudiantes = d.estudiantes && typeof d.estudiantes === "object"
+        ? Object.fromEntries(Object.entries(d.estudiantes).filter(([, v]) => valida(v))) : {};
+      const usados = new Set();
+      const vinculos = (Array.isArray(d.vinculos) ? d.vinculos : []).filter((v) => {
+        if (!v || typeof v.A !== "string" || typeof v.B !== "string" || usados.has(`A${v.A}`) || usados.has(`B${v.B}`)) return false;
+        usados.add(`A${v.A}`).add(`B${v.B}`);
+        return true;
+      }).map(({ A, B }) => ({ A, B }));
+      return { estudiantes, vinculos };
+    } catch {
+      return vacio;
+    }
+  }
+  function escribirDecisiones({ estudiantes, vinculos }) {
+    try {
+      localStorage.setItem(CLAVE_CIERRE, JSON.stringify(vinculos.length ? { estudiantes, vinculos } : { estudiantes }));
+    } catch {
+      mensaje("No se pudo guardar la decisión de cierre en este navegador.", "error");
+    }
+  }
+  function guardarDecision(clave, cambios) {
+    const d = leerDecisiones();
+    d.estudiantes[clave] = { modo: "procesado", ...d.estudiantes[clave], ...cambios };
+    escribirDecisiones(d);
+  }
+
+  // Resultado de una parte en un intento: «valida» (se contabiliza y está
+  // completa), «no cuenta» o «incompleta». Con la clave de ese intento.
+  function parteIntento(aceptadas, f, k) {
+    const p = PARTES[k];
+    const vs = f.respuestas.slice(p.desde - 1, p.hasta);
+    const completa = !vs.includes(null);
+    const aciertos = completa ? vs.filter((v, j) => !v.includes("?") && aceptadas[p.desde - 1 + j].includes(v)).length : 0;
+    const revisar = completa ? vs.filter(revisa).length : 0;
+    const estado = !f.cuentan[k] ? "no cuenta" : completa ? "valida" : "incompleta";
+    return { estado, completa, aciertos, revisar, total: vs.length };
+  }
+  // Mejor evidencia de una parte: el mayor puntaje entre los intentos válidos
+  // («de»: uno o los dos si empatan). «techo»: hasta dónde podría llegar si las
+  // respuestas a revisar resultaran correctas.
+  function mejorParte(por) {
+    const validas = INTENTOS.filter((l) => por[l] && por[l].estado === "valida");
+    if (!validas.length) return null;
+    const aciertos = Math.max(...validas.map((l) => por[l].aciertos));
+    return {
+      aciertos, total: por[validas[0]].total,
+      de: validas.filter((l) => por[l].aciertos === aciertos),
+      techo: Math.max(...validas.map((l) => por[l].aciertos + por[l].revisar)),
+    };
+  }
+  // Categoría sobre las partes elegidas, con la fracción exacta (en enteros,
+  // sin redondear porcentajes): Suficiente desde el 55 % inclusive (la vieja
+  // tolerancia de 5,5 → 6: 17/30, 9/16, 14/24); Avanzado desde el 80 % y sólo
+  // con las cuatro partes (24/30). Además, para salir de En proceso hay que
+  // cumplir el requisito de la Parte 1 (p1). Sin partes: null.
+  function categoria(aciertos, total, partes, p1) {
+    if (!partes) return null;
+    if (!p1 || 20 * aciertos < 11 * total) return "En proceso";
+    return partes === PARTES.length && 5 * aciertos >= 4 * total ? "Avanzado" : "Suficiente";
+  }
+  // Requisito de la Parte 1 · Reconocer, aparte de la selección docente: con
+  // los intentos válidos reales de P1 (no el mejor), la suma de aciertos debe
+  // llegar a 9/16 con dos intentos o a 6/8 con uno; sin intentos válidos, no se
+  // cumple. «alcanzable»: lo alcanzaría si las respuestas a revisar de P1
+  // resultaran correctas.
+  const MINIMO_P1 = { 1: 6, 2: 9 };
+  function requisitoP1(por) {
+    const validos = INTENTOS.filter((l) => por[l] && por[l].estado === "valida").map((l) => ({ l, ...por[l] }));
+    const aciertos = validos.reduce((t, r) => t + r.aciertos, 0);
+    const total = validos.reduce((t, r) => t + r.total, 0);
+    const minimo = MINIMO_P1[validos.length] ?? null;
+    const cumple = minimo !== null && aciertos >= minimo;
+    const alcanzable = minimo !== null && validos.reduce((t, r) => t + r.aciertos + r.revisar, 0) >= minimo;
+    return { validos, aciertos, total, minimo, cumple, alcanzable };
+  }
+
+  // ---------- evidencia por contenido y orientación (derivadas) ----------
+  // Por eje (ids comunes), con los ítems que cada evaluación asigna a ese eje y
+  // sólo de sus partes válidas (contabilizadas y completas), sin importar qué
+  // partes eligió el docente para la categoría. Aciertos y errores firmes; las
+  // respuestas a revisar, aparte (nunca son error). Un ítem en dos ejes (el 28
+  // de la B) cuenta en los dos.
+  function contenidosIntento(ejes, aceptadas, f) {
+    const validas = PARTES.map((p, k) => parteIntento(aceptadas, f, k).estado === "valida");
+    return Object.fromEntries(ejes.map((e) => {
+      const items = e.items.filter((n) => validas[parteDe(n - 1).n - 1]);
+      const revisar = items.filter((n) => revisa(f.respuestas[n - 1])).length;
+      const aciertos = items.filter((n) => { const v = f.respuestas[n - 1]; return !v.includes("?") && aceptadas[n - 1].includes(v); }).length;
+      return [e.id, { aciertos, errores: items.length - aciertos - revisar, revisar }];
+    }));
+  }
+  // Intensidad de la dificultad en un contenido, sólo con evidencia firme
+  // (n = aciertos + errores): 0 sin señal, 1 merece atención, 2 dificultad
+  // fuerte. Es la regla de la devolución por intento (nivelEje), extendida a la
+  // evidencia acumulada de A y B: un error suelto nunca marca (menos de 2
+  // errores); tampoco pocos errores entre mucha evidencia (menos de un tercio);
+  // fuerte sólo con mayoría de errores y al menos 3 respuestas firmes. Con 5
+  // ítems o menos coincide con nivelEje.
+  function intensidad(aciertos, errores) {
+    const n = aciertos + errores;
+    if (errores < 2 || 3 * errores < n) return 0;
+    return n >= 3 && 2 * errores > n ? 2 : 1;
+  }
+  // Contenidos acumulados A+B (no el «mejor eje»): sumas de los dos intentos.
+  // «incierta»: si las respuestas a revisar resultaran correctas, la
+  // intensidad bajaría; entonces la orientación usa la menor y lo dice.
+  function contenidosDe(f, otra) {
+    const por = { [LETRA]: f ? contenidosIntento(EJES, ACEPTADAS, f) : null, [OTRA.letra]: otra ? contenidosIntento(OTRA_EJES, OTRA_ACEPTADAS, otra) : null };
+    return EJES.map((e) => {
+      const rs = INTENTOS.map((l) => por[l]?.[e.id]).filter(Boolean);
+      const suma = (k) => rs.reduce((t, r) => t + r[k], 0);
+      const aciertos = suma("aciertos"), errores = suma("errores"), revisar = suma("revisar");
+      const nivel = intensidad(aciertos, errores);
+      const optimista = intensidad(aciertos + revisar, errores);
+      return {
+        id: e.id, corto: e.corto, foco: e.foco, por: Object.fromEntries(INTENTOS.map((l) => [l, por[l]?.[e.id] ?? null])),
+        aciertos, errores, revisar, n: aciertos + errores, nivel, incierta: optimista < nivel, orientar: optimista,
+      };
+    });
+  }
+  // Orientación según la categoría de cierre (procesada o manual): la misma
+  // intensidad se dice distinto. En proceso: lo fuerte, a fondo; Suficiente:
+  // repasar y consolidar; Avanzado: sólo lo fuerte, como algo a reforzar (no
+  // se mencionan dificultades menores). Sin categoría todavía, una formulación
+  // neutral, sin verbos de cierre.
+  // [verbo para intensidad fuerte, verbo para intensidad que merece atención]
+  const VERBOS = {
+    "En proceso": ["Volver a estudiar", "Repasar"],
+    Suficiente: ["Repasar", "Consolidar"],
+    Avanzado: ["Reforzar", null],
+  };
+  const NEUTRAL = ["Aspectos a revisar", "Aspectos a revisar"];
+  function orientacion(contenidos, categoria) {
+    const verbos = VERBOS[categoria] ?? NEUTRAL;
+    const eje = Object.fromEntries(contenidos.map((x) => [x.id, x]));
+    const verboDe = (x) => (x.orientar ? verbos[2 - x.orientar] : null);
+    // Unidades de estudio en el orden fijo de siempre; un par con el mismo
+    // verbo se nombra junto.
+    const grupos = [];
+    for (const v of [...new Set(verbos.filter(Boolean))]) {
+      const unidades = UNIDADES.flatMap((u) => {
+        const sub = u.ejes.filter((k) => verboDe(eje[k]) === v);
+        if (!sub.length) return [];
+        if (u.juntos && sub.length === u.ejes.length) return [{ ids: sub, nombre: u.juntos }];
+        return sub.map((k) => ({ ids: [k], nombre: eje[k].foco }));
+      });
+      if (unidades.length) grupos.push({ verbo: v, unidades });
+    }
+    // Dificultades que dependen de respuestas a revisar: se nombran aparte.
+    const aConfirmar = contenidos.filter((x) => x.incierta && !verboDe(x) && x.nivel && verbos[2 - x.nivel]).map((x) => x.foco);
+    return { grupos, aConfirmar };
+  }
+
+  // Emparejamiento de una fila propia con el otro intento, igual desde A y
+  // desde B. 1) Un vínculo manual del docente manda: es estable aunque los
+  // nombres no coincidan («manual»; «roto» si ya no encuentra un registro único
+  // de cada lado). 2) Si no hay vínculo, la coincidencia automática por curso y
+  // estudiante normalizados, sin los registros que ya tienen vínculo manual
+  // («unico», «ambiguo»; «dudoso» si sólo coincide el estudiante con otro
+  // curso; «sin»). «candidatos»: los registros del otro intento del mismo
+  // curso que todavía se pueden vincular a mano con esta fila.
+  function emparejar(f, otras, vinculos) {
+    const clave = claveEstudiante(f);
+    const repetidas = filas.filter((x) => claveEstudiante(x) === clave).length;
+    const base = { clave, repetidas, otra: null, vinculo: null, pares: [], cerca: [], candidatos: [] };
+    if (otras === null) return { ...base, estado: "ilegible" };
+    const delOtro = (k) => otras.filter((o) => claveEstudiante(o) === k);
+    const vinculo = vinculos.find((v) => v[LETRA] === clave) ?? null;
+    if (vinculo) {
+      const pares = delOtro(vinculo[OTRA.letra]);
+      return pares.length === 1 && repetidas === 1 ? { ...base, estado: "manual", vinculo, otra: pares[0], pares } : { ...base, estado: "roto", vinculo, pares };
+    }
+    const vinculadas = new Set(vinculos.map((v) => v[OTRA.letra]));
+    const libre = (o) => !vinculadas.has(claveEstudiante(o));
+    const pares = delOtro(clave).filter(libre);
+    if (pares.length === 1) return { ...base, estado: "unico", otra: pares[0], pares };
+    if (pares.length > 1) return { ...base, estado: "ambiguo", pares };
+    const cerca = otras.filter((o) => libre(o) && normalizar(o.estudiante) === normalizar(f.estudiante));
+    // Disponible: del mismo curso, único en su intento, sin vínculo manual y sin
+    // pareja automática de este lado (de una fila propia que no esté vinculada).
+    const propiasVinculadas = new Set(vinculos.map((v) => v[LETRA]));
+    const candidatos = repetidas !== 1 ? [] : otras.filter((o) => {
+      const k = claveEstudiante(o);
+      return normalizar(o.curso) === normalizar(f.curso) && libre(o) && delOtro(k).length === 1 &&
+        !filas.some((x) => claveEstudiante(x) === k && !propiasVinculadas.has(k));
+    });
+    return { ...base, estado: cerca.length ? "dudoso" : "sin", cerca, candidatos };
+  }
+
+  // Cierre de una fila guardada de esta herramienta, con el otro intento
+  // emparejado si es seguro y la decisión docente guardada (o la propuesta).
+  const cierreDe = (f, otras, d) => armarCierre(f, emparejar(f, otras, d.vinculos), d);
+  // Cierre de un registro del otro intento que no tiene pareja de este lado
+  // (para la impresión del curso completo): sólo con su intento.
+  function cierreDeOtra(o, otras, d) {
+    const clave = claveEstudiante(o);
+    const vinculo = d.vinculos.find((v) => v[OTRA.letra] === clave) ?? null;
+    const vinculadas = new Set(d.vinculos.map((v) => v[LETRA]));
+    const iguales = vinculo ? [] : filas.filter((x) => claveEstudiante(x) === clave && !vinculadas.has(clave));
+    const repetidas = otras.filter((x) => claveEstudiante(x) === clave).length;
+    return armarCierre(null, { clave, repetidas, otra: o, vinculo, pares: iguales, cerca: [], candidatos: [], estado: "solo-otra" }, d);
+  }
+  function armarCierre(f, e, d) {
+    const { otra, pares, cerca, repetidas, candidatos, vinculo } = e;
+    const emparejamiento = e.estado;
+    // La decisión docente va con la clave de la A cuando hay A emparejada (así
+    // es la misma desde las dos herramientas, también con un vínculo manual).
+    const clave = otra && OTRA.letra === "A" ? claveEstudiante(otra) : e.clave;
+    const decisiones = d.estudiantes;
+    const partes = PARTES.map((p, k) => {
+      const por = { [LETRA]: f ? parteIntento(ACEPTADAS, f, k) : null, [OTRA.letra]: otra ? parteIntento(OTRA_ACEPTADAS, otra, k) : null };
+      return { p, por, mejor: mejorParte(por) };
+    });
+    const disponibles = partes.map((x) => !!x.mejor);
+    const decision = decisiones[clave] ?? null;
+    const modo = decision?.modo ?? "procesado";
+    const guardada = decision?.partes ?? null;
+    const seleccion = (guardada ?? disponibles).map((x, k) => x && disponibles[k]);
+    const sinEvidencia = guardada ? PARTES.filter((p, k) => guardada[k] && !disponibles[k]).map((p) => p.n) : [];
+    const elegidas = partes.filter((x, k) => seleccion[k]);
+    const aciertos = elegidas.reduce((t, x) => t + x.mejor.aciertos, 0);
+    const total = elegidas.reduce((t, x) => t + x.mejor.total, 0);
+    const techo = elegidas.reduce((t, x) => t + x.mejor.techo, 0);
+    const p1 = requisitoP1(partes[0].por);
+    // En manual no se calcula ninguna categoría (ni el requisito de P1): la
+    // elige el docente.
+    const cat = modo === "manual" ? null : categoria(aciertos, total, elegidas.length, p1.cumple);
+    // Con lo pendiente a favor, en el porcentaje y en P1 a la vez.
+    const catTecho = categoria(techo, total, elegidas.length, p1.alcanzable);
+    // En proceso sólo por el requisito de P1 (el porcentaje alcanzaba).
+    const porP1 = cat === "En proceso" && !p1.cumple && categoria(aciertos, total, elegidas.length, true) !== "En proceso";
+    // Motivos por los que la categoría calculada todavía no es firme.
+    const motivos = [];
+    if (modo === "procesado") {
+      if (cat && catTecho !== cat) {
+        motivos.push(`hay respuestas a revisar que podrían llevarla a ${catTecho}` +
+          (!p1.cumple && p1.alcanzable ? " (también en la Parte 1, que podría alcanzar su mínimo)" : ""));
+      }
+      if (emparejamiento === "ambiguo") motivos.push(`no se usa la ${NOMBRE(OTRA.letra)}: el emparejamiento es ambiguo`);
+      if (emparejamiento === "dudoso") motivos.push(`no se usa la ${NOMBRE(OTRA.letra)}: el emparejamiento no es seguro`);
+      if (emparejamiento === "ilegible") motivos.push(`no se pudieron leer los datos de la ${NOMBRE(OTRA.letra)}`);
+      if (emparejamiento === "roto") motivos.push(`el vínculo manual con la ${NOMBRE(OTRA.letra)} no encuentra un registro único`);
+      if (repetidas > 1) motivos.push(`hay ${repetidas} registros de la ${NOMBRE(f ? LETRA : OTRA.letra)} con este curso y estudiante`);
+      if (!f && vinculo) motivos.push(`el vínculo manual con la ${NOMBRE(LETRA)} no encuentra un registro único`);
+      if (!f && pares.length > 1) motivos.push(`hay ${pares.length} registros de la ${NOMBRE(LETRA)} con este curso y estudiante`);
+    }
+    return {
+      clave, claveRegistro: e.clave, otra, pares, cerca, repetidas, candidatos, vinculo, emparejamiento, partes,
+      contenidos: contenidosDe(f, otra), disponibles, modo, guardada, seleccion, sinEvidencia,
+      aciertos, total, techo, categoria: cat, categoriaTecho: catTecho, p1, porP1, motivos,
+      manual: { categoria: decision?.categoria ?? null, devolucion: decision?.devolucion ?? "" },
+    };
+  }
 
   let s = nuevo("");
   let filas = [];
@@ -965,6 +1397,9 @@
     $("barraVer").hidden = !viendo;
     $("accionesCarga").hidden = !!viendo;
     if (viendo) $("verNombre").textContent = `${e.estudiante}${e.curso ? ` (${e.curso})` : ""}, fila ${nFila(viendo)}`;
+    $("btnAnteriorVista").disabled = !viendo || nFila(viendo) <= 1;
+    $("btnSiguienteVista").disabled = !viendo || nFila(viendo) >= filas.length;
+    renderCierre();
     renderFilas();
     guardarLocal();
   }
@@ -1023,13 +1458,20 @@
         (d.revisar ? `<span class="provisoria">Provisoria: hay ${d.revisar} respuesta${d.revisar > 1 ? "s" : ""} a revisar en el papel; ` +
           "no cuentan como error ni como acierto. Conviene resolverlas antes de copiar.</span>" : "") + `</div>`;
     }
-    $("vivo").innerHTML = (viendo
-      ? `<div class="vivo-cab"><b>Resultados</b> <span class="nota">global y por eje de la evaluación vista (sólo lectura); los de cada parte, junto a su banda.</span></div>`
+    const cuerpo = devolucionHtml + `<div class="vivo-cuerpo">${global}<div class="vivo-ejes"><span class="rot-ejes">Por eje</span>${ejes}</div></div>`;
+    // En Ver manda el panel «Cierre A+B»: lo de este intento solo (global, ejes
+    // y su devolución) queda plegado debajo, como consulta.
+    $("vivo").innerHTML = viendo
+      ? `<details class="intento" id="detalleIntento"${intentoAbierto ? " open" : ""}><summary><b>Resultados y devolución de este intento</b> ` +
+        `<span class="nota">sólo la ${NOMBRE(LETRA)} · no es la devolución de cierre</span></summary>` +
+        `<p class="nota aviso-intento">Describe sólo la ${NOMBRE(LETRA)}. La lectura vigente para el cierre del bimestre es el panel «Cierre A+B»; ` +
+        `esta devolución no es la que se imprimirá.</p>${cuerpo}</details>`
       : `<div class="vivo-cab"><b>Resultados en vivo</b> <span class="nota">global y por eje; los de cada parte, junto a su banda. Se recalculan con cada cambio` +
-        `${e.editando ? "; la fila guardada se actualiza al guardar" : ""}.</span></div>`) +
-      devolucionHtml +
-      `<div class="vivo-cuerpo">${global}<div class="vivo-ejes"><span class="rot-ejes">Por eje</span>${ejes}</div></div>`;
+        `${e.editando ? "; la fila guardada se actualiza al guardar" : ""}.</span></div>` + cuerpo;
   }
+
+  // Abierto o cerrado el detalle del intento en Ver: sólo mientras se recorre.
+  let intentoAbierto = false;
 
   function mensaje(texto, tipo = "info") {
     const m = $("mensaje");
@@ -1314,10 +1756,452 @@
     (s.estudiante ? $("zona") : $("estudiante")).focus();
   }
 
+  // ---------- cierre A+B en pantalla ----------
+  // Panel de Ver: por parte, cada intento, la mejor evidencia y la casilla de
+  // la decisión docente; debajo, resultado considerado y categoría. Cambiar
+  // una casilla guarda sólo la decisión y redibuja el panel y las filas.
+  function textoIntento(c, l, x) {
+    const r = x.por[l];
+    if (l === OTRA.letra && c.emparejamiento === "ambiguo") return `<span class="sin">ambiguo</span>`;
+    if (!r) return `<span class="sin">—</span>`;
+    if (r.estado === "incompleta") return `<span class="sin">incompleta</span>`;
+    if (r.estado === "no cuenta") return `<span class="sin">${r.completa ? `${r.aciertos}/${r.total}, ` : ""}no contabilizada</span>`;
+    return `${r.aciertos}/${r.total}${pctSpan(r.aciertos, r.total)}${r.revisar ? ` <span class="revisar">· ${r.revisar} a revisar</span>` : ""}`;
+  }
+  const pctSpan = (a, n) => `<span class="pct"> (${decimal(a, n)} %)</span>`;
+  function textoEmparejamiento(c) {
+    const otra = NOMBRE(OTRA.letra);
+    const quien = (o) => `«${esc(o.estudiante)}»${o.curso ? ` (${esc(o.curso)})` : ""}`;
+    const lineas = [];
+    const desvincular = ` <button type="button" id="btnDesvincular">Desvincular</button>`;
+    if (c.emparejamiento === "unico") lineas.push(["", `${otra}: ${quien(c.otra)}, emparejada por curso y estudiante.`]);
+    else if (c.emparejamiento === "manual") lineas.push(["", `${otra}: vinculado manualmente con ${quien(c.otra)}.${desvincular}`]);
+    else if (c.emparejamiento === "roto") lineas.push(["alerta", `${otra}: el vínculo manual ya no encuentra un registro único (¿se cambió o se repitió un nombre?); ` +
+      `no se usa.${desvincular}`]);
+    else if (c.emparejamiento === "sin") lineas.push(["", `No se encontró ${otra} correspondiente en este navegador; sólo cuenta la ${NOMBRE(LETRA)}.`]);
+    else if (c.emparejamiento === "ambiguo") lineas.push(["alerta", `${otra}: hay ${c.pares.length} registros con este curso y estudiante; no se usa ninguno. ` +
+      `Dejá uno solo en la herramienta de la ${otra} para que cuente.`]);
+    else if (c.emparejamiento === "dudoso") lineas.push(["alerta", `${otra}: no hay un registro con este curso y estudiante, pero sí ${c.cerca.map(quien).join(", ")} ` +
+      `con otro curso; no se empareja. Si es la misma persona, unificá el curso.`]);
+    else lineas.push(["alerta", `No se pudieron leer los datos guardados de la ${otra} en este navegador.`]);
+    if (c.repetidas > 1) lineas.push(["alerta", `Hay ${c.repetidas} registros de la ${NOMBRE(LETRA)} con este curso y estudiante; este cálculo usa sólo el que se está viendo.`]);
+    // Consolidación manual: sólo sin pareja automática ni vínculo.
+    if (c.emparejamiento === "sin" || c.emparejamiento === "dudoso") {
+      lineas.push(["", c.candidatos.length
+        ? `<label class="vincular">Consolidar manualmente con: <select id="cierreCandidato"><option value="">— elegir —</option>` +
+          c.candidatos.map((o) => `<option value="${esc(claveEstudiante(o))}">${esc(o.estudiante)}</option>`).join("") +
+          `</select></label> <button type="button" id="btnVincular">Vincular</button>`
+        : `<span class="sin">No hay registros de la ${otra} de este curso disponibles para vincular.</span>`]);
+    }
+    return lineas.map(([cl, t]) => `<p class="cierre-par${cl ? ` ${cl}` : ""}">${t}</p>`).join("");
+  }
+  // Requisito de la Parte 1, en una línea: suma de los intentos válidos reales
+  // y el mínimo que corresponde (9/16 con dos intentos, 6/8 con uno).
+  function textoP1(p1) {
+    const valor = !p1.validos.length ? "sin intento válido"
+      : `${p1.aciertos}/${p1.total} (${p1.validos.length > 1 ? p1.validos.map((r) => `${r.l} ${r.aciertos}/${r.total}`).join(" + ") : `sólo ${p1.validos[0].l}`})`;
+    const estado = p1.cumple ? `mínimo de ${p1.minimo}/${p1.total} alcanzado`
+      : `<span class="p1-no">${p1.minimo ? `no alcanza el mínimo de ${p1.minimo}/${p1.total}` : "no se cumple: no hay ningún intento válido"}</span>` +
+        (p1.alcanzable ? ` <span class="provisoria">· puede alcanzarlo: a revisar</span>` : "");
+    return `<span id="cierreP1">Parte 1 · Reconocer: ${valor} · ${estado}</span>`;
+  }
+  function renderCierre() {
+    const el = $("cierre");
+    const f = viendo != null ? filas.find((x) => x.id === viendo) : null;
+    el.hidden = !f;
+    if (!f) return el.replaceChildren();
+    const otras = filasOtra();
+    const c = cierreDe(f, otras, leerDecisiones());
+    const manual = c.modo === "manual";
+    const filasTabla = c.partes.map((x, k) => {
+      const m = x.mejor;
+      const mejor = m ? `${m.aciertos}/${m.total}${pctSpan(m.aciertos, m.total)} · ${m.de.join(" = ")}${m.techo > m.aciertos ? ` <span class="revisar">· puede subir: a revisar</span>` : ""}`
+        : `<span class="sin">sin evidencia</span>`;
+      return `<tr><th scope="row">P${x.p.n} · ${x.p.nombre}</th>${INTENTOS.map((l) => `<td class="num">${textoIntento(c, l, x)}</td>`).join("")}` +
+        `<td class="num">${mejor}</td>` + (manual ? "" : `<td><input type="checkbox" data-parte="${k}"${c.seleccion[k] ? " checked" : ""}${m ? "" : " disabled"} ` +
+        `aria-label="Contar la Parte ${x.p.n} para el cierre"></td>`) + `</tr>`;
+    }).join("");
+    const elegidas = PARTES.filter((p, k) => c.seleccion[k]).map((p) => p.n);
+    let res;
+    if (!c.disponibles.some(Boolean)) {
+      res = `<span>Resultado considerado: —</span><span>Categoría de cierre: <b>sin evidencia</b> <span class="sin">(ninguna parte válida en A ni en B)</span></span>`;
+    } else if (!elegidas.length) {
+      res = `<span>Resultado considerado: —</span><span>Categoría de cierre: <b>falta la decisión docente</b> <span class="sin">(ninguna parte seleccionada)</span></span>`;
+    } else {
+      const avanzadoNo = c.categoria === "Suficiente" && elegidas.length < PARTES.length && 5 * c.aciertos >= 4 * c.total;
+      res = `<span>Resultado considerado: <b id="cierreResultado">${c.aciertos}/${c.total} · ${decimal(c.aciertos, c.total)} %</b> ` +
+        `<span class="sin">(parte${elegidas.length > 1 ? "s" : ""} ${listaPartes(elegidas)})</span>` +
+        `${c.techo > c.aciertos ? ` <span class="provisoria">· hay respuestas a revisar: podría llegar a ${c.techo}/${c.total}</span>` : ""}</span>` +
+        textoP1(c.p1) +
+        `<span>Categoría de cierre: <b id="cierreCategoria">${c.categoria}</b>` +
+        `${c.porP1 ? ` <span class="p1-no" id="cierrePorP1">por el requisito de la Parte 1</span>` : ""}` +
+        `${c.motivos.length ? ` <span class="provisoria" id="cierreProvisoria">· provisoria: ${c.motivos.join("; ")}</span>` : ""}` +
+        `${avanzadoNo ? ` <span class="sin">(Avanzado requiere las cuatro partes)</span>` : ""}</span>`;
+    }
+    const decision = manual ? "" : c.guardada
+      ? `<span id="cierreEstado">Selección docente guardada en este navegador.</span>` +
+        (c.sinEvidencia.length ? ` <span class="provisoria">Parte ${listaPartes(c.sinEvidencia)}: estaba elegida y ya no tiene evidencia válida.</span>` : "")
+      : `<span id="cierreEstado">Propuesta: todas las partes con evidencia. Revisala y cambiá lo que no corresponda.</span>` +
+        `<button type="button" id="btnConfirmarCierre">Confirmar esta selección</button>`;
+    const modo = (valor, texto) => `<label><input type="radio" name="modoCierre" value="${valor}"${c.modo === valor ? " checked" : ""}> ${texto}</label>`;
+    // 1. Síntesis del cierre (procesada o manual).
+    const sintesis = manual
+      ? `<div class="cierre-manual"><label>Categoría de cierre (manual) <select id="cierreManualCategoria"><option value="">— elegir —</option>` +
+        CATEGORIAS.map((k) => `<option${c.manual.categoria === k ? " selected" : ""}>${k}</option>`).join("") + `</select></label></div>`
+      : `<div class="cierre-res">${res}</div><div class="cierre-decision">${decision}</div>`;
+    // 2. Partes: lectura rápida de la mejor evidencia y tabla.
+    const rapida = c.partes.map((x) => `${x.p.nombre} ${x.mejor ? `${decimal(x.mejor.aciertos, x.mejor.total)} %` : "—"}`).join(" · ");
+    const partes = `<h4 class="cierre-sec">Evidencia por partes</h4><p class="cierre-rapida" id="cierreResumenPartes">${rapida}</p>` +
+      `<table class="cierre-partes"><thead><tr><th>Parte</th>${INTENTOS.map((l) => `<th>${l}</th>`).join("")}<th>Mejor evidencia</th>${manual ? "" : "<th>Cuenta para cierre</th>"}</tr></thead>` +
+      `<tbody>${filasTabla}</tbody></table>`;
+    el.innerHTML = `<div class="cierre-cab"><b>Cierre A+B</b> <span class="nota">${manual
+      ? "Manual: A y B quedan a la vista como evidencia; la categoría y la devolución las decidís vos."
+      : "Cada parte usa el mejor resultado válido entre A y B. Vos elegís qué partes cuentan para la categoría."}</span></div>` +
+      `<div class="cierre-modo" role="radiogroup" aria-label="Modo de cierre"><b>Modo de cierre:</b>${modo("procesado", "Procesado A+B")}${modo("manual", "Manual")}</div>` +
+      textoEmparejamiento(c) + sintesis + partes + textoContenidos(c) + textoOrientacion(c) +
+      (manual ? `<div class="cierre-manual"><label>Devolución (texto libre) <textarea id="cierreManualTexto" rows="4" spellcheck="true"></textarea></label>` +
+        `<span class="nota">Categoría y devolución manuales se guardan sólo en este navegador, aparte de A y de B.</span></div>` : "");
+    if (manual) $("cierreManualTexto").value = c.manual.devolucion;
+    if (contenidosAbiertos) el.querySelector("details.cierre-contenidos").open = true;
+  }
+  // 3. Contenidos: acumulado A+B sobre evidencia firme, plegable (abierto o
+  // cerrado se recuerda mientras se recorre el curso, sin guardarse).
+  let contenidosAbiertos = false;
+  const LECTURA = ["sin señal", "merece atención", "dificultad fuerte"];
+  function textoContenidos(c) {
+    const intento = (r) => (!r ? `<span class="sin">—</span>` : r.aciertos + r.errores
+      ? `${r.aciertos}/${r.aciertos + r.errores}${r.revisar ? ` <span class="revisar">· ${r.revisar} a revisar</span>` : ""}`
+      : `<span class="sin">${r.revisar ? `${r.revisar} a revisar` : "—"}</span>`);
+    const filasC = c.contenidos.map((x) => `<tr data-eje="${x.id}"><th scope="row">${x.corto}</th>` +
+      INTENTOS.map((l) => `<td class="num">${intento(x.por[l])}</td>`).join("") +
+      `<td class="num">${x.n ? `<b>${x.aciertos}/${x.n}</b>${pctSpan(x.aciertos, x.n)}` : `<span class="sin">sin evidencia firme</span>`}` +
+      `${x.revisar ? ` <span class="revisar">· ${x.revisar} a revisar</span>` : ""}</td>` +
+      `<td class="lectura nivel-${x.nivel}">${x.n ? LECTURA[x.nivel] : "—"}${x.incierta ? ` <span class="revisar">(a confirmar)</span>` : ""}` +
+      `${x.n && x.n < 3 ? ` <span class="sin">poca evidencia</span>` : ""}</td></tr>`).join("");
+    const marcados = c.contenidos.filter((x) => x.nivel);
+    const resumen = marcados.length ? marcados.map((x) => `${x.corto}: ${LECTURA[x.nivel]}`).join(" · ") : "ninguno con dificultad marcada";
+    return `<details class="cierre-contenidos"><summary><h4 class="cierre-sec">Evidencia por contenidos</h4> ` +
+      `<span class="nota" id="cierreResumenContenidos">${resumen}</span></summary>` +
+      `<p class="nota">A y B acumulados (no el mejor), con los ítems de cada evaluación y todas sus partes válidas, aunque no cuenten para la categoría. ` +
+      `Aciertos sobre respuestas firmes; las respuestas a revisar van aparte. No es una nota.</p>` +
+      `<table class="cierre-tabla-contenidos"><thead><tr><th>Contenido</th>${INTENTOS.map((l) => `<th>${l}</th>`).join("")}<th>A+B</th><th>Lectura</th></tr></thead>` +
+      `<tbody>${filasC}</tbody></table></details>`;
+  }
+  // 4. Orientación para seguir trabajando, con la categoría de cierre
+  // (procesada o manual) como contexto.
+  function textoOrientacion(c) {
+    const cat = c.modo === "manual" ? c.manual.categoria : c.categoria;
+    return `<div class="cierre-orientacion" id="cierreOrientacion" data-categoria="${cat ?? ""}"><h4 class="cierre-sec">Para seguir trabajando</h4>` +
+      `${cat ? "" : `<span class="nota" id="cierreSinCategoria">Sin categoría de cierre todavía: la orientación se ajusta al elegirla o calcularla.</span>`}` +
+      `${lineasOrientacion(c, cat).join("")}</div>`;
+  }
+  function lineasOrientacion(c, cat) {
+    const o = orientacion(c.contenidos, cat);
+    const lineas = o.grupos.map((g) => `<span class="orienta">${g.verbo}: ` +
+      g.unidades.map((u) => `<span class="foco" data-ejes="${u.ids.join(" ")}" data-verbo="${g.verbo}">${u.nombre}</span>`).join("; ") + ".</span>");
+    if (!lineas.length && cat) {
+      lineas.push(`<span class="orienta">${cat === "Avanzado" ? "Sin contenidos que haga falta reforzar: seguir así."
+        : cat === "Suficiente" ? "Sin contenidos con dificultad marcada: seguir consolidando lo aprendido."
+        : "No aparece un contenido con dificultad marcada: conviene revisar las preguntas que estuvieron mal."}</span>`);
+    }
+    if (o.aConfirmar.length) lineas.push(`<span class="orienta sin">A confirmar cuando se resuelvan las respuestas a revisar: ${o.aConfirmar.join("; ")}.</span>`);
+    if (c.modo !== "manual" && c.porP1) lineas.push(`<span class="orienta">Para salir de En proceso hace falta además afianzar la Parte 1 · Reconocer.</span>`);
+    return lineas;
+  }
+
+  // ---------- devoluciones de cierre para imprimir ----------
+  // El curso completo en una salida: las filas de esta herramienta y los
+  // registros de la otra que no tienen pareja aquí. Todo derivado; nada se
+  // guarda. Orden: curso y estudiante.
+  function cierresDelCurso() {
+    const otras = filasOtra() ?? [];
+    const d = leerDecisiones();
+    const propios = filas.map((f) => ({ f, c: cierreDe(f, otras, d) }));
+    const usadas = new Set(propios.map((x) => x.c.otra).filter(Boolean));
+    const ajenos = otras.filter((o) => !usadas.has(o)).map((o) => ({ f: null, c: cierreDeOtra(o, otras, d) }));
+    return [...propios, ...ajenos].map(({ f, c }) => {
+      const reg = { [LETRA]: f, [OTRA.letra]: c.otra };
+      const [l1, l2] = INTENTOS;
+      const principal = reg[l1] ?? reg[l2];
+      const otroNombre = reg[l1] && reg[l2] && normalizar(reg[l1].estudiante) !== normalizar(reg[l2].estudiante) ? `${l2}: ${reg[l2].estudiante}` : "";
+      return { c, curso: principal.curso, estudiante: principal.estudiante, otroNombre };
+    }).sort((x, y) => normalizar(x.curso).localeCompare(normalizar(y.curso), "es") || normalizar(x.estudiante).localeCompare(normalizar(y.estudiante), "es"));
+  }
+  // Clave de corrección de A y de B, para que cada estudiante se autocorrija
+  // con su hoja: una línea por evaluación, separada por partes. Sale de la
+  // clave de cada herramienta (comprobada contra su clave-docente.md). Con
+  // varias aceptadas, «18B/D» y una aclaración debajo.
+  function claveCompacta() {
+    const claves = { [LETRA]: ACEPTADAS, [OTRA.letra]: OTRA_ACEPTADAS };
+    const simples = (a) => a.filter((x) => !x.includes("+")).join("/");
+    const lineas = INTENTOS.map((l) => `<div class="clave-linea" data-evaluacion="${l}"><span class="clave-ev">${l}</span> ` +
+      PARTES.map((p) => `<span class="clave-parte" data-parte="${p.n}"><span class="clave-p">P${p.n}</span> ` +
+        Array.from({ length: p.hasta - p.desde + 1 }, (_, j) => {
+          const n = p.desde + j;
+          return `<span class="clave-item" data-item="${n}" data-clave="${simples(claves[l][n - 1])}"><small>${n}</small>${simples(claves[l][n - 1])}</span>`;
+        }).join(" ") + `</span>`).join(" ") + `</div>`);
+    const notas = INTENTOS.flatMap((l) => claves[l].flatMap((a, i) => (a.length > 1 ? [`${l}${i + 1}: se acepta ${a.join(", ").replace(/, ([^,]*)$/, " o $1")}.`] : [])));
+    return `<div class="clave-compacta"><span class="clave-tit">Clave de corrección de las evaluaciones A y B (respuesta correcta de cada ítem)</span>` +
+      lineas.join("") + (notas.length ? `<div class="clave-nota">${notas.join(" ")}</div>` : "") + `</div>`;
+  }
+  function bloqueFinal(x) {
+    const c = x.c;
+    const manual = c.modo === "manual";
+    const cat = manual ? c.manual.categoria : c.categoria;
+    const elegidas = PARTES.filter((p, k) => c.seleccion[k]).map((p) => p.n);
+    const resultado = !manual && cat
+      ? `<p>Resultado considerado: <b>${c.aciertos}/${c.total} · ${decimal(c.aciertos, c.total)} %</b> <span class="sin">(parte${elegidas.length > 1 ? "s" : ""} ${listaPartes(elegidas)})</span>` +
+        `${c.porP1 ? ` · En proceso por el requisito de la Parte 1 · Reconocer (${c.p1.minimo ? `${c.p1.aciertos}/${c.p1.total}; mínimo ${c.p1.minimo}/${c.p1.total}` : "sin intento válido"})` : ""}</p>` : "";
+    const filasP = c.partes.map((p, k) => {
+      const m = p.mejor;
+      return `<tr><th scope="row">P${p.p.n} · ${p.p.nombre}</th>${INTENTOS.map((l) => `<td>${textoIntento(c, l, p)}</td>`).join("")}` +
+        `<td>${m ? `<b>${m.aciertos}/${m.total}</b>${pctSpan(m.aciertos, m.total)} · ${m.de.join(" = ")}` : `<span class="sin">sin evidencia</span>`}</td>` +
+        (manual ? "" : `<td>${c.seleccion[k] ? "✓" : ""}</td>`) + `</tr>`;
+    }).join("");
+    const contenidos = c.contenidos.map((e) => `${e.corto} ${e.n ? `${e.aciertos}/${e.n}` : "—"}${e.nivel ? ` (${LECTURA[e.nivel]})` : ""}`).join(" · ");
+    const texto = manual && c.manual.devolucion.trim() ? `<h3>Devolución</h3><div class="final-texto">${esc(c.manual.devolucion.trim())}</div>` : "";
+    return `<article class="final" data-modo="${c.modo}" data-clave="${esc(c.clave)}">` +
+      `<div class="final-cab"><span class="final-nombre">${esc(x.estudiante)}</span>` +
+      `${x.otroNombre ? `<span class="nota">(${esc(x.otroNombre)})</span>` : ""}<span>${esc(x.curso)}</span>` +
+      `<span class="final-cat">Cierre: <b>${cat ?? "sin categoría"}</b>${!manual && c.motivos.length ? " (provisoria)" : ""}</span></div>` +
+      resultado +
+      `<h3>Resultados por parte</h3><table><thead><tr><th>Parte</th>${INTENTOS.map((l) => `<th>Evaluación ${l}</th>`).join("")}<th>Mejor resultado</th>` +
+      `${manual ? "" : "<th>Cuenta</th>"}</tr></thead><tbody>${filasP}</tbody></table>` +
+      `<h3>Por contenidos (A y B juntos)</h3><p class="final-contenidos">${contenidos}</p>` +
+      `<h3>Para seguir trabajando</h3><div class="final-orientacion">${lineasOrientacion(c, cat).map((l) => `<p>${l}</p>`).join("") || `<p class="sin">—</p>`}</div>` +
+      texto + claveCompacta() + `</article>`;
+  }
+  function renderImpresion() {
+    const todos = cierresDelCurso();
+    const sel = $("impresionCurso");
+    const cursos = [...new Map(todos.map((x) => [normalizar(x.curso), x.curso])).entries()];
+    const elegido = cursos.some(([k]) => k === sel.value) ? sel.value : "";
+    sel.innerHTML = `<option value="">todos</option>` + cursos.map(([k, v]) => `<option value="${esc(k)}">${esc(v || "(sin curso)")}</option>`).join("");
+    sel.value = elegido;
+    const lista = todos.filter((x) => !elegido || normalizar(x.curso) === elegido);
+    $("impresionBloques").innerHTML = lista.map(bloqueFinal).join("");
+    $("impresionCantidad").textContent = `${lista.length} devolucion${lista.length === 1 ? "" : "es"}.`;
+  }
+  // ---------- datos anonimizados para análisis (bajo demanda) ----------
+  // Una proyección derivada del cierre del curso elegido (o de todos): sin
+  // nombres, claves de emparejamiento, ids de registro, vínculos, respuestas
+  // por ítem ni textos del docente. Cada estudiante recibe un id efímero
+  // («<curso> · 01») asignado en orden aleatorio dentro de su curso, para que
+  // el número no refleje el orden alfabético. No se guarda nada.
+  const EMPAREJAMIENTO = { unico: "automatico", manual: "manual", sin: "sin_pareja", "solo-otra": "sin_pareja", dudoso: "no_seguro", ambiguo: "ambiguo", roto: "vinculo_roto", ilegible: "otra_evaluacion_ilegible" };
+  const redondear = (a, n) => (n ? Math.round((1000 * a) / n) / 10 : null);
+  function mezclar(lista) {
+    const azar = (n) => (window.crypto?.getRandomValues ? window.crypto.getRandomValues(new Uint32Array(1))[0] % n : Math.floor(Math.random() * n));
+    for (let i = lista.length - 1; i > 0; i--) { const j = azar(i + 1); [lista[i], lista[j]] = [lista[j], lista[i]]; }
+    return lista;
+  }
+  function estudianteAnonimo(c, id, curso) {
+    const manual = c.modo === "manual";
+    const presente = Object.fromEntries(INTENTOS.map((l) => [l, c.partes[0].por[l] !== null]));
+    const intento = (r) => (!r ? null : r.estado === "valida"
+      ? { estado: "valida", aciertos: r.aciertos, total: r.total, porcentaje: redondear(r.aciertos, r.total), revisar: r.revisar }
+      : { estado: r.estado === "no cuenta" ? "no_contabilizada" : "incompleta" });
+    const motivos = [];
+    if (!manual) {
+      if (c.categoria && c.categoriaTecho !== c.categoria) motivos.push("respuestas_a_revisar");
+      if (["ambiguo", "dudoso", "roto", "ilegible"].includes(c.emparejamiento)) motivos.push(`emparejamiento_${EMPAREJAMIENTO[c.emparejamiento]}`);
+      if (c.repetidas > 1 || c.pares.length > 1 && c.emparejamiento === "solo-otra") motivos.push("registro_duplicado");
+    }
+    return {
+      id, curso,
+      intentos: { presentes: presente, validos: INTENTOS.filter((l) => c.partes.some((p) => p.por[l]?.estado === "valida")).length,
+        emparejamiento: EMPAREJAMIENTO[c.emparejamiento] },
+      cierre: {
+        modo: c.modo,
+        categoria: manual ? c.manual.categoria : c.categoria,
+        provisoria: motivos.length > 0,
+        motivos_provisoria: motivos,
+        seleccion_confirmada: manual ? null : !!c.guardada,
+        partes_consideradas: manual ? null : PARTES.filter((p, k) => c.seleccion[k]).map((p) => p.n),
+        resultado_considerado: !manual && c.total ? { aciertos: c.aciertos, total: c.total, porcentaje: redondear(c.aciertos, c.total) } : null,
+        en_proceso_por_requisito_p1: manual ? null : c.porP1,
+      },
+      requisito_p1: { cumple: c.p1.cumple, intentos_validos: c.p1.validos.length, aciertos: c.p1.validos.length ? c.p1.aciertos : null,
+        total: c.p1.validos.length ? c.p1.total : null, minimo: c.p1.minimo, alcanzable_si_se_revisa: !c.p1.cumple && c.p1.alcanzable },
+      partes: c.partes.map((x, k) => ({
+        parte: x.p.n, ...Object.fromEntries(INTENTOS.map((l) => [l, intento(x.por[l])])),
+        mejor: x.mejor ? { aciertos: x.mejor.aciertos, total: x.mejor.total, porcentaje: redondear(x.mejor.aciertos, x.mejor.total), de: x.mejor.de, puede_subir_al_revisar: x.mejor.techo > x.mejor.aciertos } : null,
+        cuenta_para_cierre: manual ? null : c.seleccion[k],
+      })),
+      contenidos: c.contenidos.map((e) => ({
+        id: e.id,
+        ...Object.fromEntries(INTENTOS.map((l) => [l, e.por[l] ? { aciertos: e.por[l].aciertos, errores: e.por[l].errores, revisar: e.por[l].revisar } : null])),
+        AB: { aciertos: e.aciertos, errores: e.errores, firme: e.n, porcentaje: redondear(e.aciertos, e.n), revisar: e.revisar },
+        intensidad: e.n ? e.nivel : null,
+        intensidad_incierta: e.incierta,
+      })),
+    };
+  }
+  function exportAnonimo(elegido) {
+    const todos = cierresDelCurso().filter((x) => !elegido || normalizar(x.curso) === elegido);
+    const grupos = new Map();
+    for (const x of todos) {
+      const k = normalizar(x.curso);
+      if (!grupos.has(k)) grupos.set(k, { curso: x.curso.trim() || "(sin curso)", lista: [] });
+      grupos.get(k).lista.push(x.c);
+    }
+    const cursos = [...grupos.values()].sort((a, b) => normalizar(a.curso).localeCompare(normalizar(b.curso), "es"));
+    const ancho = (n) => Math.max(2, String(n).length);
+    const estudiantes = cursos.flatMap((g) => mezclar([...g.lista]).map((c, i) => estudianteAnonimo(c, `${g.curso} · ${String(i + 1).padStart(ancho(g.lista.length), "0")}`, g.curso)));
+    const cuenta = (lista, f) => Object.fromEntries([...CATEGORIAS, null].map((k) => [k ?? "sin_categoria", lista.filter((e) => f(e) === k).length]));
+    return {
+      formato: "aula · cierre A+B anonimizado",
+      version: 1,
+      generado: new Date().toISOString(),
+      descripcion: "Evidencia anonimizada del cierre del bimestre con las Evaluaciones A y B de Sistemas Informáticos (dos intentos paralelos sobre los mismos contenidos). " +
+        "Sin nombres, respuestas por ítem ni devoluciones escritas. Los id de estudiante son efímeros: sólo distinguen filas dentro de este archivo.",
+      alcance: {
+        seleccion: elegido ? "un curso" : "todos los cursos",
+        cursos: cursos.map((g) => g.curso),
+        estudiantes: estudiantes.length,
+        por_curso: cursos.map((g) => ({ curso: g.curso, estudiantes: g.lista.length,
+          categorias: cuenta(estudiantes.filter((e) => e.curso === g.curso), (e) => e.cierre.categoria) })),
+      },
+      definiciones: {
+        intentos: "A y B: dos evaluaciones paralelas de 30 ítems en cuatro partes. «presentes»: hay registro de ese intento; «validos»: intentos con al menos una parte válida.",
+        parte_valida: "Una parte de un intento es evidencia válida si se contabilizó y está completa. Si no, estado «no_contabilizada» o «incompleta», sin puntaje.",
+        revisar: "Respuestas ilegibles o dudosas: no suman ni son error; se cuentan aparte.",
+        mejor: "Por parte, el mayor puntaje válido entre A y B («de»: de qué intento; los dos si empatan).",
+        cierre_procesado: "Categoría sobre las partes consideradas por el docente (con su mejor puntaje): En proceso si < 55 % o si no cumple el requisito de la Parte 1; " +
+          "Suficiente desde 55 %; Avanzado desde 80 % y sólo con las cuatro partes (24/30). «provisoria»: respuestas a revisar o emparejamiento que podrían cambiarla.",
+        cierre_manual: "Categoría decidida por el docente con criterio pedagógico general; la evidencia objetiva se incluye igual.",
+        requisito_p1: "Parte 1 · Reconocer: con dos intentos válidos, suma de aciertos ≥ 9/16; con uno, ≥ 6/8; sin intentos válidos, no se cumple. Se evalúa aunque P1 no sea parte considerada.",
+        contenidos: "Por eje, A y B acumulados (no el mejor), con los ítems que cada evaluación asigna al eje y sólo de partes válidas. «firme» = aciertos + errores; porcentaje sobre lo firme.",
+        intensidad: "0 sin señal, 1 merece atención, 2 dificultad fuerte: menos de 2 errores o errores < 1/3 de lo firme → 0; errores > mitad con al menos 3 firmes → 2; si no, 1. " +
+          "«intensidad_incierta»: bajaría si las respuestas a revisar resultaran correctas. null: sin evidencia firme.",
+        emparejamiento: "Cómo se unieron A y B: automatico, manual (decisión docente), sin_pareja, ambiguo, no_seguro, vinculo_roto.",
+        porcentajes: "Con un decimal; null si no hay total.",
+      },
+      estructura: {
+        partes: PARTES.map((p) => ({ parte: p.n, nombre: p.nombre, items: p.hasta - p.desde + 1 })),
+        contenidos: EJES.map((e) => ({ id: e.id, nombre: e.corto, items: Object.fromEntries(INTENTOS.map((l) => [l, (l === LETRA ? EJES : OTRA_EJES).find((x) => x.id === e.id).items])) })),
+        categorias: CATEGORIAS,
+      },
+      estudiantes,
+    };
+  }
+  function exportarAnonimo() {
+    const elegido = $("impresionCurso").value;
+    const datos = exportAnonimo(elegido);
+    if (!datos.estudiantes.length) return mensaje("No hay estudiantes para exportar.", "error");
+    const hoy = new Date();
+    const fecha = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, "0")}-${String(hoy.getDate()).padStart(2, "0")}`;
+    const nombre = `cierre-anonimizado-${elegido ? normalizar(datos.alcance.cursos[0]).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "curso" : "todos-los-cursos"}-${fecha}.json`;
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(datos, null, 2)], { type: "application/json;charset=utf-8" }));
+    a.download = nombre;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    mensaje(`Descargado ${nombre}: ${datos.estudiantes.length} estudiante${datos.estudiantes.length === 1 ? "" : "s"}, sin nombres.`, "ok");
+  }
+  function abrirImpresion() {
+    $("impresion").hidden = false;
+    renderImpresion();
+    $("impresion").scrollIntoView?.({ block: "start" });
+  }
+  // Línea breve de cierre en cada fila guardada, para recorrer un curso.
+  function lineaCierre(c) {
+    if (c.modo === "manual") return `Cierre: ${c.manual.categoria ? `<b>${c.manual.categoria}</b> · manual` : "manual · falta categoría"}`;
+    const marcas = [
+      c.porP1 ? "P1 no alcanza" : "",
+      c.motivos.length ? `<span class="provisoria">provisoria</span>` : "",
+      c.emparejamiento === "sin" ? `sin ${OTRA.letra}` : "",
+      c.emparejamiento === "manual" ? "vínculo manual" : "",
+      c.disponibles.some(Boolean) && !c.guardada ? "propuesta" : "",
+    ].filter(Boolean).join(" · ");
+    const base = !c.disponibles.some(Boolean) ? "sin evidencia" : !c.categoria ? "falta decisión"
+      : `<b>${c.categoria}</b> · ${c.aciertos}/${c.total}`;
+    return `Cierre: ${base}${marcas ? ` · ${marcas}` : ""}`;
+  }
+  // Decisiones docentes desde el panel: sólo escriben CLAVE_CIERRE.
+  const cierreVisto = () => { const f = filas.find((x) => x.id === viendo); return f ? cierreDe(f, filasOtra(), leerDecisiones()) : null; };
+  function cambiarCierre(k, valor) {
+    const c = cierreVisto();
+    if (!c) return;
+    const sel = [...c.seleccion];
+    if (k != null) sel[k] = valor;
+    guardarDecision(c.clave, { partes: sel });
+    renderCierre();
+    renderFilas();
+    (k != null ? $("cierre").querySelector(`input[data-parte="${k}"]`) : $("cierre").querySelector("input[data-parte]:not(:disabled)"))?.focus();
+  }
+  // Vínculo manual A ↔ B: se guarda sólo en CLAVE_CIERRE. Si la decisión de
+  // cierre estaba sólo con la clave de la B, pasa a la de la A (la que usa el
+  // par); si ya había una con la de la A, manda esa y la otra queda guardada
+  // para cuando se desvincule.
+  function vincular() {
+    const f = filas.find((x) => x.id === viendo);
+    const k = $("cierreCandidato")?.value;
+    if (!f) return;
+    if (!k) return mensaje(`Elegí un registro de la ${NOMBRE(OTRA.letra)} para vincular.`, "error");
+    const d = leerDecisiones();
+    const c = cierreDe(f, filasOtra(), d);
+    const o = c.candidatos.find((x) => claveEstudiante(x) === k);
+    if (!o) return mensaje("Ese registro ya no está disponible para vincular: puede estar vinculado o emparejado con otro.", "error");
+    const v = { [LETRA]: c.claveRegistro, [OTRA.letra]: k };
+    d.vinculos.push({ A: v.A, B: v.B });
+    if (d.estudiantes[v.B] && !d.estudiantes[v.A]) {
+      d.estudiantes[v.A] = d.estudiantes[v.B];
+      delete d.estudiantes[v.B];
+    }
+    escribirDecisiones(d);
+    mensaje(`Vinculado manualmente con «${o.estudiante}».`, "ok");
+    renderCierre();
+    renderFilas();
+    $("btnDesvincular")?.focus();
+  }
+  function desvincular() {
+    const f = filas.find((x) => x.id === viendo);
+    if (!f) return;
+    const d = leerDecisiones();
+    const clave = claveEstudiante(f);
+    d.vinculos = d.vinculos.filter((v) => v[LETRA] !== clave);
+    escribirDecisiones(d);
+    mensaje("Vínculo manual borrado.");
+    renderCierre();
+    renderFilas();
+    ($("cierreCandidato") ?? $("cierre").querySelector("input"))?.focus();
+  }
+  function cambiarModo(modo) {
+    const c = cierreVisto();
+    if (!c) return;
+    guardarDecision(c.clave, { modo });
+    renderCierre();
+    renderFilas();
+    $("cierre").querySelector(`input[name="modoCierre"][value="${modo}"]`)?.focus();
+  }
+  // Manual: la categoría redibuja el panel (la orientación depende de ella) y
+  // la línea de la fila; el texto se guarda mientras se escribe, sin redibujar
+  // el panel (no se pierde el cursor).
+  function cambiarManual(cambios) {
+    const c = cierreVisto();
+    if (!c) return;
+    guardarDecision(c.clave, cambios);
+    if ("categoria" in cambios) {
+      renderCierre();
+      $("cierreManualCategoria")?.focus();
+    }
+    renderFilas();
+  }
+  function verVecina(d) {
+    const i = filas.findIndex((x) => x.id === viendo) + d;
+    if (viendo == null || i < 0 || i >= filas.length) return;
+    ver(filas[i].id);
+    const [este, otro] = d < 0 ? ["btnAnteriorVista", "btnSiguienteVista"] : ["btnSiguienteVista", "btnAnteriorVista"];
+    $($(este).disabled ? otro : este).focus();
+  }
+
   // ---------- filas guardadas y exportación ----------
   function renderFilas() {
     const tb = document.querySelector("#tabla tbody");
     tb.replaceChildren();
+    const otras = filasOtra();
+    const decisiones = leerDecisiones();
     filas.forEach((f, n) => {
       const tr = document.createElement("tr");
       if (f.id === viendo) tr.className = "viendo";
@@ -1389,7 +2273,15 @@
       bb.className = "peligro";
       bb.addEventListener("click", () => eliminar(f.id));
       acc.append(bv, " ", be, " ", bb);
-      tr.append(celda(n + 1), celda(f.curso), celda(f.estudiante), resp, acc);
+      const est = document.createElement("td");
+      const nombre = document.createElement("span");
+      nombre.className = "nombre";
+      nombre.textContent = f.estudiante;
+      const lc = document.createElement("span");
+      lc.className = "cierre-fila";
+      lc.innerHTML = lineaCierre(cierreDe(f, otras, decisiones));
+      est.append(nombre, lc);
+      tr.append(celda(n + 1), celda(f.curso), est, resp, acc);
       tb.append(tr);
     });
     $("cantidad").textContent = filas.length;
@@ -1399,6 +2291,7 @@
     const t = filas.length ? tsv() : "";
     $("vista").textContent = t;
     $("estadoExport").textContent = !filas.length ? "" : t === exportado ? "Exportado: sin cambios desde la última exportación." : "Hay cambios sin exportar.";
+    if (!$("impresion").hidden) renderImpresion(); // la vista de impresión abierta sigue al día
   }
 
   // Esquema TSV: evaluacion, curso, estudiante, i01–i30 (respuesta cruda) y, al
@@ -1556,6 +2449,17 @@
     marcarExportado(t, `Descargado ${a.download} con ${filas.length} filas.`);
   }
 
+  // Las decisiones de cierre son de las dos herramientas: «Vaciar sesión» no
+  // las toca; se borran aparte, todas juntas.
+  function borrarCierre() {
+    if (!confirm("¿Borrar de este navegador todas las decisiones de cierre A+B (partes elegidas, categorías y devoluciones manuales, vínculos manuales)? " +
+      "Valen para las herramientas de A y de B. Los registros de A y de B no se tocan.")) return;
+    try { localStorage.removeItem(CLAVE_CIERRE); } catch { /* sin almacenamiento */ }
+    mensaje("Decisiones de cierre borradas.");
+    renderCierre();
+    renderFilas();
+  }
+
   function vaciar() {
     const sinExportar = filas.length && tsv() !== exportado;
     const texto = sinExportar
@@ -1600,9 +2504,34 @@
   $("btnDescartar").addEventListener("click", descartar);
   $("btnEditarVista").addEventListener("click", () => editar(viendo));
   $("btnCerrarVista").addEventListener("click", cerrarVista);
+  $("btnAnteriorVista").addEventListener("click", () => verVecina(-1));
+  $("btnSiguienteVista").addEventListener("click", () => verVecina(1));
+  $("cierre").addEventListener("change", (e) => {
+    if (e.target.dataset.parte != null) cambiarCierre(Number(e.target.dataset.parte), e.target.checked);
+    else if (e.target.name === "modoCierre") cambiarModo(e.target.value);
+    else if (e.target.id === "cierreManualCategoria") cambiarManual({ categoria: e.target.value || null });
+  });
+  $("vivo").addEventListener("toggle", (e) => { if (e.target.id === "detalleIntento") intentoAbierto = e.target.open; }, true);
+  $("cierre").addEventListener("toggle", (e) => { if (e.target.matches?.("details.cierre-contenidos")) contenidosAbiertos = e.target.open; }, true);
+  $("cierre").addEventListener("input", (e) => { if (e.target.id === "cierreManualTexto") cambiarManual({ devolucion: e.target.value }); });
+  $("cierre").addEventListener("click", (e) => {
+    if (e.target.id === "btnConfirmarCierre") cambiarCierre(null);
+    else if (e.target.id === "btnVincular") vincular();
+    else if (e.target.id === "btnDesvincular") desvincular();
+  });
+  // Otra pestaña cambió el otro intento o las decisiones: redibujar sin escribir nada.
+  window.addEventListener("storage", (e) => {
+    if (e.key === OTRA.claveLocal || e.key === CLAVE_CIERRE || e.key === null) { renderCierre(); renderFilas(); }
+  });
   $("btnCopiar").addEventListener("click", copiar);
   $("btnDescargar").addEventListener("click", descargar);
   $("btnVaciar").addEventListener("click", vaciar);
+  $("btnBorrarCierre").addEventListener("click", borrarCierre);
+  $("btnImpresion").addEventListener("click", abrirImpresion);
+  $("impresionCurso").addEventListener("change", renderImpresion);
+  $("btnImprimir").addEventListener("click", () => window.print());
+  $("btnExportarAnonimo").addEventListener("click", exportarAnonimo);
+  $("btnCerrarImpresion").addEventListener("click", () => { $("impresion").hidden = true; });
   $("btnImportar").addEventListener("click", () => $("archivoImport").click());
   // El panel se vuelve a dibujar en cada cambio: el botón se atiende por delegación.
   $("vivo").addEventListener("click", (e) => {

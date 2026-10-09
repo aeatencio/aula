@@ -83,7 +83,21 @@ test("A y B son el mismo código fuera de su bloque CONFIG", () => {
   assert.equal(html.replace(CONFIG, "\n"), htmlA.replace(CONFIG, "\n"));
   const nombres = (h) => [...h.match(CONFIG)[0].matchAll(/^ {2}const (\w+) =/gm)].map((m) => m[1]);
   assert.deepEqual(nombres(html), nombres(htmlA), "las dos configuraciones declaran lo mismo");
-  assert.deepEqual(nombres(html), ["EVALUACION", "TITULO", "BAJADA", "CLAVE_LOCAL", "PARTES", "ACEPTADAS", "NOTA_CLAVE", "EJES", "IDEAS"]);
+  assert.deepEqual(nombres(html), ["EVALUACION", "TITULO", "BAJADA", "CLAVE_LOCAL", "PARTES", "ACEPTADAS", "NOTA_CLAVE", "EJES", "IDEAS",
+    "LETRA", "OTRA", "OTRA_ACEPTADAS", "OTRA_EJES"]);
+});
+
+test("cierre A+B: cada herramienta conoce la clave y el almacenamiento reales de la otra", () => {
+  const aceptadas = (h, c) => JSON.parse(h.match(new RegExp(`const ${c} = (\\[[\\s\\S]*?\\]\\s*\\]);`))[1]);
+  const otra = (h) => h.match(/const OTRA = \{ letra: "([AB])", claveLocal: "([^"]+)" \};/).slice(1);
+  const local = (h) => h.match(/const CLAVE_LOCAL = "([^"]+)";/)[1];
+  assert.deepEqual(aceptadas(html, "OTRA_ACEPTADAS"), aceptadas(htmlA, "ACEPTADAS"));
+  assert.deepEqual(aceptadas(htmlA, "OTRA_ACEPTADAS"), aceptadas(html, "ACEPTADAS"));
+  const otrosEjes = (h) => JSON.parse(h.match(/const OTRA_EJES = (\[[\s\S]*?\n {2}\]);/)[1]);
+  assert.deepEqual(otrosEjes(html), ejesDe(htmlA).map(({ id, items }) => ({ id, items })), "ejes de A en la B");
+  assert.deepEqual(otrosEjes(htmlA), ejesDe(html).map(({ id, items }) => ({ id, items })), "ejes de B en la A");
+  assert.deepEqual(otra(html), ["A", local(htmlA)]);
+  assert.deepEqual(otra(htmlA), ["B", local(html)]);
 });
 
 test("la clave de la herramienta B coincide con clave-docente.md versionada", () => {

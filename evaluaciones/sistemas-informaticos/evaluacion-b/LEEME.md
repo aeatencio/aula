@@ -1,8 +1,6 @@
 # Evaluación B · Sistemas Informáticos
 
-Instrumento individual, escrito, a libro cerrado y de opción múltiple sobre Sistemas Informáticos. Es una versión paralela de la [Evaluación A](../evaluacion-a/): comparable en estructura, ejes y exigencia, con casos y formulaciones nuevas. Sus contenidos corresponden al [recorrido de estudio](../../../src/data/recorridos.ts) con el que se diseñó.
-
-Uso registrado: se preparó como recuperatorio de la Evaluación A para 3.º año de la escuela Gabriela Mistral, para tomarse el 06/10/2026; el recorrido de referencia fue el que siguió ese curso (Gabriela Mistral · 3.º año · 3.er bimestre 2026).
+Instrumento individual, escrito, a libro cerrado y de opción múltiple sobre Sistemas Informáticos. Es una versión paralela de la [Evaluación A](../evaluacion-a/): comparable en estructura, ejes y exigencia, con casos y formulaciones nuevas.
 
 Tiene 30 ítems en cuatro partes —Reconocer (1–8), Relacionar (9–16), Interpretar (17–24) y Usar lo que sabés (25–30)—, una por cara. Los resultados se registran por parte (sobre 8, 8, 8 y 6): son el resultado principal. Como síntesis puede mostrarse un resultado global con las partes que se contabilicen, que no reemplaza las partes ni es una nota (criterio completo en `clave-docente.md`).
 
@@ -23,7 +21,7 @@ Elegir el PDF que corresponda al papel oficio disponible (216 × 356 o 216 × 34
 
 ## Corrección y análisis
 
-[`herramienta/index.html`](herramienta/) se abre en `http://localhost:4321/herramientas/evaluacion-b/` con `npm run dev` (sólo en desarrollo; no se publica) o directamente en Chrome o Edge, sin servidor ni conexión. Funciona como la de la [Evaluación A](../evaluacion-a/herramienta/), con la clave y los ejes de la B; lo propio de la B está en su [LEEME](herramienta/LEEME.md).
+[`herramienta/index.html`](herramienta/) se abre en `http://localhost:4321/herramientas/evaluacion-b/` con `npm run dev` (sólo en desarrollo; no se publica) o directamente en Chrome o Edge, sin servidor ni conexión. Funciona como la de la [Evaluación A](../evaluacion-a/herramienta/), con la clave y los ejes de la B, e integra en «Ver» el cierre A+B (mejor resultado por parte entre A y B, partes que el docente elige y categoría de cierre, o cierre manual); lo propio de la B está en su [LEEME](herramienta/LEEME.md).
 
 Los nombres y respuestas reales son privados y nunca se versionan. La herramienta no tiene backend ni transmite datos: lo cargado queda en el `localStorage` de ese navegador, separado de lo de la Evaluación A, y el TSV exportado debe tratarse como privado y guardarse fuera del repositorio.
 

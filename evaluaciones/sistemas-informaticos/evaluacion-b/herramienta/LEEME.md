@@ -65,6 +65,22 @@ Con la regla de la devolución, «CPU y memoria» (dos ítems) llega como mucho 
 `analisis-de-items.md` de la B; la del 28 aparece en los dos ejes cuando ambos
 quedan señalados.
 
+## Cierre A+B
+
+En **Ver**, el panel «Cierre A+B» muestra por parte el resultado en A y en B, la
+mejor evidencia y qué partes cuentan para el cierre (o el modo manual, con
+categoría y devolución del docente), la evidencia por contenidos de A y B
+acumulados y una orientación para seguir trabajando acorde a la categoría
+(«Cierre del curso: imprimir o exportar…» las reúne para todo el curso, con la
+clave de A y B en cada una, y exporta datos anonimizados para análisis); en la tabla, cada fila guardada tiene su
+línea «Cierre: …». Lee en sólo lectura los registros de la Evaluación A del mismo
+navegador y origen, y guarda sólo las decisiones docentes en
+`aula-evaluacion-cierre-v1`, incluidos los vínculos manuales A ↔ B para nombres
+que no coinciden («Consolidar manualmente con: … Vincular»). Reglas, umbrales (Suficiente desde el 55 %,
+Avanzado sólo con las cuatro partes y 24/30, y en ambos casos el requisito de la
+Parte 1: 9/16 sumando A y B, o 6/8 con un solo intento) y emparejamiento:
+[Cierre A+B](../../evaluacion-a/herramienta/LEEME.md#cierre-ab) en el LEEME de la A.
+
 ## Configuración y pruebas
 
 Todo lo propio de B está en el bloque `// <CONFIG>` … `// </CONFIG>` de
