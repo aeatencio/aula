@@ -378,7 +378,7 @@ test("corrección roja: sólo capa visual, fuera de la respuesta cruda", () => {
   assert.deepEqual(enFila(2).corr, {}, "B+D? queda a revisar, sin corrección");
   assert.deepEqual(enFila(3).corr, { 12: "D", 18: "B/D" }, "blanco en el 18 → B/D");
   assert.deepEqual(enFila(4).corr, { 18: "B/D" });
-  assert.match(t.filas()[0].querySelector(".v.i18 .corr").title, /Clave del ítem 18: B, D o B\+D/);
+  assert.match(t.filas()[0].querySelector(".v.ancho .corr").title, /Clave del ítem 18: B, D o B\+D/);
   // Resultados sin cambios por la capa visual.
   assert.deepEqual(t.resultados(0), ["3/8 · 38 %resp. 7/8 · 1 a revisar", "6/8 · 75 %resp. 8/8 · 2 a revisar", "7/8 · 88 %resp. 8/8", "6/6 · 100 %resp. 6/6"]);
 
@@ -1318,6 +1318,7 @@ test("devolución: todo eje para repasar o volver a estudiar aparece en ambas ve
   // Regla, recalculada aquí desde las respuestas y la clave, y unidades fijas.
   const EJES = JSON.parse(html.match(/const EJES = (\[[\s\S]*?\n  \]);/)[1]);
   const ACEPTADAS = JSON.parse(html.match(/const ACEPTADAS = (\[[\s\S]*?\]\s*\]);/)[1]);
+  assert.deepEqual(EJES.map((e) => e.id), ["hw", "datos", "es", "cpu", "ram", "estado", "so", "repr"], "ids estables de los ejes");
   const UNIDAD = [0, 3, 4, 1, 1, 4, 2, 5]; // eje (hw, datos, e/s, cpu, ram, estado, so, repr) → unidad
   const PARES = [[3, 4], [2, 5]];
   const PARTE = (n) => (n <= 8 ? 0 : n <= 16 ? 1 : n <= 24 ? 2 : 3);
@@ -1328,7 +1329,7 @@ test("devolución: todo eje para repasar o volver a estudiar aparece en ambas ve
   };
   let semilla = 20261007;
   const azar = () => ((semilla = (semilla * 1103515245 + 12345) % 2147483648) / 2147483648);
-  const spans = (t, id) => [...t.d.querySelectorAll(`#${id} .foco`)].map((s) => ({ ejes: s.dataset.ejes.split(" ").map(Number), nivel: s.dataset.nivel }));
+  const spans = (t, id) => [...t.d.querySelectorAll(`#${id} .foco`)].map((s) => ({ ejes: s.dataset.ejes.split(" ").map((id) => EJES.findIndex((e) => e.id === id)), nivel: s.dataset.nivel }));
   // Nombre que debe decir cada unidad de la breve: el del par o el propio del eje.
   const nombre = (ejes) => (ejes.length === 2 ? (ejes[0] === 3 ? "CPU, RAM y almacenamiento" : "entrada, salida y estado") : EJES[ejes[0]].foco);
   const plano = (ss) => Object.fromEntries(ss.flatMap((s) => s.ejes.map((k) => [String(k), s.nivel])));

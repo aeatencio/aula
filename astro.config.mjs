@@ -2,12 +2,15 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "astro/config";
 
-// Herramienta local de corrección y análisis de la Evaluación A. Se sirve sólo con
-// `astro dev` (apply: "serve"): no es una página del sitio, no se copia a
-// public/ ni entra en dist/.
-const RUTA_EVALUACION_A = "/herramientas/evaluacion-a";
-const HTML_EVALUACION_A = fileURLToPath(
-  new URL("./evaluaciones/sistemas-informaticos/evaluacion-a/herramienta/index.html", import.meta.url),
+// Herramientas locales de corrección y análisis de las evaluaciones A y B. Se
+// sirven sólo con `astro dev` (apply: "serve"): no son páginas del sitio, no se
+// copian a public/ ni entran en dist/.
+const HERRAMIENTAS = new Map(
+  ["a", "b"].flatMap((x) => {
+    const ruta = `/herramientas/evaluacion-${x}/`;
+    const html = fileURLToPath(new URL(`./evaluaciones/sistemas-informaticos/evaluacion-${x}/herramienta/index.html`, import.meta.url));
+    return [[ruta, html], [`${ruta}index.html`, html]];
+  }),
 );
 
 const herramientasLocales = {
@@ -15,11 +18,11 @@ const herramientasLocales = {
   apply: "serve",
   configureServer(server) {
     server.middlewares.use((req, res, next) => {
-      const ruta = (req.url ?? "").split("?")[0];
-      if (ruta !== `${RUTA_EVALUACION_A}/` && ruta !== `${RUTA_EVALUACION_A}/index.html`) return next();
+      const html = HERRAMIENTAS.get((req.url ?? "").split("?")[0]);
+      if (!html) return next();
       res.setHeader("Content-Type", "text/html; charset=utf-8");
       res.setHeader("Cache-Control", "no-store");
-      res.end(readFileSync(HTML_EVALUACION_A));
+      res.end(readFileSync(html));
     });
   },
 };

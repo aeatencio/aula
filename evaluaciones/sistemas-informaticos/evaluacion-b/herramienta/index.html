@@ -461,72 +461,79 @@
 "use strict";
 (() => {
   // <CONFIG> ·················································
-  // Todo lo propio de la Evaluación A está en este bloque. Fuera de él, el
-  // código es el mismo que en la herramienta de la Evaluación B: mientras sean
+  // Todo lo propio de la Evaluación B está en este bloque. Fuera de él, el
+  // código es el mismo que en la herramienta de la Evaluación A: mientras sean
   // copias, tests/herramienta-evaluacion-b.test.mjs comprueba que no se separen.
-  const EVALUACION = "SI-A";
-  const TITULO = "Corrección y análisis · Evaluación A";
+  const EVALUACION = "SI-B";
+  const TITULO = "Corrección y análisis · Evaluación B";
   const BAJADA = "Carga de respuestas, resultados y devolución pedagógica · Sistemas Informáticos";
-  const CLAVE_LOCAL = "aula-evaluacion-a-v1";
-  // Estructura real de la Evaluación A (fuente/evaluacion.html): la Parte 1
-  // tiene opciones A–C; las demás, A–D.
+  const CLAVE_LOCAL = "aula-evaluacion-b-v1";
+  // Estructura real de la Evaluación B (fuente/evaluacion.html), la misma que la
+  // de la A: la Parte 1 tiene opciones A–C; las demás, A–D.
   const PARTES = [
     { n: 1, nombre: "Reconocer", desde: 1, hasta: 8, letras: "ABC" },
     { n: 2, nombre: "Relacionar", desde: 9, hasta: 16, letras: "ABCD" },
     { n: 3, nombre: "Interpretar", desde: 17, hasta: 24, letras: "ABCD" },
     { n: 4, nombre: "Usar lo que sabés", desde: 25, hasta: 30, letras: "ABCD" },
   ];
-  // Clave vigente de evaluaciones/sistemas-informaticos/evaluacion-a/clave-docente.md:
-  // respuestas aceptadas por ítem (12: sólo D; 18: B, D o B+D).
-  // tests/herramienta-evaluacion-a.test.mjs comprueba que coincida con ese archivo.
+  // Clave vigente de evaluaciones/sistemas-informaticos/evaluacion-b/clave-docente.md:
+  // una sola respuesta aceptada por ítem.
+  // tests/herramienta-evaluacion-b.test.mjs comprueba que coincida con ese archivo.
   const ACEPTADAS = [
-    ["B"], ["A"], ["C"], ["B"], ["C"], ["A"], ["B"], ["C"],
-    ["D"], ["B"], ["A"], ["D"], ["B"], ["C"], ["A"], ["C"],
-    ["B"], ["B", "D", "B+D"], ["A"], ["A"], ["C"], ["B"], ["C"], ["D"],
-    ["C"], ["B"], ["D"], ["A"], ["B"], ["A"]
+    ["B"], ["C"], ["A"], ["B"], ["C"], ["C"], ["A"], ["B"],
+    ["D"], ["B"], ["C"], ["A"], ["B"], ["A"], ["D"], ["C"],
+    ["C"], ["B"], ["D"], ["A"], ["B"], ["C"], ["A"], ["D"],
+    ["A"], ["D"], ["B"], ["C"], ["A"], ["D"]
   ];
   // Particularidades de la clave que se nombran en la leyenda ("" si no hay).
-  const NOTA_CLAVE = "12: sólo D; 18: B, D o B+D";
-  // Ejes de analisis-de-items.md («Cobertura»), sólo con los ítems principales:
-  // sin los que figuran entre paréntesis como integrados. Cada ítem queda en un
-  // solo eje. «id» es estable entre evaluaciones (el mismo eje de A y de B);
-  // «corto» es el rótulo en pantalla; «foco», cómo se nombra el tema en la
-  // devolución al estudiante.
-  // tests/herramienta-evaluacion-a.test.mjs comprueba que nombres e ítems
+  const NOTA_CLAVE = "";
+  // Ejes de analisis-de-items.md («Cobertura», columna de la Evaluación B), sólo
+  // con los ítems principales: sin los que figuran entre paréntesis como
+  // integrados. El 28 es principal en dos ejes (RAM y almacenamiento; SO) y
+  // cuenta en ambos; los demás ítems quedan en un solo eje. «id» es estable entre
+  // evaluaciones (el mismo eje de A y de B); «corto» es el rótulo en pantalla;
+  // «foco», cómo se nombra el tema en la devolución al estudiante.
+  // tests/herramienta-evaluacion-b.test.mjs comprueba que nombres e ítems
   // coincidan con ese archivo.
   const EJES = [
     { "id": "hw", "nombre": "Hardware, software, programa", "corto": "Hardware y software", "foco": "hardware y software", "items": [1, 2, 9] },
     { "id": "datos", "nombre": "Instrucciones, datos, operaciones, resultados", "corto": "Datos y operaciones", "foco": "datos y operaciones", "items": [3, 10, 11, 24] },
     { "id": "es", "nombre": "Entrada, procesamiento y salida", "corto": "Entrada y salida", "foco": "entrada y salida", "items": [4, 5, 12, 21, 25] },
-    { "id": "cpu", "nombre": "CPU y memoria / Von Neumann", "corto": "CPU y memoria", "foco": "CPU y memoria", "items": [6, 20, 30] },
-    { "id": "ram", "nombre": "RAM, almacenamiento y recorrido", "corto": "RAM y almacenamiento", "foco": "RAM y almacenamiento", "items": [7, 13, 22] },
-    { "id": "estado", "nombre": "Estado", "corto": "Estado", "foco": "estado", "items": [14, 17, 18, 26] },
-    { "id": "so", "nombre": "SO y administración de recursos", "corto": "Sistema operativo", "foco": "sistema operativo", "items": [8, 15, 23, 28, 29] },
-    { "id": "repr", "nombre": "Representaciones y miradas", "corto": "Representaciones", "foco": "representaciones", "items": [16, 19, 27] }
+    { "id": "cpu", "nombre": "CPU y memoria / Von Neumann", "corto": "CPU y memoria", "foco": "CPU y memoria", "items": [6, 20] },
+    { "id": "ram", "nombre": "RAM, almacenamiento y recorrido", "corto": "RAM y almacenamiento", "foco": "RAM y almacenamiento", "items": [7, 13, 22, 28] },
+    { "id": "estado", "nombre": "Estado", "corto": "Estado", "foco": "estado", "items": [14, 17, 18, 26, 27] },
+    { "id": "so", "nombre": "SO y administración de recursos", "corto": "Sistema operativo", "foco": "sistema operativo", "items": [8, 15, 28, 29, 30] },
+    { "id": "repr", "nombre": "Representaciones y miradas", "corto": "Representaciones", "foco": "representaciones", "items": [16, 19, 23] }
   ];
   // Qué revisar dentro de cada tema según los ítems fallados (para la
   // devolución extendida), a partir de «Qué mide» en analisis-de-items.md.
-  // Ítems que miden lo mismo comparten texto.
+  // Ítems que miden lo mismo comparten texto. El del 28 sirve para sus dos ejes.
   const IDEAS = {
     1: "la diferencia entre hardware (lo físico) y software (programas y datos)", 9: "la diferencia entre hardware (lo físico) y software (programas y datos)",
-    2: "por qué la misma computadora puede hacer tareas distintas",
-    3: "la diferencia entre dato, operación y resultado", 10: "la diferencia entre dato, operación y resultado",
+    2: "por qué el mismo dispositivo puede hacer tareas distintas según sus programas",
+    3: "la diferencia entre dato, operación y resultado", 10: "la diferencia entre entrada, operación y salida",
     11: "cómo un resultado puede volver a usarse como dato", 24: "de qué datos depende cada resultado en un cálculo",
-    4: "cuáles son los dispositivos de entrada y de salida", 5: "cuáles son los dispositivos de entrada y de salida",
+    4: "cuáles son los dispositivos de entrada y de salida",
+    5: "que una salida puede ser una señal o una acción, no sólo algo en pantalla",
     12: "qué información entra al sistema en cada momento", 21: "cómo la salida de un sistema puede ser la entrada de otro",
-    25: "la diferencia entre lo que entra al sistema y lo que guarda como estado",
-    6: "qué hace la CPU y qué hace la RAM mientras se ejecuta un programa", 20: "qué hace la CPU y qué hace la RAM mientras se ejecuta un programa",
-    30: "cómo la RAM mantiene los datos disponibles durante una tarea",
+    25: "la diferencia entre lo que entra al sistema y lo que ya guarda como estado",
+    6: "qué hace la CPU mientras un programa funciona",
+    20: "cómo la CPU toma datos de la memoria y devuelve ahí los resultados",
     7: "qué información está en uso (RAM) y qué información queda guardada (almacenamiento)",
-    22: "qué información está en uso (RAM) y qué información queda guardada (almacenamiento)",
     13: "el recorrido de un programa al abrirlo, del almacenamiento a la RAM y a la CPU",
-    14: "qué datos forman el estado de un sistema", 17: "qué cambia y qué se mantiene en el estado", 26: "qué cambia y qué se mantiene en el estado",
-    18: "la diferencia entre lo que entra al sistema y lo que el sistema hace",
-    8: "cómo administra los recursos", 23: "cómo administra los recursos",
-    15: "el papel de los drivers", 28: "cómo alterna entre programas sin perder su estado",
-    29: "qué pasa al encender, cuando lo guardado se carga en la RAM",
-    16: "qué muestra y qué no muestra cada representación", 19: "qué muestra y qué no muestra cada representación",
-    27: "cómo una salida puede cambiar la próxima entrada",
+    22: "qué memoria ocupan los programas abiertos (la RAM, no el almacenamiento)",
+    28: "qué pasa al encender, cuando el sistema operativo guardado se carga en la RAM",
+    14: "qué datos forman el estado de un sistema", 17: "qué cambia y qué se mantiene en el estado",
+    26: "cuándo una operación cambia el estado y cuándo no",
+    27: "la diferencia entre una salida y lo que queda registrado en el estado",
+    18: "la diferencia entre lo que llega al sistema y lo que el sistema hace con eso",
+    8: "qué es un sistema operativo frente a las aplicaciones y los archivos",
+    15: "cómo organiza el uso de un recurso que comparten varios programas",
+    29: "cómo alterna entre programas guardando y retomando el estado de cada uno",
+    30: "el papel de los drivers",
+    16: "qué representación conviene según la pregunta que se quiere responder",
+    19: "qué muestra y qué no muestra una representación",
+    23: "que un esquema de entrada, procesamiento y salida no muestra el estado",
   };
   // </CONFIG> ················································
 

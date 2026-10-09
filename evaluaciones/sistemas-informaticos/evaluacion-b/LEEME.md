@@ -13,12 +13,19 @@ Tiene 30 ítems en cuatro partes —Reconocer (1–8), Relacionar (9–16), Inte
 | `evaluacion-oficio-216x356.pdf` y `evaluacion-oficio-216x340.pdf` | Variantes listas para imprimir, con el mismo contenido. |
 | `clave-docente.md` | Clave y criterio de corrección. |
 | `analisis-de-items.md` | Qué mide cada ítem, distractores, cobertura comparada con la Evaluación A y alcances del modelo. |
+| `herramienta/` | Corrección y análisis: página local para cargar las respuestas en papel, corregirlas y ver resultados y devolución pedagógica. |
 | `fuente/evaluacion.html` | Fuente HTML del instrumento. |
 | `fuente/generar-pdf.mjs` | Genera ambas variantes desde el HTML y mide el espacio de cada cara. |
 
 ## Imprimir
 
 Elegir el PDF que corresponda al papel oficio disponible (216 × 356 o 216 × 340 mm). Imprimir al 100 %, doble faz, con giro por el borde largo; abrochar las dos hojas. La clave docente se usa por separado.
+
+## Corrección y análisis
+
+[`herramienta/index.html`](herramienta/) se abre en `http://localhost:4321/herramientas/evaluacion-b/` con `npm run dev` (sólo en desarrollo; no se publica) o directamente en Chrome o Edge, sin servidor ni conexión. Funciona como la de la [Evaluación A](../evaluacion-a/herramienta/), con la clave y los ejes de la B; lo propio de la B está en su [LEEME](herramienta/LEEME.md).
+
+Los nombres y respuestas reales son privados y nunca se versionan. La herramienta no tiene backend ni transmite datos: lo cargado queda en el `localStorage` de ese navegador, separado de lo de la Evaluación A, y el TSV exportado debe tratarse como privado y guardarse fuera del repositorio.
 
 ## Regenerar o adaptar
 

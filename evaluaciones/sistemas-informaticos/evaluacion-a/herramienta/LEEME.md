@@ -266,6 +266,22 @@ porque un archivo abierto desde el disco no puede leer otro archivo.
 y `analisis-de-items.md` y falla si difieren: si cambia alguno de esos
 documentos, actualizar también `index.html`.
 
+## Configuración y Evaluación B
+
+Todo lo propio de la Evaluación A está en un bloque delimitado por
+`// <CONFIG>` y `// </CONFIG>` en `index.html`: código de evaluación (`SI-A`),
+título, clave de `localStorage`, partes, clave aceptada, particularidades que
+nombra la leyenda, ejes (con un `id` estable: `hw`, `datos`, `es`, `cpu`, `ram`,
+`estado`, `so`, `repr`) e ideas de la devolución extendida. El resto se deriva
+de ahí: la leyenda, la columna más ancha de los ítems con más de una respuesta
+aceptada (aquí, el 18) y el nombre del `.tsv` descargado.
+
+La [herramienta de la Evaluación B](../../evaluacion-b/herramienta/) es una
+copia de este archivo con su propio bloque CONFIG. Mientras sean copias,
+`tests/herramienta-evaluacion-b.test.mjs` exige que fuera de ese bloque sean
+idénticas: un cambio de comportamiento se hace en las dos. Es un control
+temporal de la duplicación, no una regla de diseño.
+
 ## Valores de cada ítem
 
 | Valor | Significa |
