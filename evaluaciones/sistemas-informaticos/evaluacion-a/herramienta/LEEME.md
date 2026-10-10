@@ -324,7 +324,7 @@ ningún paso ni guarda nada: el docente interviene sólo en las excepciones.
   la sugerida hace lo mismo). Al cambiar la categoría, «Agregar nota docente para
   la devolución…» se abre sola con una guía («¿En qué otras evidencias del
   período se apoya la categoría? …») que no se guarda; la nota es siempre
-  opcional, se imprime («Nota docente») y no va al export. «← Anterior» y
+  opcional, se imprime («Nota de tu docente») y no va al export. «← Anterior» y
   «Siguiente →» recorren la lista. Plegados: detalle A/B por parte, contenidos y
   orientación, enlaces a la devolución de cada intento en su herramienta
   (`#ver=<id>` abre esa evaluación en Ver) e información técnica.
@@ -436,7 +436,9 @@ todo derivado; nada de esto se guarda). El panel se lee en este orden:
    respuestas a revisar, aparte y nunca como error. No es una nota ni cambia la
    categoría.
 4. **Para seguir trabajando:** orientación por unidades de estudio (las mismas
-   agrupaciones y el mismo orden que la devolución por intento).
+   agrupaciones y el mismo orden que la devolución por intento). Es una
+   lectura para el docente: intensidades y orientación no van al papel del
+   estudiante, que sólo lista las preguntas incorrectas por tema.
 
 **Intensidad por contenido** (con n = aciertos + errores firmes de A+B): sin
 señal si hay menos de 2 errores o los errores son menos de un tercio de n;
@@ -484,34 +486,61 @@ páginas (`break-inside: avoid`) y lleva, en este orden:
    «Calificación del Tercer Bimestre» (así se llama en el papel, como en el
    boletín): la categoría efectiva (la elegida por el docente o, si no, la
    de la evidencia, con «provisoria» si corresponde), sin decir de dónde sale.
-   Debajo, el mismo encuadre para todos: «La calificación del tercer bimestre
-   valora el proceso del período. Las Evaluaciones A y B son una de las
-   evidencias consideradas.» (A+B describe una evidencia; la categoría valora el
-   período);
-2. resultado considerado (si la categoría es la de la evidencia); si hay
-   respuestas pendientes de revisión, una línea lo dice («estos resultados
-   todavía pueden cambiar»), sea cual sea la categoría;
-3. «Resultados en las Evaluaciones A y B»: A, B y el mejor, con porcentajes (sin
-   la columna «Cuenta»: las partes consideradas ya las dice «Resultado
-   considerado»), con una fila
-   **Total**: para A y para B, la suma de sus partes válidas con su propio
-   denominador (14/24 si una parte no es válida, nunca sobre 30 inventado) y lo
-   que queda a revisar; para «Mejor», la suma de la mejor evidencia de cada parte
-   (no es una evaluación completa). La misma fila está en el detalle por parte de
-   la revisión individual;
-4. por contenidos, A y B juntos, con las dificultades marcadas;
-5. para seguir trabajando: la orientación por contenidos respaldada por A+B. Si
-   la categoría final difiere de la sugerida, no se agregan frases generales de
-   respaldo ni la Parte 1 como explicación (eso lo dice la nota), y si no queda
-   nada respaldado la sección no aparece;
-6. la nota docente, si se escribió;
-7. la **clave de corrección** de A y de B, una línea por evaluación separada
-   por partes (`A | P1 1B 2A … 8C | P2 9D … | P3 17B 18B/D … | P4 … 30A`), para que
-   el estudiante se autocorrija con su hoja. Sale de la clave de cada
-   herramienta (que las pruebas comparan con cada `clave-docente.md`); con
-   varias respuestas aceptadas se muestran las simples unidas por «/» y una
-   aclaración debajo («A18: se acepta B, D o B+D.»). Sólo esta sección usa una
-   letra algo menor (9 pt) para que cada evaluación entre en un renglón.
+   Debajo, el mismo encuadre para todos, coincida o no la calificación con
+   la sugerida: «Las Evaluaciones A y B son una evidencia importante, pero la
+   calificación del tercer bimestre considera también tus otros trabajos, las
+   actividades de aprendizaje en el aula y la valoración conceptual del
+   período.» (A+B es una evidencia; la calificación la decide el docente
+   mirando el período);
+2. «Tus resultados en las Evaluaciones A y B»: una fila por parte con A, B y
+   **Para A+B** («6 de 8»; en A o B, «no se consideró» o «incompleta» si esa
+   parte no es evidencia y «(1 en revisión)» si quedan respuestas a revisar;
+   si de una evaluación no hay ningún registro, una sola celda «Sin
+   resultado» en su columna, sin decir por qué). Para A+B es exactamente la
+   evidencia que usa la sugerencia: la mejor evidencia de cada parte que
+   cuenta («no se consideró» si el docente la dejó afuera, «—» si no hay
+   evidencia válida). La fila **Total** lleva puntaje y porcentaje («25 de 30
+   (83,3 %)»; coma decimal, a lo sumo un decimal, sin «,0»): para A y para B,
+   la suma de sus partes válidas con su propio denominador (14 de 24 si una
+   parte no es válida, nunca sobre 30 inventado); para A+B, el resultado
+   considerado. Por parte, sólo el puntaje (con 6 u 8 preguntas se lee
+   directo y la tabla no se recarga). Debajo, la regla y su resultado:
+   «Para valorar las Evaluaciones A y B, en cada parte se conserva tu mejor
+   resultado entre las dos. Así obtuviste 18 de 30 (60 %).» Con una sola
+   evaluación: «Como de la Evaluación B no hay resultado, para valorar las
+   Evaluaciones A y B se toma tu resultado en la A. Así obtuviste …»; si no
+   cuentan las cuatro partes, «… en las partes que se consideraron»; si lo
+   que está en revisión puede cambiar ese total, «Así obtuviste, por ahora,
+   …». Sin partes que cuenten, no hay total ni frase. Si hay respuestas
+   pendientes de revisión, una línea lo dice («Algunas respuestas todavía se
+   están revisando: estos resultados pueden cambiar.»). Si en alguna parte B
+   supera a A: «De la Evaluación A a la B mejoraste en …»;
+3. «Para revisar — preguntas que tuviste mal en cada evaluación, por tema»:
+   **todas** las respuestas incorrectas firmes de las partes válidas de A y
+   de B (no las que están en revisión), agrupadas por unidad de estudio en el
+   orden de siempre («Sistema operativo — A 8, 15 · B 8, 29»; el 28 de la B
+   está en dos temas y aparece en los dos), y una sola orientación fija:
+   «Cómo seguir: buscá esas preguntas en tus evaluaciones, compará tus
+   respuestas con la clave y volvé a los materiales de clase de esos temas.»
+   Sin incorrectas: «No tuviste respuestas incorrectas en las partes
+   consideradas.» El papel muestra y organiza la evidencia; no la interpreta.
+   No lleva intensidades, verbos de orientación («volver a estudiar»,
+   «repasar», «consolidar», «reforzar»), «te fue mejor en», temas «a
+   confirmar», la explicación del requisito de la Parte 1, procedencias ni la
+   categoría sugerida: todo eso queda en la pantalla docente y en los
+   exports. Salvo la calificación, el papel es el mismo coincida o no la
+   decisión docente con la sugerida;
+4. «Nota de tu docente», si se escribió;
+5. la **clave**, presentada como herramienta para corregirse («Para corregir
+   tus evaluaciones, compará tus respuestas con esta clave: una línea para la
+   Evaluación A y otra para la B; cada número es una pregunta y la letra que lo
+   sigue, su respuesta correcta.»), una línea para A y otra para B, separadas
+   por partes (`A | P1 1B 2A … 8C | P2 9D … | P3 17B 18B/D … | P4 … 30A` y
+   `B | P1 1B 2C … 8B | P2 9D … | P3 … | P4 … 30D`). Sale de la clave de cada herramienta (que las
+   pruebas comparan con cada `clave-docente.md`); con varias respuestas
+   aceptadas se muestran las simples unidas por «/» y una aclaración debajo
+   («A18: se acepta B, D o B+D.»). Sólo esta sección usa una letra algo menor
+   (9 pt) para que cada evaluación entre en un renglón.
 
 No se publica nada: no hay página, ruta ni QR; la clave sólo está en el papel.
 
@@ -560,7 +589,10 @@ puede reimportar: es un archivo documental. Adentro:
   la herramienta (categoría, resultado considerado, P1, provisoria y motivos),
   la **decisión docente** (categoría elegida si la cambió, final, partes
   elegidas, nota y el registro guardado; si no hizo nada, no se inventa una
-  decisión) y la **devolución entregada** (lo que se imprime);
+  decisión) y la **devolución entregada** (lo que se imprime, leído del papel:
+  calificación, encuadre, pendiente, resultados con Para A+B, la frase de
+  A+B («conjunto»), mejoras, temas —cada línea de «Para revisar» y «Cómo
+  seguir»—, nota y presentación de la clave);
 - `resumen.tsv`: una fila por estudiante para abrir en una planilla;
 - `evaluacion-a.tsv` y `evaluacion-b.tsv`: los registros del alcance con la misma
   serialización que el TSV de cada herramienta;

@@ -318,6 +318,21 @@ const medida = await evaluar(`(() => {
 verificar(medida.oculto === "none" && !medida.desborde, "al imprimir: sólo las devoluciones, sin desborde");
 verificar(medida.altos.every((h) => h < medida.pagina * 0.5), `cada devolución entra holgada en media página Oficio (${medida.altos.join(", ")} px de ${medida.pagina})`);
 verificar(medida.lineas.every((n) => n === 1), `cada línea de clave en un solo renglón → ${medida.lineas.join(", ")}`);
+// Sólo A (13, 15) y sólo B (16): una celda «Sin resultado» que abarca las cuatro partes, en su columna.
+const unica = await evaluar(`[...document.querySelectorAll("#impresionBloques td.sin-resultado")].map((td) => {
+  const b = td.closest("article"), filas = [...b.querySelectorAll("tbody tr")];
+  const alto = filas.at(-1).getBoundingClientRect().bottom - filas[0].getBoundingClientRect().top;
+  const col = b.querySelectorAll("thead th")[td.cellIndex].textContent;
+  return b.querySelector(".final-nombre").textContent + ":" + col + ":" + (Math.abs(td.getBoundingClientRect().height - alto) < 2 ? "abarca" : "no abarca");
+}).join(" ")`);
+verificar(unica === "Estudiante 13:Evaluación B:abarca Estudiante 15:Evaluación B:abarca Estudiante 16:Evaluación A:abarca", `«Sin resultado» en papel → ${unica}`);
+// Para A+B: el mejor resultado de cada parte (12: A 19 y B 19 por separado; 21 con las mejores partes).
+const ab12 = await evaluar(`(() => { const b = [...document.querySelectorAll("#impresionBloques article.final")].find((x) => x.querySelector(".final-nombre").textContent === "Estudiante 12");
+  return [...b.querySelectorAll("thead th")].map((th) => th.textContent).join(" | ") + " / " + [...b.querySelectorAll("tbody tr, tfoot tr")].map((tr) => tr.lastElementChild.textContent).join(" | ") +
+    " / " + [...b.querySelector("tfoot tr").children].map((c) => c.textContent).join(" | ") + " / " + b.querySelector(".final-conjunto").textContent; })()`);
+verificar(ab12 === "Parte | Evaluación A | Evaluación B | Para A+B / 6 de 8 | 6 de 8 | 5 de 8 | 4 de 6 | 21 de 30 (70 %) / Total | 19 de 30 (63,3 %) | 19 de 30 (63,3 %) | 21 de 30 (70 %) / " +
+  "Para valorar las Evaluaciones A y B, en cada parte se conserva tu mejor resultado entre las dos. Así obtuviste 21 de 30 (70 %).", `Para A+B en papel → ${ab12}`);
+await captura("cierre-impresion-oficio-una-sola.png");
 console.log(`     tipografía: devolución ${medida.fuente}, clave ${medida.fuenteClave}`);
 await captura("cierre-impresion-oficio.png");
 // La clave de un bloque, ampliada, para revisar la legibilidad.
@@ -415,14 +430,17 @@ verificar(nums === "01 02 03 04 05", `N.º de lista en el curso → ${nums}`);
 // Imprimir el curso entero sin entrar a ningún estudiante.
 const papelDe = () => evaluar(`(() => { const bs = [...document.querySelectorAll("#impresionBloques article.final")];
   return { cats: bs.map((b) => b.querySelector(".final-nombre").textContent + ":" + b.querySelector(".final-cat b").textContent).join(" "),
-    limpio: bs.every((b) => /^Calificación del Tercer Bimestre: /.test(b.querySelector(".final-cat").textContent) && !/sugerid|automátic|sin confirmar|≠|Cuenta|Categoría del período/i.test(b.textContent)),
-    encuadre: bs.every((b) => b.querySelector(".final-encuadre")?.textContent === "La calificación del tercer bimestre valora el proceso del período. Las Evaluaciones A y B son una de las evidencias consideradas."),
+    limpio: bs.every((b) => /^Calificación del Tercer Bimestre: /.test(b.querySelector(".final-cat").textContent) && !/sugerid|automátic|sin confirmar|≠|Cuenta|Categoría del período|Resultado considerado|merece atención|dificultad fuerte|te fue mejor|Necesitás|Te conviene|consolidar|reforzar|Seguí así|afianzar/i.test(b.textContent) &&
+      /^Para corregir tus evaluaciones, compará tus respuestas con esta clave/.test(b.querySelector(".clave-tit")?.textContent ?? "")),
+    encuadre: bs.every((b) => b.querySelector(".final-encuadre")?.textContent === "Las Evaluaciones A y B son una evidencia importante, pero la calificación del tercer bimestre considera también tus otros trabajos, las actividades de aprendizaje en el aula y la valoración conceptual del período."),
     nota: bs.find((b) => b.querySelector(".final-nombre").textContent === "Estudiante 23")?.querySelector(".final-texto")?.textContent ?? null }; })()`);
 await clic("#ccImprimir");
 let papel = await papelDe();
 verificar(await evaluar('[...document.querySelectorAll("#impresionBloques .final-num")].map((e) => e.textContent).join(" ")') === "01 02 03 04 05", "el mismo N.º en el papel");
-const total21 = await evaluar('[...document.querySelector("#impresionBloques article.final tfoot tr").children].slice(0, 4).map((c) => c.textContent).join(" | ")');
-verificar(total21 === "Total | 22/30 (73,3 %) | 22/30 (73,3 %) | 22/30 (73,3 %)", `fila Total en el papel → ${total21}`);
+const total21 = await evaluar('[...document.querySelector("#impresionBloques article.final tfoot tr").children].map((c) => c.textContent).join(" | ")');
+verificar(total21 === "Total | 22 de 30 (73,3 %) | 22 de 30 (73,3 %) | 22 de 30 (73,3 %)", `fila Total en el papel → ${total21}`);
+const temas21 = await evaluar('[...document.querySelectorAll("#impresionBloques article.final:first-child :is(h3, .final-contenidos > p, .final-revisar li)")].map((e) => e.textContent).join(" / ")');
+verificar(/^Tus resultados en las Evaluaciones A y B \/ Para revisar — preguntas que tuviste mal en cada evaluación, por tema \/ .*Sistema operativo — A [\d, ]+ · B [\d, ]+ \/ .*Cómo seguir: buscá esas preguntas/.test(temas21), `temas del papel → ${temas21}`);
 verificar(papel.cats === "Estudiante 21:Suficiente Estudiante 22:Avanzado Estudiante 23:En proceso Estudiante 24:Suficiente Estudiante 25:Suficiente" && papel.limpio && papel.encuadre,
   `impresión sin confirmar nada → ${papel.cats}`);
 verificar(await evaluar('localStorage.getItem("aula-evaluacion-cierre-v1")') === JSON.stringify({ estudiantes: { "curso x\testudiante 22": { modo: "procesado", partes: [true, true, true, true] } } }),
@@ -492,9 +510,11 @@ verificar(l6.join(" / ") === "Estudiante 27 | ✓ | ✓ | Avanzado | Provisorio�
   `el cambio no oculta lo pendiente → ${l6.join(" / ")}`);
 await clic("#ccImprimir");
 const p7 = await evaluar(`[...document.querySelectorAll("#impresionBloques article.final")].map((b) => ({ cat: b.querySelector(".final-cat").textContent,
-  pendiente: b.querySelector(".final-pendiente")?.textContent ?? "", seguir: [...b.querySelectorAll("h3")].some((h) => h.textContent === "Para seguir trabajando") }))`);
-verificar(p7[0].cat === "Calificación del Tercer Bimestre: Avanzado" && /pendientes de revisión/.test(p7[0].pendiente) &&
-  p7[1].cat === "Calificación del Tercer Bimestre: En proceso" && !p7[1].seguir, "papel: categoría del docente, lo pendiente dicho, sin orientación sin respaldo");
+  pendiente: b.querySelector(".final-pendiente")?.textContent ?? "", conjunto: b.querySelector(".final-conjunto")?.textContent ?? "",
+  revisar: [...b.querySelectorAll(".final-revisar li")].length, heuristica: /te fue mejor|Necesitás|Te conviene|Seguí así|dificultades marcadas|sugerid/i.test(b.textContent) }))`);
+verificar(p7[0].cat === "Calificación del Tercer Bimestre: Avanzado" && /todavía se están revisando/.test(p7[0].pendiente) && /Así obtuviste, por ahora, /.test(p7[0].conjunto) &&
+  p7[1].cat === "Calificación del Tercer Bimestre: En proceso" && p7[1].revisar > 0 && !p7.some((x) => x.heuristica),
+  "papel: categoría del docente, lo pendiente dicho, las mismas preguntas para revisar y sin interpretación");
 
 
 await evaluar("localStorage.clear()");

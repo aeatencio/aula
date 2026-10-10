@@ -1120,6 +1120,9 @@ const curso = () => {
   });
   return { a, b, cierre };
 };
+const PARA_REVISAR = "Para revisar — preguntas que tuviste mal en cada evaluación, por tema";
+// El encuadre, igual en todos los papeles: A+B es una evidencia; la calificación mira el período.
+const ENCUADRE = "Las Evaluaciones A y B son una evidencia importante, pero la calificación del tercer bimestre considera también tus otros trabajos, las actividades de aprendizaje en el aula y la valoración conceptual del período.";
 const bloques = (t) => {
   t.$("btnImpresion").click();
   return [...t.$("impresionBloques").querySelectorAll("article.final")];
@@ -1143,14 +1146,14 @@ test("impresión: un bloque por estudiante del curso (A y B), en orden, con todo
   assert.match(bs[4].querySelector(".final-cab").textContent, /\(B: Juan Pérez\)/, "vínculo manual: los dos nombres");
   // Sin override docente: la categoría efectiva es la de la evidencia.
   assert.deepEqual(datosBloque(bs[0]), { nombre: "Estudiante 01", modo: "procesado", cat: "Avanzado",
-    secciones: ["Resultados en las Evaluaciones A y B", "Por contenidos (A y B juntos)", "Para seguir trabajando"] });
+    secciones: ["Tus resultados en las Evaluaciones A y B", PARA_REVISAR] });
   assert.deepEqual(datosBloque(bs[1]), { nombre: "Estudiante 02", modo: "manual", cat: "Suficiente",
-    secciones: ["Resultados en las Evaluaciones A y B", "Por contenidos (A y B juntos)", "Para seguir trabajando", "Nota docente"] });
+    secciones: ["Tus resultados en las Evaluaciones A y B", PARA_REVISAR, "Nota de tu docente"] });
   assert.equal(bs[1].querySelector(".final-texto").textContent, "Texto sintético de la devolución.\nSegunda línea.");
   // La clave, siempre al final de cada bloque.
   for (const b of bs) assert.equal(b.lastElementChild.className, "clave-compacta");
-  // Resultados por parte con porcentajes y lo que cuenta para el cierre.
-  assert.match(bs[0].querySelector("tbody tr").textContent, /^P1 · Reconocer7\/8 \(87,5 %\)6\/8 \(75 %\)7\/8 \(87,5 %\) · A$/);
+  // Resultados por parte: A, B y Para A+B, sólo puntajes y sin procedencia.
+  assert.deepEqual([...bs[0].querySelector("tbody tr").children].map((c) => c.textContent), ["1 · Reconocer", "7 de 8", "6 de 8", "7 de 8"]);
   // Filtrar por curso.
   t.$("impresionCurso").value = "curso y";
   t.$("impresionCurso").dispatchEvent(new t.w.Event("change"));
@@ -1190,8 +1193,7 @@ test("impresión: las líneas A y B coinciden con clave-docente.md (30 ítems, c
 test("impresión: el mismo curso desde la herramienta A y desde la B", () => {
   const resumen = (x) => {
     const t = abrir(x, curso());
-    const r = bloques(t).map((b) => [datosBloque(b).nombre, b.dataset.clave, datosBloque(b).cat, b.querySelector(".final-contenidos").textContent,
-      b.querySelector(".final-orientacion").textContent]);
+    const r = bloques(t).map((b) => [datosBloque(b).nombre, b.dataset.clave, datosBloque(b).cat, b.textContent]);
     t.cerrar();
     return r;
   };
@@ -1598,11 +1600,12 @@ test("impresión del curso completo sin confirmar nada: la categoría efectiva (
   assert.equal(de("Estudiante 01").querySelector(".final-cat b").textContent, "En proceso", "override");
   assert.equal(de("Estudiante 05").querySelector(".final-cat b").textContent, "Suficiente", "sugerida, sin entrar al estudiante");
   assert.equal(de("Estudiante 02").querySelector(".final-cat b").textContent, "Avanzado");
-  assert.match(de("Estudiante 05").textContent, /Resultado considerado: 20\/30/);
+  assert.deepEqual([...de("Estudiante 05").querySelector("tfoot tr").children].map((c) => c.textContent), ["Total", "20 de 30 (66,7 %)", "", "20 de 30 (66,7 %)"]);
+  assert.equal(de("Estudiante 05").querySelector("tbody td.sin-resultado").textContent, "Sin resultado", "sólo A: B sin resultado");
   for (const b of bs) {
     assert.match(b.querySelector(".final-cat").textContent, /^Calificación del Tercer Bimestre: /);
-    assert.equal(b.querySelector(".final-encuadre").textContent, "La calificación del tercer bimestre valora el proceso del período. Las Evaluaciones A y B son una de las evidencias consideradas.");
-    assert.equal(b.querySelector("h3").textContent, "Resultados en las Evaluaciones A y B");
+    assert.equal(b.querySelector(".final-encuadre").textContent, ENCUADRE);
+    assert.equal(b.querySelector("h3").textContent, "Tus resultados en las Evaluaciones A y B");
     assert.doesNotMatch(b.textContent, /sugerid|automátic|sin confirmar|≠|pendiente de decisión/i);
   }
   t.cerrar();
@@ -1639,7 +1642,7 @@ test("trabajo por excepción: un cambio de categoría no oculta el estado de la 
   const bs = bloques(t);
   const b51 = bs.find((x) => x.querySelector(".final-nombre").textContent === "Estudiante 51");
   assert.equal(b51.querySelector(".final-cat").textContent, "Calificación del Tercer Bimestre: Avanzado");
-  assert.equal(b51.querySelector(".final-pendiente").textContent, "Hay respuestas pendientes de revisión en A o B: estos resultados todavía pueden cambiar.");
+  assert.equal(b51.querySelector(".final-pendiente").textContent, "Algunas respuestas todavía se están revisando: estos resultados pueden cambiar.");
   t.cerrar();
 });
 
@@ -1694,7 +1697,7 @@ test("N.º de lista: alfabético dentro del curso, una pareja = un número, rein
   t.cerrar();
 });
 
-test("fila Total por intento y Mejor: partes válidas con su propio denominador, a revisar aparte, en el detalle y en el papel", () => {
+test("fila Total por intento y Mejor: partes válidas con su propio denominador, a revisar aparte, en el detalle; en el papel, A, B y Para A+B", () => {
   const casos = [
     // [opciones A, opciones B, esperado A, esperado B, esperado Mejor]
     [{}, {}, "16/30 (53,3 %)", "13/30 (43,3 %)", "17/30 (56,7 %)"],
@@ -1716,10 +1719,12 @@ test("fila Total por intento y Mejor: partes válidas con su propio denominador,
     revisar(t, "Estudiante 81");
     const total = [...t.$("cierreCurso").querySelector(".cc-pliegues tfoot tr").children].map((c) => c.textContent);
     assert.deepEqual(total, ["Total", ea, eb, em], JSON.stringify([oa, ob]));
-    // El papel muestra la misma fila.
+    // El papel muestra los mismos totales de A, de B y de Para A+B (aquí
+    // cuentan las cuatro partes, así que es la suma de la mejor de cada una),
+    // dichos para el estudiante.
     const [b] = bloques(t);
     const papel = [...b.querySelector("tfoot tr").children].map((c) => c.textContent);
-    assert.deepEqual(papel.slice(0, 4), ["Total", ea, eb, em]);
+    assert.deepEqual(papel, ["Total", ...[ea, eb, em].map((x) => x.replace(/^(\d+)\/(\d+) (\([^)]*\)).*$/, "$1 de $2 $3"))]);
     assert.equal(b.querySelectorAll("tbody tr").length, 4, "las partes siguen siendo cuatro filas");
     // Sólo visual: nada se guarda.
     assert.deepEqual(escrituras.filter((k) => k === CIERRE), []);
@@ -1860,11 +1865,15 @@ test("cierre completo: corrección, sugerencia y decisión docente separadas (im
   // 06: P1 8/16 → la sugerencia es En proceso aunque el porcentaje alcance.
   const e06 = de("Estudiante 06");
   assert.deepEqual([e06.sugerencia.categoria, e06.sugerencia.requisito_p1.cumple, e06.sugerencia.requisito_p1.aciertos], ["En proceso", false, 8]);
-  assert.match(e06.devolucion_entregada.resultado_considerado, /requisito de la Parte 1/);
+  // La Parte 1 queda en la sugerencia (arriba) y en la orientación docente, no en el papel.
+  assert.ok(!e06.devolucion_entregada.temas.some((x) => /Parte 1|afianzar/.test(x)));
+  assert.ok(e06.orientacion.some((x) => /afianzar la Parte 1/.test(x)));
   // Mejor evidencia integrada y devolución entregada.
   assert.deepEqual(e01.correccion.integrada.suma_mejor, { aciertos: 22, total: 30, porcentaje: 73.3 });
-  assert.deepEqual(e01.devolucion_entregada.resultados.at(-1), ["Total", "22/30 (73,3 %)", "18/30 (60 %) · 1 a revisar", "22/30 (73,3 %)"]);
-  assert.match(e01.devolucion_entregada.encuadre, /^La calificación del tercer bimestre valora el proceso del período/);
+  assert.deepEqual(e01.devolucion_entregada.resultados.at(-1), ["Total", "22 de 30 (73,3 %)", "18 de 30 (60 %)", "22 de 30 (73,3 %)"]);
+  assert.equal(e01.devolucion_entregada.conjunto, "Para valorar las Evaluaciones A y B, en cada parte se conserva tu mejor resultado entre las dos. Así obtuviste 22 de 30 (73,3 %).");
+  assert.equal(e01.devolucion_entregada.pendiente, "Algunas respuestas todavía se están revisando: estos resultados pueden cambiar.");
+  assert.equal(e01.devolucion_entregada.encuadre, ENCUADRE);
   assert.ok(e01.orientacion.length > 0);
   t.cerrar();
 });
@@ -1935,31 +1944,31 @@ test("cierre completo: un curso sólo incluye sus estudiantes y registros; nada 
   t.cerrar();
 });
 
-test("papel: «Calificación del Tercer Bimestre», encuadre nuevo y sin columna «Cuenta»; las partes consideradas en la línea de resultado", async () => {
+test("papel: calificación y encuadre exactos; A y B a la vista; sin «Resultado considerado», «Mejor resultado» ni lecturas internas; devoluciones.html = impresión", async () => {
   const t = pantalla(cursoCompleto());
   t.$("ccImprimir").click();
   const bs = [...t.$("impresionBloques").querySelectorAll("article.final")];
   const { archivos, json } = await exportarCompleto(t);
-  const html = new JSDOM(archivos["devoluciones.html"]).window.document;
-  for (const [donde, bloques] of [["impresión", bs], ["devoluciones.html", [...html.querySelectorAll("article.final")]]]) {
-    assert.equal(bloques.length, 8, donde);
-    for (const b of bloques) {
-      assert.match(b.querySelector(".final-cat").textContent, /^Calificación del Tercer Bimestre: (En proceso|Suficiente|Avanzado)/, donde);
-      assert.equal(b.querySelector(".final-encuadre").textContent, "La calificación del tercer bimestre valora el proceso del período. Las Evaluaciones A y B son una de las evidencias consideradas.", donde);
-      assert.deepEqual([...b.querySelectorAll("thead th")].map((th) => th.textContent), ["Parte", "Evaluación A", "Evaluación B", "Mejor resultado"], `${donde}: sin «Cuenta»`);
-      assert.ok([...b.querySelectorAll("tbody tr, tfoot tr")].every((tr) => tr.children.length === 4), donde);
-      assert.doesNotMatch(b.textContent, /Categoría del período|Cuenta|✓/, donde);
-    }
+  const zip = [...new JSDOM(archivos["devoluciones.html"]).window.document.querySelectorAll("article.final")];
+  assert.deepEqual(zip.map((b) => b.outerHTML), bs.map((b) => b.outerHTML), "el ZIP entrega exactamente el papel impreso");
+  assert.equal(bs.length, 8);
+  for (const b of bs) {
+    assert.match(b.querySelector(".final-cat").textContent, /^Calificación del Tercer Bimestre: (En proceso|Suficiente|Avanzado)/);
+    assert.equal(b.querySelector(".final-encuadre").textContent, ENCUADRE);
+    assert.deepEqual([...b.querySelectorAll("thead th")].map((th) => th.textContent), ["Parte", "Evaluación A", "Evaluación B", "Para A+B"]);
+    // Cuatro columnas; con una evaluación sin resultado, su celda única abarca las filas de las partes.
+    const unica = b.querySelector("td.sin-resultado");
+    assert.ok([...b.querySelectorAll("tbody tr, tfoot tr")].every((tr, k) => tr.children.length === (unica && k > 0 && k < 4 ? 3 : 4)));
+    assert.doesNotMatch(b.textContent, /Categoría del período|Cuenta|✓|Resultado considerado|Mejor resultado|mejor evidencia|A = B|A=B|merece atención|dificultad fuerte|sin señal|intensidad|\d+\/\d+|Por contenidos|Aspectos a revisar|Sin contenidos|manejás bien|Qué ya sabés|no aparecen temas/);
+    // Porcentajes sólo junto a su puntaje («18 de 30 (60 %)»), nunca sueltos.
+    assert.equal(b.textContent.match(/%/g)?.length ?? 0, b.textContent.match(/\d+ de \d+ \(\d+(,\d)? %\)/g)?.length ?? 0);
   }
-  // Las partes consideradas siguen en «Resultado considerado» (5: sin la Parte 4).
-  const b05 = bs.find((b) => b.querySelector(".final-nombre").textContent === "Estudiante 05");
-  assert.match(b05.textContent, /Resultado considerado: 18\/24 · 75 % \(partes 1, 2 y 3\)/);
-  assert.match(bs.find((b) => b.querySelector(".final-nombre").textContent === "Estudiante 01").textContent, /Resultado considerado: 22\/30 · 73,3 % \(partes 1, 2, 3 y 4\)/);
-  // Lo estructurado del export guarda el rótulo entregado; la decisión y los cálculos, iguales.
+  // Las partes elegidas por el docente no se explican en el papel; la decisión y los cálculos, iguales.
   const e05 = json.estudiantes.find((e) => e.estudiante === "Estudiante 05");
   assert.equal(e05.devolucion_entregada.categoria_del_periodo, "Calificación del Tercer Bimestre: Suficiente");
   assert.deepEqual(e05.decision_docente.partes_elegidas, [T, T, T, F]);
   assert.deepEqual(e05.sugerencia.resultado_considerado, { aciertos: 18, total: 24, porcentaje: 75, partes: [1, 2, 3] });
+  assert.deepEqual(Object.keys(e05.devolucion_entregada), ["categoria_del_periodo", "encuadre", "pendiente", "resultados", "conjunto", "mejoras", "temas", "nota_docente", "clave"]);
   t.cerrar();
 });
 
@@ -1975,33 +1984,413 @@ test("papel: sin textos técnicos ni rótulos internos, también con pareja ambi
   t.cerrar();
 });
 
-test("final ≠ sugerida: la evidencia queda intacta, sin frases de respaldo ni Parte 1 como explicación", () => {
+test("papel igual con o sin cambio docente: sólo cambia la calificación; la Parte 1 nunca como explicación (queda para el docente)", () => {
+  const sinCalificacion = (b) => { const x = b.cloneNode(true); x.querySelector(".final-cat").remove(); return x.innerHTML; };
   const alto = { a: [fila("A", "Estudiante 41", [8, 8, 7, 6])], b: [fila("B", "Estudiante 41", [7, 8, 8, 6])] };
   let t = pantalla(alto);
   let [b] = bloques(t);
-  assert.match(b.querySelector(".final-orientacion").textContent, /Sin contenidos que haga falta reforzar: seguir así/, "con la sugerida, el respaldo sigue");
+  assert.equal(b.querySelector(".final-cat b").textContent, "Avanzado");
+  const antes = sinCalificacion(b);
   t.$("btnCerrarImpresion").click();
   revisar(t, "Estudiante 41");
   assert.equal(t.$("ccSugerida").textContent, "Avanzado");
   finalCC(t, "En proceso");
   [b] = bloques(t);
   assert.equal(b.querySelector(".final-cat b").textContent, "En proceso");
-  assert.equal(b.querySelectorAll("tbody tr").length, 4, "los resultados siguen");
-  assert.match(b.querySelector(".final-contenidos").textContent, /Hardware y software 6\/6/);
-  assert.equal(b.querySelector(".final-orientacion"), null, "sin respaldo contradictorio ni sección vacía");
-  assert.ok(![...b.querySelectorAll("h3")].some((h) => h.textContent === "Para seguir trabajando"));
+  assert.equal(sinCalificacion(b), antes, "la evidencia y lo que hay para revisar no dependen de la decisión");
+  assert.doesNotMatch(b.textContent, /Avanzado/, "la sugerida no aparece");
   t.cerrar();
-  // P1: sugerida En proceso por la Parte 1; si el docente elige Suficiente, P1 no aparece como explicación.
+  // P1: sugerida En proceso por la Parte 1 (8 de 16). El papel no lo explica; la pantalla docente sí.
   const p1 = { a: [fila("A", "Estudiante 42", [4, 8, 8, 6])], b: [fila("B", "Estudiante 42", [4, 8, 8, 6])] };
   t = pantalla(p1);
   [b] = bloques(t);
-  assert.match(b.textContent, /requisito de la Parte 1/, "con la sugerida, P1 es la causa y se dice");
+  assert.equal(b.querySelector(".final-cat b").textContent, "En proceso");
+  assert.doesNotMatch(b.textContent, /requisito|afianzar|Para alcanzar|hacían falta|mínimo/);
+  assert.deepEqual([...b.querySelector("tbody tr").children].map((c) => c.textContent), ["1 · Reconocer", "4 de 8", "4 de 8", "4 de 8"], "el resultado de P1 sigue a la vista");
+  const p1Antes = sinCalificacion(b);
   t.$("btnCerrarImpresion").click();
   revisar(t, "Estudiante 42");
+  assert.match(t.$("ccP1").textContent, /^Parte 1 · Reconocer: 8\/16 \(A 4\/8 \+ B 4\/8\) · no alcanza el mínimo de 9\/16/, "para el docente, la explicación de P1 sigue");
   finalCC(t, "Suficiente");
   [b] = bloques(t);
-  assert.doesNotMatch(b.textContent, /requisito de la Parte 1|afianzar la Parte 1/);
-  assert.match(b.querySelector("tbody tr").textContent, /^P1 · Reconocer4\/8/, "el resultado de P1 sigue a la vista");
+  assert.equal(sinCalificacion(b), p1Antes);
+  t.cerrar();
+});
+
+// Contenidos de cada evaluación, como los define su herramienta.
+const EJES_DE = Object.fromEntries(["A", "B"].map((x) => [x, JSON.parse(HTML[x].match(/const EJES = (\[[\s\S]*?\]);/)[1])]));
+const TEMA = {
+  "Hardware y software": ["hw"], "CPU, RAM y almacenamiento": ["cpu", "ram"], "CPU y memoria": ["cpu"], "RAM y almacenamiento": ["ram"], "Sistema operativo": ["so"],
+  "Datos y operaciones": ["datos"], "Entrada, salida y estado": ["es", "estado"], "Entrada y salida": ["es"], "Estado": ["estado"], "Representaciones": ["repr"],
+};
+const ORDEN_TEMAS = ["hw", "cpu", "ram", "so", "datos", "es", "estado", "repr"];
+const COMO_SEGUIR = "Cómo seguir: buscá esas preguntas en tus evaluaciones, compará tus respuestas con la clave y volvé a los materiales de clase de esos temas.";
+// «Para revisar» de un papel: [[tema, { A: [preguntas], B: [preguntas] }]].
+const paraRevisar = (b) => [...b.querySelectorAll(".final-revisar li")].map((li) => {
+  const [tema, preguntas] = li.textContent.split(" — ");
+  return [tema, Object.fromEntries(preguntas.split(" · ").map((g) => [g[0], g.slice(2).split(", ").map(Number)]))];
+});
+// Preguntas incorrectas firmes (sin las que están en revisión) de las partes contabilizadas.
+const incorrectas = (x, f) => f.respuestas.flatMap((v, i) => (f.cuentan[PARTES.findIndex(([d, h]) => i + 1 >= d && i + 1 <= h)] && v !== BUENAS[x][i] && !v.includes("?") &&
+  !(x === "A" && i === 17 && ["B", "D", "B+D"].includes(v)) ? [i + 1] : []));
+
+test("papel «Para revisar»: todas las respuestas incorrectas firmes, por tema, sin interpretación; una sola orientación fija", () => {
+  const filasA = [fila("A", "Estudiante 91", [6, 6, 6, 4]), fila("A", "Estudiante 92", [3, 3, 3, 2]),
+    fila("A", "Estudiante 97", [6, 6, 6, 4], { cuentan: [T, T, T, F], cambios: { 7: "?" } }), fila("A", "Estudiante 98", PERFECTO)];
+  const filasB = [fila("B", "Estudiante 91", [6, 6, 6, 4]), fila("B", "Estudiante 92", [4, 3, 4, 2]), fila("B", "Estudiante 98", PERFECTO)];
+  const t = pantalla({ a: filasA, b: filasB });
+  const bs = bloques(t);
+  for (const b of bs) {
+    const n = b.querySelector(".final-nombre").textContent;
+    assert.deepEqual([...b.querySelectorAll("h3")].map((h) => h.textContent), ["Tus resultados en las Evaluaciones A y B", n === "Estudiante 98" ? "Para revisar" : PARA_REVISAR], n);
+    // Nada de interpretación heurística en el papel.
+    assert.doesNotMatch(b.textContent, /te fue mejor|Necesitás|Te conviene|volver a estudiar|consolidar|reforzar|Todavía en revisión|Seguí así|dificultades marcadas|manejás|dominás|Cómo te fue/i, n);
+    const reg = { A: filasA.find((f) => f.estudiante === n), B: filasB.find((f) => f.estudiante === n) };
+    const lista = paraRevisar(b);
+    for (const x of ["A", "B"]) {
+      // Completo y exacto: cada incorrecta firme de una parte contabilizada aparece, y sólo ellas.
+      const listadas = [...new Set(lista.flatMap(([, g]) => g[x] ?? []))].sort((p, q) => p - q);
+      assert.deepEqual(listadas, reg[x] ? incorrectas(x, reg[x]) : [], `${n} ${x}`);
+      // Cada pregunta, en un tema al que pertenece en esa evaluación.
+      for (const [tema, g] of lista) {
+        const items = EJES_DE[x].filter((e) => TEMA[tema].includes(e.id)).flatMap((e) => e.items);
+        for (const q of g[x] ?? []) assert.ok(items.includes(q), `${n}: ${x}${q} en ${tema}`);
+      }
+    }
+    // Temas en el orden fijo de siempre.
+    const orden = lista.map(([tema]) => ORDEN_TEMAS.indexOf(TEMA[tema][0]));
+    assert.deepEqual(orden, [...orden].sort((p, q) => p - q), n);
+  }
+  const de = (n) => papelDe(bs, n);
+  assert.deepEqual([...de("Estudiante 92").querySelectorAll(".final-contenidos > p, .final-revisar li")].map((e) => e.textContent), [
+    "CPU, RAM y almacenamiento — A 6, 7, 13, 20, 22, 30 · B 6, 7, 13, 22, 28",
+    "Sistema operativo — A 8, 15, 23, 28, 29 · B 8, 15, 28, 29, 30",
+    "Datos y operaciones — A 24 · B 24",
+    "Entrada, salida y estado — A 4, 5, 12, 14, 21 · B 5, 12, 14, 21, 27",
+    "Representaciones — A 16, 27 · B 16, 23",
+    COMO_SEGUIR,
+  ]);
+  // La 7 en revisión y la Parte 4 que no se contabiliza no se listan.
+  assert.deepEqual(paraRevisar(de("Estudiante 97")).flatMap(([, g]) => g.A).sort((p, q) => p - q), [8, 15, 16, 23, 24]);
+  // Sin incorrectas: lo dice, sin elogios ni lista.
+  assert.equal(de("Estudiante 98").querySelector(".final-revisar"), null);
+  assert.equal(de("Estudiante 98").querySelector(".final-contenidos").textContent, "No tuviste respuestas incorrectas en las partes consideradas.");
+  for (const n of ["Estudiante 91", "Estudiante 92", "Estudiante 97"]) assert.equal(de(n).querySelector(".final-como").textContent, COMO_SEGUIR, n);
+  // La clave, presentada como herramienta para corregirse.
+  for (const b of bs) {
+    assert.equal(b.querySelector(".clave-tit").textContent, "Para corregir tus evaluaciones, compará tus respuestas con esta clave: una línea para la Evaluación A y otra para la B; cada número es una pregunta y la letra que lo sigue, su respuesta correcta.");
+    assert.deepEqual([...b.querySelectorAll(".clave-ev")].map((e) => e.textContent), ["A", "B"]);
+  }
+  t.cerrar();
+});
+
+test("papel: con una sola evaluación, «Sin resultado» una vez en su columna y sin causa; lo de la otra, sin inventar", () => {
+  const t = pantalla({
+    a: [fila("A", "Estudiante 93", [6, 6, 6, 4])],
+    b: [fila("B", "Estudiante 94", [6, 6, 6, 4])],
+  });
+  const bs = bloques(t);
+  const de = (n) => bs.find((b) => b.querySelector(".final-nombre").textContent === n);
+  const filas = (b) => [...b.querySelectorAll("tbody tr, tfoot tr")].map((tr) => [...tr.children].map((c) => c.textContent));
+  // Sólo A: la columna B dice una vez «Sin resultado» (abarca las cuatro partes) y su total queda vacío;
+  // Para A+B es lo de la A.
+  assert.deepEqual(filas(de("Estudiante 93")), [
+    ["1 · Reconocer", "6 de 8", "Sin resultado", "6 de 8"], ["2 · Relacionar", "6 de 8", "6 de 8"], ["3 · Interpretar", "6 de 8", "6 de 8"], ["4 · Usar lo que sabés", "4 de 6", "4 de 6"],
+    ["Total", "22 de 30 (73,3 %)", "", "22 de 30 (73,3 %)"],
+  ]);
+  // Sólo B: lo mismo en la columna A.
+  assert.deepEqual(filas(de("Estudiante 94")), [
+    ["1 · Reconocer", "Sin resultado", "6 de 8", "6 de 8"], ["2 · Relacionar", "6 de 8", "6 de 8"], ["3 · Interpretar", "6 de 8", "6 de 8"], ["4 · Usar lo que sabés", "4 de 6", "4 de 6"],
+    ["Total", "", "22 de 30 (73,3 %)", "22 de 30 (73,3 %)"],
+  ]);
+  for (const [n, x] of [["Estudiante 93", "A"], ["Estudiante 94", "B"]]) {
+    const b = de(n);
+    const celda = b.querySelector("td.sin-resultado");
+    assert.equal(celda.getAttribute("rowspan"), "4", n);
+    assert.equal(b.querySelectorAll("td.sin-resultado").length, 1, n);
+    assert.doesNotMatch(b.querySelector("table").textContent, /—/, `${n}: sin guiones repetidos`);
+    // No se dice por qué falta la evaluación.
+    assert.doesNotMatch(b.textContent, /ausente|no realizada|no la hiciste|no rendiste|faltaste|no se presentó|no entregaste/i, n);
+    assert.equal(b.querySelector(".final-mejoras"), null, n);
+    // Para revisar: sólo preguntas de la evaluación que hay.
+    assert.ok(paraRevisar(b).length && paraRevisar(b).every(([, g]) => Object.keys(g).join() === x), n);
+  }
+  t.cerrar();
+});
+
+// ---------- Papel: evidencia A+B (el mejor resultado de cada parte) ----------
+const papelDe = (bs, nombre) => bs.find((b) => b.querySelector(".final-nombre").textContent === nombre);
+const columna = (b, k) => [...b.querySelectorAll("tbody tr, tfoot tr")].map((tr) => tr.children[tr.children.length - 4 + k]?.textContent ?? null);
+const paraAB = (b) => [...b.querySelectorAll("tbody tr, tfoot tr")].map((tr) => tr.lastElementChild.textContent);
+const totales = (b) => [...b.querySelector("tfoot tr").children].map((c) => c.textContent);
+const conjunto = (b) => b.querySelector(".final-conjunto")?.textContent ?? null;
+const REGLA = "Para valorar las Evaluaciones A y B, en cada parte se conserva tu mejor resultado entre las dos.";
+const SOLO = (x) => `Como de la Evaluación ${x === "A" ? "B" : "A"} no hay resultado, para valorar las Evaluaciones A y B se toma tu resultado en la ${x}.`;
+// « Así obtuviste[, por ahora,] 18 de 24 (75 %)[ en las partes que se consideraron].»
+const obtuviste = (total, { ahora = false, menos = false } = {}) => ` Así obtuviste${ahora ? ", por ahora," : ""} ${total}${menos ? " en las partes que se consideraron" : ""}.`;
+// Porcentaje con coma decimal, a lo sumo un decimal y sin «,0»; cálculo
+// independiente del de la herramienta.
+const pctEsperado = (a, n) => (a * 100 / n).toFixed(1).replace(/\.0$/, "").replace(".", ",");
+const conPct = (a, n) => `${a} de ${n} (${pctEsperado(a, n)} %)`;
+
+test("papel A+B: cada parte conserva su mejor resultado, aunque venga de la evaluación con menor total", () => {
+  const casos = [
+    // [A, B, Para A+B por parte, total A, total B, total Para A+B, calificación]
+    // A > B en total, pero Usar lo que sabés viene de B.
+    [[8, 8, 7, 1], [6, 6, 6, 5], ["8 de 8", "8 de 8", "7 de 8", "5 de 6"], conPct(24, 30), conPct(23, 30), "28 de 30 (93,3 %)", "Avanzado"],
+    // B > A en total, pero Reconocer viene de A.
+    [[7, 2, 2, 2], [4, 6, 6, 5], ["7 de 8", "6 de 8", "6 de 8", "5 de 6"], conPct(13, 30), conPct(21, 30), "24 de 30 (80 %)", "Avanzado"],
+    // Ninguno de los dos totales alcanza Suficiente (9/30 y 14/30); la combinación sí (18/30).
+    [[6, 0, 1, 2], [3, 4, 6, 1], ["6 de 8", "4 de 8", "6 de 8", "2 de 6"], "9 de 30 (30 %)", "14 de 30 (46,7 %)", "18 de 30 (60 %)", "Suficiente"],
+    // A 23/30 y B 20/30 (Suficiente cada una); la combinación llega a 25/30 (Avanzado).
+    [[8, 7, 6, 2], [5, 5, 7, 3], ["8 de 8", "7 de 8", "7 de 8", "3 de 6"], "23 de 30 (76,7 %)", "20 de 30 (66,7 %)", "25 de 30 (83,3 %)", "Avanzado"],
+  ];
+  for (const [pa, pb, partes, ta, tb, tj, cat] of casos) {
+    const t = pantalla({ a: [fila("A", "Estudiante 71", pa)], b: [fila("B", "Estudiante 71", pb)] });
+    const [b] = bloques(t);
+    const que = JSON.stringify([pa, pb]);
+    assert.deepEqual(paraAB(b), [...partes, tj], que);
+    assert.deepEqual(totales(b), ["Total", ta, tb, tj], que);
+    assert.equal(conjunto(b), REGLA + obtuviste(tj), que);
+    assert.equal(b.querySelector(".final-cat b").textContent, cat, que);
+    // Ni procedencias ni rótulos técnicos.
+    assert.doesNotMatch(b.textContent, /Mejor resultado|Resultado considerado|A = B|mejor evidencia/, que);
+    t.cerrar();
+  }
+});
+
+test("papel A+B = cálculo del cierre, al azar: contra una regla independiente (mejor por parte, P1, umbrales) y contra el export", async () => {
+  // Generador determinista: cada parte de cada intento es válida, no se
+  // contabiliza (con o sin respuestas cargadas) o tiene una respuesta en
+  // revisión (una parte contabilizada siempre está completa); hay
+  // estudiantes sólo con A o sólo con B, y partes elegidas por el docente.
+  let semilla = 20261010;
+  const azar = (n) => { semilla = (semilla * 1103515245 + 12345) % 2147483648; return semilla % n; };
+  const TAM = [8, 8, 8, 6];
+  const intento = () => {
+    const puntajes = TAM.map((n) => azar(n + 1));
+    const estado = TAM.map(() => ["valida", "valida", "valida", "no cuenta", "no cuenta vacía", "revisar"][azar(6)]);
+    return { puntajes, estado };
+  };
+  const enRevision = (r, k) => r.estado[k] === "revisar" && r.puntajes[k] < TAM[k];
+  const registro = (x, nombre, r) => {
+    const cambios = {};
+    r.estado.forEach((e, k) => {
+      const [d, h] = PARTES[k];
+      if (e === "no cuenta vacía") for (let n = d; n <= h; n++) cambios[n] = null;
+      // En revisión, sobre una respuesta incorrecta: no cambia los aciertos firmes.
+      if (e === "revisar" && r.puntajes[k] < h - d + 1) cambios[h] = "?";
+    });
+    return fila(x, nombre, r.puntajes, { cuentan: r.estado.map((e) => !e.startsWith("no cuenta")), cambios });
+  };
+  const gente = Array.from({ length: 48 }, (_, i) => {
+    const nombre = `Estudiante ${100 + i}`;
+    const quien = azar(5);
+    const partes = azar(3) === 0 ? TAM.map(() => azar(4) !== 0) : null;
+    return { nombre, A: quien === 4 ? null : intento(), B: quien === 3 ? null : intento(), partes };
+  });
+  const a = gente.filter((g) => g.A).map((g) => registro("A", g.nombre, g.A));
+  const b = gente.filter((g) => g.B).map((g) => registro("B", g.nombre, g.B));
+  const cierre = JSON.stringify({ estudiantes: Object.fromEntries(gente.filter((g) => g.partes).map((g) => [`curso x\t${g.nombre.toLowerCase()}`, { modo: "procesado", partes: g.partes }])) });
+  const t = pantalla({ a, b, cierre });
+  const bs = bloques(t);
+  const { json } = await exportarCompleto(t);
+  let combinados = 0;
+  for (const g of gente) {
+    // La regla, calculada aparte: por parte, el mayor puntaje entre los intentos válidos.
+    const valido = (r, k) => r && ["valida", "revisar"].includes(r.estado[k]);
+    const mejor = TAM.map((n, k) => { const vs = [g.A, g.B].filter((r) => valido(r, k)).map((r) => r.puntajes[k]); return vs.length ? Math.max(...vs) : null; });
+    const elegidas = TAM.map((n, k) => mejor[k] !== null && (g.partes ? g.partes[k] : true));
+    const aciertos = mejor.reduce((s, m, k) => s + (elegidas[k] ? m : 0), 0);
+    const total = TAM.reduce((s, n, k) => s + (elegidas[k] ? n : 0), 0);
+    const p1 = [g.A, g.B].filter((r) => valido(r, 0));
+    const cumpleP1 = p1.length > 0 && p1.reduce((s, r) => s + r.puntajes[0], 0) >= { 1: 6, 2: 9 }[p1.length];
+    const partes = elegidas.filter(Boolean).length;
+    const cat = !partes ? null : !cumpleP1 || 20 * aciertos < 11 * total ? "En proceso" : partes === 4 && 5 * aciertos >= 4 * total ? "Avanzado" : "Suficiente";
+    if (g.A && g.B && mejor.some((m, k) => valido(g.A, k) && valido(g.B, k) && g.A.puntajes[k] !== g.B.puntajes[k])) combinados++;
+    // El papel.
+    const bl = papelDe(bs, g.nombre);
+    const que = JSON.stringify(g);
+    assert.deepEqual(paraAB(bl).slice(0, 4), mejor.map((m, k) => (m === null ? "—" : !elegidas[k] ? "no se consideró" : `${m} de ${TAM[k]}`)), que);
+    assert.equal(paraAB(bl)[4], total ? conPct(aciertos, total) : "", que);
+    // Lo que está en revisión puede subir el total si, en una parte que cuenta, supera al mejor firme.
+    const ahora = TAM.some((n, k) => elegidas[k] && [g.A, g.B].some((r) => valido(r, k) && r.puntajes[k] + (enRevision(r, k) ? 1 : 0) > mejor[k]));
+    assert.equal(conjunto(bl), !total ? null : (g.A && g.B ? REGLA : SOLO(g.A ? "A" : "B")) + obtuviste(conPct(aciertos, total), { ahora, menos: partes < 4 }), que);
+    assert.equal(bl.querySelector(".final-cat b").textContent, cat ?? "sin definir", que);
+    // Totales de A y de B: sus partes válidas, con su propio denominador.
+    for (const [x, col] of [["A", 1], ["B", 2]]) {
+      const r = g[x];
+      const ks = TAM.map((n, k) => k).filter((k) => valido(r, k));
+      const esperado = !r ? "" : !ks.length ? "—" : conPct(ks.reduce((s, k) => s + r.puntajes[k], 0), ks.reduce((s, k) => s + TAM[k], 0));
+      assert.equal(totales(bl)[col], esperado, `${x} ${que}`);
+    }
+    // Cada porcentaje del papel: coma decimal, a lo sumo un decimal, sin «,0», y coincide con su puntaje.
+    for (const [, x, n, p] of bl.textContent.matchAll(/(\d+) de (\d+) \(([^)]*) %\)/g)) {
+      assert.match(p, /^\d+(,\d)?$/, que);
+      assert.doesNotMatch(p, /,0$/, que);
+      assert.equal(p, pctEsperado(+x, +n), que);
+    }
+    // El export: la misma evidencia que usa la sugerencia, y la misma categoría.
+    const e = json.estudiantes.find((x) => x.estudiante === g.nombre);
+    assert.deepEqual([e.sugerencia.resultado_considerado.aciertos, e.sugerencia.resultado_considerado.total, e.sugerencia.categoria], [aciertos, total, cat], que);
+    assert.equal(e.devolucion_entregada.conjunto, conjunto(bl), que);
+    assert.deepEqual(e.devolucion_entregada.resultados.at(-1), totales(bl), que);
+  }
+  assert.ok(combinados >= 10, `casos con partes de A y de B distintas: ${combinados}`);
+  t.cerrar();
+});
+
+test("papel A+B: una parte que no cuenta no entra; el total y el porcentaje usan el denominador real, no 30", () => {
+  // Elegida por el docente sin la Parte 4; A completa y B sin la Parte 1.
+  const t = pantalla({
+    a: [fila("A", "Estudiante 72", [6, 6, 6, 5]), fila("A", "Estudiante 73", [5, 6, 6, 4])],
+    b: [fila("B", "Estudiante 72", [5, 7, 4, 2]), fila("B", "Estudiante 73", [8, 6, 6, 4], { cuentan: [F, T, T, T] })],
+    cierre: JSON.stringify({ estudiantes: { "curso x\testudiante 72": { modo: "procesado", partes: [T, T, T, F] } } }),
+  });
+  const bs = bloques(t);
+  const b72 = papelDe(bs, "Estudiante 72");
+  assert.deepEqual(paraAB(b72), ["6 de 8", "7 de 8", "6 de 8", "no se consideró", "19 de 24 (79,2 %)"]);
+  assert.equal(conjunto(b72), REGLA + obtuviste("19 de 24 (79,2 %)", { menos: true }));
+  // Las evaluaciones, completas: lo que no cuenta para A+B sigue a la vista en su columna.
+  assert.deepEqual(totales(b72), ["Total", "23 de 30 (76,7 %)", "18 de 30 (60 %)", "19 de 24 (79,2 %)"]);
+  assert.doesNotMatch(b72.textContent, /de 30 \(\d+(,\d)? %\)\.$/m);
+  // Sin la Parte 1 en B: Para A+B toma P1 sólo de A (el 8 de B no se contabiliza).
+  const b73 = papelDe(bs, "Estudiante 73");
+  assert.deepEqual(columna(b73, 2).slice(0, 1), ["no se consideró"]);
+  assert.deepEqual(paraAB(b73), ["5 de 8", "6 de 8", "6 de 8", "4 de 6", "21 de 30 (70 %)"]);
+  assert.deepEqual(totales(b73), ["Total", "21 de 30 (70 %)", "16 de 22 (72,7 %)", "21 de 30 (70 %)"]);
+  t.cerrar();
+});
+
+test("papel A+B: sólo A y sólo B, sin inventar la otra evaluación", () => {
+  const t = pantalla({
+    a: [fila("A", "Estudiante 74", [7, 6, 5, 4]), fila("A", "Estudiante 76", [7, 6, 5, 4])],
+    b: [fila("B", "Estudiante 75", [5, 6, 7, 3])],
+    cierre: JSON.stringify({ estudiantes: { "curso x\testudiante 76": { modo: "procesado", partes: [T, T, F, T] } } }),
+  });
+  const bs = bloques(t);
+  const b74 = papelDe(bs, "Estudiante 74"), b75 = papelDe(bs, "Estudiante 75"), b76 = papelDe(bs, "Estudiante 76");
+  assert.deepEqual(totales(b74), ["Total", "22 de 30 (73,3 %)", "", "22 de 30 (73,3 %)"]);
+  assert.equal(conjunto(b74), "Como de la Evaluación B no hay resultado, para valorar las Evaluaciones A y B se toma tu resultado en la A. Así obtuviste 22 de 30 (73,3 %).");
+  assert.deepEqual(totales(b75), ["Total", "", "21 de 30 (70 %)", "21 de 30 (70 %)"]);
+  assert.equal(conjunto(b75), "Como de la Evaluación A no hay resultado, para valorar las Evaluaciones A y B se toma tu resultado en la B. Así obtuviste 21 de 30 (70 %).");
+  assert.equal(conjunto(b76), SOLO("A") + obtuviste("17 de 22 (77,3 %)", { menos: true }));
+  // Sólo A con una parte que no cuenta: el total de A sigue siendo la evaluación; Para A+B, lo que cuenta.
+  assert.deepEqual(paraAB(b76), ["7 de 8", "6 de 8", "no se consideró", "4 de 6", "17 de 22 (77,3 %)"]);
+  assert.equal(totales(b76)[1], "22 de 30 (73,3 %)");
+  for (const b of [b74, b75, b76]) {
+    assert.equal(b.querySelectorAll("td.sin-resultado").length, 1);
+    assert.equal(b.querySelector(".final-mejoras"), null);
+    assert.doesNotMatch(b.textContent, /ausente|no realizada|no la hiciste|no rendiste|faltaste|no se presentó|no entregaste|entre las dos/i);
+  }
+  t.cerrar();
+});
+
+test("papel A+B con respuestas en revisión: sólo lo firme, con el aviso; «por ahora» sólo si el total puede cambiar", () => {
+  // A: la 7 (Parte 1) y la 30 en revisión, sobre respuestas incorrectas.
+  const t = pantalla({ a: [fila("A", "Estudiante 77", [6, 3, 5, 4], { cambios: { 7: "?", 30: "?" } })], b: [fila("B", "Estudiante 77", [5, 5, 4, 3])] });
+  const [b] = bloques(t);
+  assert.equal(b.querySelector(".final-pendiente").textContent, "Algunas respuestas todavía se están revisando: estos resultados pueden cambiar.");
+  assert.deepEqual(columna(b, 1).slice(0, 4), ["6 de 8 (1 en revisión)", "3 de 8", "5 de 8", "4 de 6 (1 en revisión)"]);
+  assert.deepEqual(paraAB(b), ["6 de 8", "5 de 8", "5 de 8", "4 de 6", "20 de 30 (66,7 %)"]);
+  // La 7 de A podría llevar Reconocer a 7 de 8: el total de A+B todavía puede cambiar.
+  assert.equal(conjunto(b), REGLA + obtuviste("20 de 30 (66,7 %)", { ahora: true }));
+  // Las respuestas en revisión no se listan como incorrectas.
+  assert.ok(!paraRevisar(b).some(([, g]) => g.A?.includes(7) || g.A?.includes(30)));
+  t.cerrar();
+  // En revisión en una parte donde la otra evaluación ya es mejor: el total no puede cambiar.
+  const u = pantalla({ a: [fila("A", "Estudiante 87", [5, 3, 5, 4], { cambios: { 7: "?" } })], b: [fila("B", "Estudiante 87", [8, 5, 4, 3])] });
+  const [b87] = bloques(u);
+  assert.ok(b87.querySelector(".final-pendiente"));
+  assert.equal(conjunto(b87), REGLA + obtuviste("22 de 30 (73,3 %)"));
+  u.cerrar();
+});
+
+test("papel sin evidencia válida o sin partes que cuenten: ningún porcentaje sin denominador", () => {
+  const t = pantalla({
+    a: [fila("A", "Estudiante 78", [null, null, null, null], { cuentan: [F, F, F, F] }), fila("A", "Estudiante 79", [6, 6, 6, 4])],
+    b: [fila("B", "Estudiante 78", [5, null, 5, 3], { cuentan: [T, T, T, T] })],
+    cierre: JSON.stringify({ estudiantes: { "curso x\testudiante 79": { modo: "procesado", partes: [F, F, F, F] } } }),
+  });
+  const bs = bloques(t);
+  // 78: A sin ninguna parte contabilizada, B incompleta en la Parte 2.
+  const b78 = papelDe(bs, "Estudiante 78");
+  assert.deepEqual(columna(b78, 1).slice(0, 4), ["no se consideró", "no se consideró", "no se consideró", "no se consideró"]);
+  assert.deepEqual(paraAB(b78), ["5 de 8", "—", "5 de 8", "3 de 6", "13 de 22 (59,1 %)"]);
+  assert.deepEqual(totales(b78), ["Total", "—", "13 de 22 (59,1 %)", "13 de 22 (59,1 %)"]);
+  // 79: el docente no eligió ninguna parte: sin total ni porcentaje de Para A+B, sin frase.
+  const b79 = papelDe(bs, "Estudiante 79");
+  assert.deepEqual(paraAB(b79), ["no se consideró", "no se consideró", "no se consideró", "no se consideró", ""]);
+  assert.equal(conjunto(b79), null);
+  assert.equal(totales(b79)[1], "22 de 30 (73,3 %)");
+  for (const b of bs) assert.doesNotMatch(b.textContent, /NaN|Infinity|undefined|\(\s*%\)|de 0\b/);
+  t.cerrar();
+  // Sin ninguna parte válida en A ni en B: ni total ni porcentaje en ninguna columna.
+  const u = pantalla({ a: [fila("A", "Estudiante 80", [null, null, null, null], { cuentan: [F, F, F, F] })], b: [fila("B", "Estudiante 80", [3, 3, 3, 3], { cuentan: [F, F, F, F] })] });
+  const [b80] = bloques(u);
+  assert.deepEqual(totales(b80), ["Total", "—", "—", ""]);
+  assert.equal(conjunto(b80), null);
+  assert.doesNotMatch(b80.querySelector("table").textContent + (b80.querySelector(".final-conjunto")?.textContent ?? ""), /%/);
+  u.cerrar();
+});
+
+test("encuadre del bimestre en todos los papeles, coincida o no la decisión docente; nunca la categoría sugerida ni un cambio", () => {
+  // 81: sugerida (Avanzado), sin decisión. 82: el docente eligió la misma que la sugerida.
+  // 83: sugerida Avanzado, el docente eligió En proceso. 84: sugerida En proceso, el docente eligió Suficiente.
+  const t = pantalla({
+    a: ["81", "82", "83"].map((n) => fila("A", `Estudiante ${n}`, [8, 8, 7, 6])).concat(fila("A", "Estudiante 84", [4, 3, 4, 2])),
+    b: ["81", "82", "83"].map((n) => fila("B", `Estudiante ${n}`, [7, 8, 8, 6])).concat(fila("B", "Estudiante 84", [4, 4, 4, 3])),
+    cierre: JSON.stringify({ estudiantes: {
+      "curso x\testudiante 82": { modo: "manual", categoria: "Avanzado" },
+      "curso x\testudiante 83": { modo: "manual", categoria: "En proceso" },
+      "curso x\testudiante 84": { modo: "manual", categoria: "Suficiente" },
+    } }),
+  });
+  const bs = bloques(t);
+  const esperado = { "Estudiante 81": ["Avanzado", null], "Estudiante 82": ["Avanzado", null], "Estudiante 83": ["En proceso", "Avanzado"], "Estudiante 84": ["Suficiente", "En proceso"] };
+  for (const [n, [final, oculta]] of Object.entries(esperado)) {
+    const b = papelDe(bs, n);
+    assert.equal(b.querySelector(".final-cat").textContent, `Calificación del Tercer Bimestre: ${final}`, n);
+    assert.equal(b.querySelector(".final-encuadre").textContent, ENCUADRE, n);
+    // El encuadre va antes de los resultados, junto a la calificación.
+    assert.equal(b.querySelector(".final-encuadre").nextElementSibling.textContent, "Tus resultados en las Evaluaciones A y B", n);
+    // La evidencia A+B se muestra igual, con o sin cambio docente.
+    assert.ok(conjunto(b).startsWith(REGLA), n);
+    if (oculta) assert.doesNotMatch(b.textContent, new RegExp(oculta), `${n}: no aparece la sugerida (${oculta})`);
+    assert.doesNotMatch(b.textContent, /sugerid|automátic|override|manual|procesad|modificad|cambió|umbral|55|80 %\)?\s*o más|requisito/i, n);
+  }
+  // Iguales para todos: el texto del encuadre no depende de la decisión.
+  assert.equal(new Set(bs.map((b) => b.querySelector(".final-encuadre").outerHTML)).size, 1);
+  t.cerrar();
+});
+
+test("export privado: devolucion_entregada lee el papel nuevo; lo técnico de antes sigue igual", async () => {
+  const t = pantalla(cursoCompleto());
+  t.$("ccImprimir").click();
+  const bs = [...t.$("impresionBloques").querySelectorAll("article.final")];
+  const { json, archivos } = await exportarCompleto(t);
+  for (const e of json.estudiantes) {
+    const b = bs.find((x) => x.querySelector(".final-nombre").textContent === e.estudiante);
+    const plano = (n) => n.textContent.replace(/\s+/g, " ").trim();
+    assert.deepEqual(e.devolucion_entregada.resultados, [...b.querySelectorAll("thead tr, tbody tr, tfoot tr")].map((tr) => [...tr.children].map(plano)), e.estudiante);
+    assert.equal(e.devolucion_entregada.conjunto, conjunto(b), e.estudiante);
+    assert.equal(e.devolucion_entregada.encuadre, ENCUADRE);
+    // Para A+B del papel = resultado considerado de la sugerencia.
+    const r = e.sugerencia.resultado_considerado;
+    assert.equal(e.devolucion_entregada.resultados.at(-1).at(-1), r.total ? `${r.aciertos} de ${r.total} (${String(r.porcentaje).replace(".", ",")} %)` : "", e.estudiante);
+    // Lo técnico, con las mismas claves de siempre.
+    assert.deepEqual(Object.keys(e.sugerencia), ["categoria", "resultado_considerado", "requisito_p1", "provisoria", "motivos", "categoria_si_lo_pendiente_resultara_correcto"]);
+    assert.deepEqual(Object.keys(e.correccion.integrada), ["partes", "suma_mejor", "contenidos"]);
+    assert.deepEqual(Object.keys(e.decision_docente), ["categoria_elegida", "categoria_final", "coincide_con_sugerida", "partes_elegidas", "nota", "registro_guardado"]);
+  }
+  // Estudiante 05: el docente dejó afuera la Parte 4. El papel dice 18 de 24; el export conserva
+  // la suma de la mejor evidencia de todas las partes (22/30) y el resultado considerado (18/24).
+  const e05 = json.estudiantes.find((e) => e.estudiante === "Estudiante 05");
+  assert.deepEqual(e05.correccion.integrada.suma_mejor, { aciertos: 22, total: 30, porcentaje: 73.3 });
+  assert.deepEqual(e05.sugerencia.resultado_considerado, { aciertos: 18, total: 24, porcentaje: 75, partes: [1, 2, 3] });
+  assert.equal(e05.devolucion_entregada.conjunto, REGLA + obtuviste("18 de 24 (75 %)", { menos: true }));
+  assert.equal(archivos["resumen.tsv"].split("\n")[0], ["curso", "n_lista", "estudiante", "nombre_en_A", "nombre_en_B", "presencia_A", "presencia_B", "emparejamiento",
+    "total_A", "porcentaje_A", "total_B", "porcentaje_B", "mejor_A+B", "porcentaje_A+B", "categoria_sugerida", "categoria_final", "modificada_por_docente", "estado", "nota_docente"].join("\t"));
   t.cerrar();
 });
 
@@ -2028,7 +2417,7 @@ test("nota docente: opcional; se abre con una guía si se cambia la categoría; 
   const bs = bloques(t);
   const de = (n) => bs.find((b) => b.querySelector(".final-nombre").textContent === n);
   assert.equal(de("Estudiante 06").querySelector(".final-texto").textContent, "Nota sintética 5521: buen trabajo en clase.");
-  assert.ok([...de("Estudiante 06").querySelectorAll("h3")].some((h) => h.textContent === "Nota docente"));
+  assert.ok([...de("Estudiante 06").querySelectorAll("h3")].some((h) => h.textContent === "Nota de tu docente"));
   assert.equal(de("Estudiante 01").querySelector(".final-texto"), null, "vacía: no aparece");
   const { texto, datos } = await exportar(t);
   assert.ok(!texto.includes("5521") && !texto.includes("Nota sintética"));

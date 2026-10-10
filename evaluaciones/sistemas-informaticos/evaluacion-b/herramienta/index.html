@@ -470,10 +470,18 @@
   .final p { margin: .5mm 0; }
   .final table { width: auto; font-size: 10pt; }
   .final th, .final td { padding: .3mm 4mm .3mm 0; border-bottom: 1px solid #e3e7ec; }
-  .final .pct { color: #555; font-size: 9pt; }
+  .final .pct { color: #555; font-size: 9pt; white-space: nowrap; }
+  .final .conjunta { border-left: 1px solid #c9d0d8; padding-left: 3mm; }
   .final .sin { color: #555; }
   .final .revisar { color: #7a4600; }
   .final-encuadre { font-size: 9.5pt; color: #333; font-style: italic; }
+  .final-revisar { list-style: none; margin: .5mm 0; padding: 0; }
+  .final-tema { font-weight: 700; }
+  .final-sub { font-weight: 400; color: #444; }
+  .final-conjunto b { white-space: nowrap; }
+  .final thead th { white-space: nowrap; }
+  .final td.sin-resultado { vertical-align: middle; color: #555; font-style: italic; }
+  .final-preguntas { font-size: 9.5pt; color: #444; }
   .final-pendiente { font-size: 9.5pt; color: #7a4600; }
   .fila-total th, .fila-total td { border-top: 1.5px solid #8a939e; }
   .final-texto { white-space: pre-wrap; border-left: 2px solid #8a939e; padding-left: 2.5mm; }
@@ -1082,20 +1090,23 @@
     Avanzado: ["Reforzar", null],
   };
   const NEUTRAL = ["Aspectos a revisar", "Aspectos a revisar"];
+  // Unidades de estudio que cumplen una condición, en el orden fijo de
+  // siempre; un par en el que los dos ejes la cumplen se nombra junto.
+  function unidadesDonde(contenidos, cumple) {
+    const eje = Object.fromEntries(contenidos.map((x) => [x.id, x]));
+    return UNIDADES.flatMap((u) => {
+      const sub = u.ejes.filter((k) => cumple(eje[k]));
+      if (!sub.length) return [];
+      if (u.juntos && sub.length === u.ejes.length) return [{ ids: sub, nombre: u.juntos }];
+      return sub.map((k) => ({ ids: [k], nombre: eje[k].foco }));
+    });
+  }
   function orientacion(contenidos, categoria) {
     const verbos = VERBOS[categoria] ?? NEUTRAL;
-    const eje = Object.fromEntries(contenidos.map((x) => [x.id, x]));
     const verboDe = (x) => (x.orientar ? verbos[2 - x.orientar] : null);
-    // Unidades de estudio en el orden fijo de siempre; un par con el mismo
-    // verbo se nombra junto.
     const grupos = [];
     for (const v of [...new Set(verbos.filter(Boolean))]) {
-      const unidades = UNIDADES.flatMap((u) => {
-        const sub = u.ejes.filter((k) => verboDe(eje[k]) === v);
-        if (!sub.length) return [];
-        if (u.juntos && sub.length === u.ejes.length) return [{ ids: sub, nombre: u.juntos }];
-        return sub.map((k) => ({ ids: [k], nombre: eje[k].foco }));
-      });
+      const unidades = unidadesDonde(contenidos, (x) => verboDe(x) === v);
       if (unidades.length) grupos.push({ verbo: v, unidades });
     }
     // Dificultades que dependen de respuestas a revisar: se nombran aparte.
@@ -2037,48 +2048,100 @@
           return `<span class="clave-item" data-item="${n}" data-clave="${simples(claves[l][n - 1])}"><small>${n}</small>${simples(claves[l][n - 1])}</span>`;
         }).join(" ") + `</span>`).join(" ") + `</div>`);
     const notas = INTENTOS.flatMap((l) => claves[l].flatMap((a, i) => (a.length > 1 ? [`${l}${i + 1}: se acepta ${a.join(", ").replace(/, ([^,]*)$/, " o $1")}.`] : [])));
-    return `<div class="clave-compacta"><span class="clave-tit">Clave de corrección de las evaluaciones A y B (respuesta correcta de cada ítem)</span>` +
+    return `<div class="clave-compacta"><span class="clave-tit"><b>Para corregir tus evaluaciones</b>, compará tus respuestas con esta clave: ` +
+      `una línea para la Evaluación A y otra para la B; cada número es una pregunta y la letra que lo sigue, su respuesta correcta.</span>` +
       lineas.join("") + (notas.length ? `<div class="clave-nota">${notas.join(" ")}</div>` : "") + `</div>`;
+  }
+  // ---------- devolución impresa (para el estudiante) ----------
+  // La herramienta muestra y organiza la evidencia; el juicio pedagógico lo
+  // pone el docente (la calificación y la nota). El papel dice la calificación,
+  // cómo le fue en A, en B y lo que vale para A+B (el mejor resultado de cada
+  // parte), las preguntas que tuvo mal por tema y la clave para corregirse. Lo
+  // interpretativo (intensidades, verbos de orientación, fortalezas, el
+  // requisito de P1) y lo técnico (procedencias, la categoría sugerida) quedan
+  // en la pantalla docente y en los exports.
+  const deN = (a, n) => `${a} de ${n}`;
+  // «18 de 30 (60 %)»: el puntaje siempre; el porcentaje sólo con denominador.
+  const deNPct = (a, n) => `${deN(a, n)}${n ? pctSpan(a, n) : ""}`;
+  const enumerar = (xs) => (xs.length < 2 ? xs.join("") : `${xs.slice(0, -1).join(", ")} ${/^h?i(?!e)/i.test(xs.at(-1)) ? "e" : "y"} ${xs.at(-1)}`);
+  // Preguntas de un tema que el estudiante tuvo mal (firmes), por evaluación.
+  function preguntasARevisar(x, ids) {
+    return INTENTOS.flatMap((l) => {
+      const f = x.reg[l];
+      if (!f) return [];
+      const items = (l === LETRA ? EJES : OTRA_EJES).filter((e) => ids.includes(e.id)).flatMap((e) => e.items);
+      const mal = [...new Set(items)].sort((a, b) => a - b).filter((n) => {
+        const parte = x.c.partes[parteDe(n - 1).n - 1].por[l];
+        const v = f.respuestas[n - 1];
+        return parte?.estado === "valida" && !revisa(v) && !ACEPTADAS_DE[l][n - 1].includes(v);
+      });
+      return mal.length ? [`${l} ${mal.join(", ")}`] : [];
+    });
+  }
+  function celdaPapel(r) {
+    if (!r) return `<span class="sin">—</span>`;
+    if (r.estado === "no cuenta") return `<span class="sin">no se consideró</span>`;
+    if (r.estado === "incompleta") return `<span class="sin">incompleta</span>`;
+    return `${deN(r.aciertos, r.total)}${r.revisar ? ` <span class="revisar">(${r.revisar} en revisión)</span>` : ""}`;
   }
   function bloqueFinal(x) {
     const c = x.c;
-    const manual = c.modo === "manual";
-    // En el papel, la categoría efectiva (la del docente si la eligió; si no,
-    // la de la evidencia), sin decir de dónde sale.
+    // La calificación efectiva (la del docente si la eligió; si no, la de la
+    // evidencia), sin decir de dónde sale.
     const final = efectivaDe(c);
     const procesado = !!(final && !overrideDe(c));
-    // Lo pendiente de la evidencia se dice, sea cual sea la categoría.
     const estado = estadoCierre(c);
     const pendientes = c.partes.some((p) => INTENTOS.some((l) => p.por[l]?.estado === "valida" && p.por[l].revisar > 0));
-    const elegidas = PARTES.filter((p, k) => c.seleccion[k]).map((p) => p.n);
-    const resultado = procesado
-      ? `<p>Resultado considerado: <b>${c.aciertos}/${c.total} · ${decimal(c.aciertos, c.total)} %</b> <span class="sin">(parte${elegidas.length > 1 ? "s" : ""} ${listaPartes(elegidas)})</span>` +
-        `${c.porP1 ? ` · En proceso por el requisito de la Parte 1 · Reconocer (${c.p1.minimo ? `${c.p1.aciertos}/${c.p1.total}; mínimo ${c.p1.minimo}/${c.p1.total}` : "sin intento válido"})` : ""}</p>` : "";
-    const filasP = c.partes.map((p) => {
-      const m = p.mejor;
-      // En el papel, sin rótulos técnicos del emparejamiento.
-      return `<tr><th scope="row">P${p.p.n} · ${p.p.nombre}</th>${INTENTOS.map((l) => `<td>${p.por[l] ? textoIntento(c, l, p) : `<span class="sin">—</span>`}</td>`).join("")}` +
-        `<td>${m ? `<b>${m.aciertos}/${m.total}</b>${pctSpan(m.aciertos, m.total)} · ${m.de.join(" = ")}` : `<span class="sin">sin evidencia</span>`}</td></tr>`;
-    }).join("");
-    const contenidos = c.contenidos.map((e) => `${e.corto} ${e.n ? `${e.aciertos}/${e.n}` : "—"}${e.nivel ? ` (${LECTURA[e.nivel]})` : ""}`).join(" · ");
-    const texto = c.manual.devolucion.trim() ? `<h3>Nota docente</h3><div class="final-texto">${esc(c.manual.devolucion.trim())}</div>` : "";
+    // 1. Resultados en A, en B y Para A+B. Los totales llevan
+    // porcentaje (sobre su propio denominador); las partes, sólo el puntaje.
+    const validas = (l) => c.partes.map((p) => p.por[l]).filter((r) => r?.estado === "valida");
+    const total = (l) => { const rs = validas(l); return rs.length ? deNPct(rs.reduce((t, r) => t + r.aciertos, 0), rs.reduce((t, r) => t + r.total, 0)) : "—"; };
+    // Una evaluación sin ningún registro: una sola indicación neutral en su
+    // columna (sin decir por qué falta), no un guion por fila.
+    const sinResultado = (l) => c.partes.every((p) => !p.por[l]);
+    // Para A+B: exactamente la evidencia del cálculo (c.aciertos / c.total),
+    // es decir, la mejor evidencia de cada parte que cuenta; una parte que no
+    // cuenta no entra.
+    const conjunta = (p, k) => (!p.mejor ? `<span class="sin">—</span>` : !c.seleccion[k] ? `<span class="sin">no se consideró</span>` : deN(p.mejor.aciertos, p.mejor.total));
+    const filasP = c.partes.map((p, k) => `<tr><th scope="row">${p.p.n} · ${p.p.nombre}</th>${INTENTOS.map((l) => (!sinResultado(l) ? `<td>${celdaPapel(p.por[l])}</td>`
+      : k === 0 ? `<td class="sin-resultado" rowspan="${c.partes.length}">Sin resultado</td>` : "")).join("")}<td class="conjunta">${conjunta(p, k)}</td></tr>`).join("");
+    const [l1, l2] = INTENTOS;
+    const solo = INTENTOS.filter((l) => !sinResultado(l));
+    // «por ahora»: sólo si lo que está en revisión puede cambiar este total;
+    // «en las partes que se consideraron»: si no son las cuatro.
+    const regla = !c.total ? ""
+      : `<p class="final-conjunto">${solo.length > 1 ? "Para valorar las Evaluaciones A y B, en cada parte se conserva tu mejor resultado entre las dos."
+        : `Como de la Evaluación ${INTENTOS.find((l) => l !== solo[0])} no hay resultado, para valorar las Evaluaciones A y B se toma tu resultado en la ${solo[0]}.`}` +
+        ` Así obtuviste${c.techo > c.aciertos ? ", por ahora," : ""} <b>${deNPct(c.aciertos, c.total)}</b>${c.seleccion.filter(Boolean).length < PARTES.length ? " en las partes que se consideraron" : ""}.</p>`;
+    const mejoras = c.partes.filter((p) => p.por[l1]?.estado === "valida" && p.por[l2]?.estado === "valida" && p.por[l2].aciertos > p.por[l1].aciertos).map((p) => p.p.nombre);
+    const resultados = `<h3>Tus resultados en las Evaluaciones A y B</h3>` +
+      (pendientes ? `<p class="final-pendiente">Algunas respuestas todavía se están revisando: estos resultados pueden cambiar.</p>` : "") +
+      `<table><thead><tr><th>Parte</th>${INTENTOS.map((l) => `<th>Evaluación ${l}</th>`).join("")}<th class="conjunta">Para A+B</th></tr></thead><tbody>${filasP}</tbody>` +
+      `<tfoot><tr class="fila-total"><th scope="row">Total</th>${INTENTOS.map((l) => (sinResultado(l) ? "<td></td>" : `<td><b>${total(l)}</b></td>`)).join("")}` +
+      `<td class="conjunta">${c.total ? `<b>${deNPct(c.aciertos, c.total)}</b>` : ""}</td></tr></tfoot></table>` + regla +
+      (mejoras.length ? `<p class="final-mejoras">De la Evaluación ${l1} a la ${l2} mejoraste en ${enumerar(mejoras)}.</p>` : "");
+    // 2. Para revisar: todas las respuestas incorrectas firmes de las partes
+    // válidas, agrupadas por contenido, y una sola orientación fija. Sin
+    // interpretación (intensidades, verbos, fortalezas): eso queda para el docente.
+    const mayuscula = (t) => t[0].toUpperCase() + t.slice(1);
+    const temasMal = unidadesDonde(c.contenidos, (e) => e.errores > 0);
+    const hayValidas = c.partes.some((p) => INTENTOS.some((l) => p.por[l]?.estado === "valida"));
+    const temas = !hayValidas ? "" : `<h3>Para revisar${temasMal.length ? `<span class="final-sub"> — preguntas que tuviste mal en cada evaluación, por tema</span>` : ""}</h3>` +
+      `<div class="final-contenidos">` + (temasMal.length
+      ? `<ul class="final-revisar">` +
+        temasMal.map((u) => `<li><span class="final-tema">${mayuscula(u.nombre)}</span> — <span class="final-preguntas">${preguntasARevisar(x, u.ids).join(" · ")}</span></li>`).join("") +
+        `</ul><p class="final-como">Cómo seguir: buscá esas preguntas en tus evaluaciones, compará tus respuestas con la clave y volvé a los materiales de clase de esos temas.</p>`
+      : `<p class="final-como">No tuviste respuestas incorrectas en las partes consideradas.</p>`) + `</div>`;
+    const nota = c.manual.devolucion.trim() ? `<h3>Nota de tu docente</h3><div class="final-texto">${esc(c.manual.devolucion.trim())}</div>` : "";
     return `<article class="final" data-modo="${c.modo}" data-clave="${esc(c.clave)}">` +
       `<div class="final-cab"><span class="final-num">${x.num}</span><span class="final-nombre">${esc(x.estudiante)}</span>` +
       `${x.otroNombre ? `<span class="nota">(${esc(x.otroNombre)})</span>` : ""}<span>${esc(x.curso)}</span>` +
       `<span class="final-cat">Calificación del Tercer Bimestre: <b>${final ?? "sin definir"}</b>${procesado && (estado === "Provisorio" || estado === "Revisar pareja") ? " (provisoria)" : ""}</span></div>` +
-      `<p class="final-encuadre">La calificación del tercer bimestre valora el proceso del período. Las Evaluaciones A y B son una de las evidencias consideradas.</p>` +
-      resultado +
-      `<h3>Resultados en las Evaluaciones A y B</h3>` +
-      (pendientes ? `<p class="final-pendiente">Hay respuestas pendientes de revisión en A o B: estos resultados todavía pueden cambiar.</p>` : "") + `<table><thead><tr><th>Parte</th>${INTENTOS.map((l) => `<th>Evaluación ${l}</th>`).join("")}<th>Mejor resultado</th>` +
-      `</tr></thead><tbody>${filasP}</tbody>${filaTotal(c)}</table>` +
-      `<h3>Por contenidos (A y B juntos)</h3><p class="final-contenidos">${contenidos}</p>` +
-      orientacionImpresa(lineasOrientacion(c, final, !modificada(c))) +
-      texto + claveCompacta() + `</article>`;
+      // Para todos por igual: A+B es una evidencia; la calificación mira el período.
+      `<p class="final-encuadre">Las Evaluaciones A y B son una evidencia importante, pero la calificación del tercer bimestre considera también ` +
+      `tus otros trabajos, las actividades de aprendizaje en el aula y la valoración conceptual del período.</p>` +
+      resultados + temas + nota + claveCompacta() + `</article>`;
   }
-  // «Para seguir trabajando» sólo si la evidencia permite decir algo (con una
-  // categoría elegida por el docente puede no haber nada respaldado por A+B).
-  const orientacionImpresa = (lineas) => (lineas.length
-    ? `<h3>Para seguir trabajando</h3><div class="final-orientacion">${lineas.map((l) => `<p>${l}</p>`).join("")}</div>` : "");
   function renderImpresion() {
     const todos = cierresDelCurso();
     const sel = $("impresionCurso");
@@ -2511,14 +2574,15 @@
   function devolucionEntregada(x) {
     const e = document.createElement("div");
     e.innerHTML = bloqueFinal(x);
-    const t = (sel) => e.querySelector(sel)?.textContent.replace(/\s+/g, " ").trim() ?? null;
+    const plano = (n) => n.textContent.replace(/\s+/g, " ").trim();
+    const t = (sel) => (e.querySelector(sel) ? plano(e.querySelector(sel)) : null);
     return {
-      categoria_del_periodo: t(".final-cat"), encuadre: t(".final-encuadre"), resultado_considerado: t(".final-encuadre + p"),
-      pendiente: t(".final-pendiente"),
-      resultados: [...e.querySelectorAll("tbody tr, tfoot tr")].map((tr) => [...tr.children].map((c) => c.textContent.replace(/\s+/g, " ").trim())),
-      contenidos: t(".final-contenidos"),
-      orientacion: [...e.querySelectorAll(".final-orientacion p")].map((p) => p.textContent.replace(/\s+/g, " ").trim()),
-      nota_docente: t(".final-texto"),
+      categoria_del_periodo: t(".final-cat"), encuadre: t(".final-encuadre"), pendiente: t(".final-pendiente"),
+      resultados: [...e.querySelectorAll("thead tr, tbody tr, tfoot tr")].map((tr) => [...tr.children].map(plano)),
+      conjunto: t(".final-conjunto"), mejoras: t(".final-mejoras"),
+      // «Para revisar»: cada tema con sus preguntas y «Cómo seguir».
+      temas: [...e.querySelectorAll(".final-contenidos > p, .final-revisar li")].map(plano),
+      nota_docente: t(".final-texto"), clave: t(".clave-tit"),
     };
   }
   function motivosEvidencia(c) {
