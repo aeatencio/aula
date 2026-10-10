@@ -416,6 +416,8 @@
   .cc-filtros select { font: inherit; }
   .cc-lista td, .cc-lista th { padding: 6px 10px; font-size: 15px; }
   .cc-lista td.ab { text-align: center; width: 3em; }
+  .cc-lista td.num-lista { color: var(--suave); font-variant-numeric: tabular-nums; width: 2.5em; }
+  .cc-par { display: block; font-size: 12px; color: var(--suave); }
   .cc-lista .propuesta { color: var(--suave); font-style: italic; }
   .cc-estado { font-size: 13px; padding: 1px 8px; border-radius: 10px; background: #eef1f4; white-space: nowrap; }
   .cc-estado.listo { background: #e3f3e8; color: #1d5e33; }
@@ -453,12 +455,15 @@
   .impresion-barra { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin-bottom: 12px; }
   .impresion-barra h2 { margin: 0; }
   .impresion-export { flex: 1 1 100%; }
+  .impresion-privado { flex: 1 1 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px;
+    margin-top: 4px; padding: 6px 10px; border: 1px dashed var(--error); border-radius: 6px; background: #fdf6f6; }
   .impresion-curso { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; color: var(--tinta); }
   .hoja { max-width: 192mm; margin: 0 auto; background: #fff; color: #111; }
   .final { border: 1px solid #8a939e; border-radius: 4px; padding: 3mm 4mm; margin: 0 0 5mm; font-size: 10.5pt; line-height: 1.3;
     break-inside: avoid; page-break-inside: avoid; }
   .final-cab { display: flex; flex-wrap: wrap; align-items: baseline; gap: 1mm 4mm; border-bottom: 1px solid #c9d0d8; padding-bottom: 1.5mm; }
   .final-nombre { font-size: 12.5pt; font-weight: 700; }
+  .final-num { font-size: 9.5pt; color: #555; font-variant-numeric: tabular-nums; }
   .final-cat { margin-left: auto; font-size: 11.5pt; }
   .final .nota { font-size: 9pt; }
   .final h3 { font-size: 10pt; margin: 2.5mm 0 .5mm; }
@@ -469,6 +474,8 @@
   .final .sin { color: #555; }
   .final .revisar { color: #7a4600; }
   .final-encuadre { font-size: 9.5pt; color: #333; font-style: italic; }
+  .final-pendiente { font-size: 9.5pt; color: #7a4600; }
+  .fila-total th, .fila-total td { border-top: 1.5px solid #8a939e; }
   .final-texto { white-space: pre-wrap; border-left: 2px solid #8a939e; padding-left: 2.5mm; }
   .clave-compacta { margin-top: 2.5mm; padding-top: 1.5mm; border-top: 1px dashed #8a939e; color: #222; }
   .clave-tit { display: block; font-size: 8.5pt; color: #444; margin-bottom: .5mm; }
@@ -602,6 +609,11 @@
     <span class="nota"><span id="impresionCantidad"></span> Impresión: hoja Oficio (216 × 356 mm), al 100 %; cada devolución entera en una página.</span>
     <span class="nota impresion-export">El archivo incluye resultados por curso, partes y contenidos del curso elegido (o de todos). No incluye nombres,
       respuestas individuales ni devoluciones escritas.</span>
+    <div class="impresion-privado">
+      <button type="button" class="peligro" id="btnExportarCompleto">Exportar cierre completo (privado) (.zip)</button>
+      <span class="nota"><b>Privado:</b> incluye nombres, respuestas y decisiones docentes del curso elegido (o de todos). Guardar como archivo privado,
+        fuera del repositorio. Se genera en este navegador; no se envía a ningún lado.</span>
+    </div>
   </div>
   <div class="hoja" id="impresionBloques"></div>
 </section>
@@ -682,7 +694,7 @@
   // respuestas). tests/herramienta-evaluacion-b.test.mjs comprueba que coincidan
   // con la otra herramienta.
   const LETRA = "A";
-  const OTRA = { letra: "B", claveLocal: "aula-evaluacion-b-v1" };
+  const OTRA = { letra: "B", evaluacion: "SI-B", claveLocal: "aula-evaluacion-b-v1" };
   const OTRA_ACEPTADAS = [
     ["B"], ["C"], ["A"], ["B"], ["C"], ["C"], ["A"], ["B"],
     ["D"], ["B"], ["C"], ["A"], ["B"], ["A"], ["D"], ["C"],
@@ -1820,6 +1832,18 @@
     return `${r.aciertos}/${r.total}${pctSpan(r.aciertos, r.total)}${r.revisar ? ` <span class="revisar">· ${r.revisar} a revisar</span>` : ""}`;
   }
   const pctSpan = (a, n) => `<span class="pct"> (${decimal(a, n)} %)</span>`;
+  // Fila «Total» de una tabla de partes (síntesis visual, derivada): por
+  // intento, la suma de sus partes válidas con su propio denominador (sin
+  // inventar un total sobre 30); «Mejor», la suma de la mejor evidencia de cada
+  // parte, que no es una evaluación completa. Las respuestas a revisar no suman
+  // ni restan: se indican aparte. «extra»: celdas finales de la tabla, si las hay.
+  function filaTotal(c, extra = "") {
+    const suma = (rs) => rs.reduce((t, r) => ({ a: t.a + r.aciertos, n: t.n + r.total, rev: t.rev + (r.revisar ?? 0) }), { a: 0, n: 0, rev: 0 });
+    const celda = (t) => (t.n ? `<b>${t.a}/${t.n}</b>${pctSpan(t.a, t.n)}${t.rev ? ` <span class="revisar">· ${t.rev} a revisar</span>` : ""}` : `<span class="sin">—</span>`);
+    const intentos = INTENTOS.map((l) => celda(suma(c.partes.map((p) => p.por[l]).filter((r) => r && r.estado === "valida"))));
+    const mejor = celda(suma(c.partes.filter((p) => p.mejor).map((p) => ({ aciertos: p.mejor.aciertos, total: p.mejor.total }))));
+    return `<tfoot><tr class="fila-total"><th scope="row">Total</th>${intentos.map((x) => `<td>${x}</td>`).join("")}<td>${mejor}</td>${extra}</tr></tfoot>`;
+  }
   function textoEmparejamiento(c) {
     const otra = NOMBRE(OTRA.letra);
     const quien = (o) => `«${esc(o.estudiante)}»${o.curso ? ` (${esc(o.curso)})` : ""}`;
@@ -1979,7 +2003,18 @@
       const principal = reg[l1] ?? reg[l2];
       const otroNombre = reg[l1] && reg[l2] && normalizar(reg[l1].estudiante) !== normalizar(reg[l2].estudiante) ? `${l2}: ${reg[l2].estudiante}` : "";
       return { c, f, reg, ref: f ? `p${f.id}` : `o${c.otra.id}`, curso: principal.curso, estudiante: principal.estudiante, otroNombre };
-    }).sort((x, y) => normalizar(x.curso).localeCompare(normalizar(y.curso), "es") || normalizar(x.estudiante).localeCompare(normalizar(y.estudiante), "es"));
+    }).sort((x, y) => normalizar(x.curso).localeCompare(normalizar(y.curso), "es") || normalizar(x.estudiante).localeCompare(normalizar(y.estudiante), "es"))
+      .map(numerarEnCurso());
+  }
+  // N.º de lista: orden alfabético dentro de cada curso (01, 02…); una pareja
+  // A+B es una sola fila y un solo número. Se deriva en cada vista; no se guarda.
+  function numerarEnCurso() {
+    const cuenta = new Map();
+    return (x) => {
+      const k = normalizar(x.curso);
+      cuenta.set(k, (cuenta.get(k) ?? 0) + 1);
+      return { ...x, num: String(cuenta.get(k)).padStart(2, "0") };
+    };
   }
   // Clave de corrección de A y de B, para que cada estudiante se autocorrija
   // con su hoja: una línea por evaluación, separada por partes. Sale de la
@@ -2005,30 +2040,38 @@
     // la de la evidencia), sin decir de dónde sale.
     const final = efectivaDe(c);
     const procesado = !!(final && !overrideDe(c));
+    // Lo pendiente de la evidencia se dice, sea cual sea la categoría.
+    const estado = estadoCierre(c);
+    const pendientes = c.partes.some((p) => INTENTOS.some((l) => p.por[l]?.estado === "valida" && p.por[l].revisar > 0));
     const elegidas = PARTES.filter((p, k) => c.seleccion[k]).map((p) => p.n);
     const resultado = procesado
       ? `<p>Resultado considerado: <b>${c.aciertos}/${c.total} · ${decimal(c.aciertos, c.total)} %</b> <span class="sin">(parte${elegidas.length > 1 ? "s" : ""} ${listaPartes(elegidas)})</span>` +
         `${c.porP1 ? ` · En proceso por el requisito de la Parte 1 · Reconocer (${c.p1.minimo ? `${c.p1.aciertos}/${c.p1.total}; mínimo ${c.p1.minimo}/${c.p1.total}` : "sin intento válido"})` : ""}</p>` : "";
-    const filasP = c.partes.map((p, k) => {
+    const filasP = c.partes.map((p) => {
       const m = p.mejor;
-      return `<tr><th scope="row">P${p.p.n} · ${p.p.nombre}</th>${INTENTOS.map((l) => `<td>${textoIntento(c, l, p)}</td>`).join("")}` +
-        `<td>${m ? `<b>${m.aciertos}/${m.total}</b>${pctSpan(m.aciertos, m.total)} · ${m.de.join(" = ")}` : `<span class="sin">sin evidencia</span>`}</td>` +
-        (procesado ? `<td>${c.seleccion[k] ? "✓" : ""}</td>` : "") + `</tr>`;
+      // En el papel, sin rótulos técnicos del emparejamiento.
+      return `<tr><th scope="row">P${p.p.n} · ${p.p.nombre}</th>${INTENTOS.map((l) => `<td>${p.por[l] ? textoIntento(c, l, p) : `<span class="sin">—</span>`}</td>`).join("")}` +
+        `<td>${m ? `<b>${m.aciertos}/${m.total}</b>${pctSpan(m.aciertos, m.total)} · ${m.de.join(" = ")}` : `<span class="sin">sin evidencia</span>`}</td></tr>`;
     }).join("");
     const contenidos = c.contenidos.map((e) => `${e.corto} ${e.n ? `${e.aciertos}/${e.n}` : "—"}${e.nivel ? ` (${LECTURA[e.nivel]})` : ""}`).join(" · ");
     const texto = c.manual.devolucion.trim() ? `<h3>Nota docente</h3><div class="final-texto">${esc(c.manual.devolucion.trim())}</div>` : "";
     return `<article class="final" data-modo="${c.modo}" data-clave="${esc(c.clave)}">` +
-      `<div class="final-cab"><span class="final-nombre">${esc(x.estudiante)}</span>` +
+      `<div class="final-cab"><span class="final-num">${x.num}</span><span class="final-nombre">${esc(x.estudiante)}</span>` +
       `${x.otroNombre ? `<span class="nota">(${esc(x.otroNombre)})</span>` : ""}<span>${esc(x.curso)}</span>` +
-      `<span class="final-cat">Categoría del período: <b>${final ?? "sin evidencia suficiente"}</b>${procesado && c.motivos.length ? " (provisoria)" : ""}</span></div>` +
-      `<p class="final-encuadre">La categoría valora el proceso del período. Las Evaluaciones A y B son una de las evidencias consideradas.</p>` +
+      `<span class="final-cat">Calificación del Tercer Bimestre: <b>${final ?? "sin definir"}</b>${procesado && (estado === "Provisorio" || estado === "Revisar pareja") ? " (provisoria)" : ""}</span></div>` +
+      `<p class="final-encuadre">La calificación del tercer bimestre valora el proceso del período. Las Evaluaciones A y B son una de las evidencias consideradas.</p>` +
       resultado +
-      `<h3>Resultados en las Evaluaciones A y B</h3><table><thead><tr><th>Parte</th>${INTENTOS.map((l) => `<th>Evaluación ${l}</th>`).join("")}<th>Mejor resultado</th>` +
-      `${procesado ? "<th>Cuenta</th>" : ""}</tr></thead><tbody>${filasP}</tbody></table>` +
+      `<h3>Resultados en las Evaluaciones A y B</h3>` +
+      (pendientes ? `<p class="final-pendiente">Hay respuestas pendientes de revisión en A o B: estos resultados todavía pueden cambiar.</p>` : "") + `<table><thead><tr><th>Parte</th>${INTENTOS.map((l) => `<th>Evaluación ${l}</th>`).join("")}<th>Mejor resultado</th>` +
+      `</tr></thead><tbody>${filasP}</tbody>${filaTotal(c)}</table>` +
       `<h3>Por contenidos (A y B juntos)</h3><p class="final-contenidos">${contenidos}</p>` +
-      `<h3>Para seguir trabajando</h3><div class="final-orientacion">${lineasOrientacion(c, final, !modificada(c)).map((l) => `<p>${l}</p>`).join("") || `<p class="sin">—</p>`}</div>` +
+      orientacionImpresa(lineasOrientacion(c, final, !modificada(c))) +
       texto + claveCompacta() + `</article>`;
   }
+  // «Para seguir trabajando» sólo si la evidencia permite decir algo (con una
+  // categoría elegida por el docente puede no haber nada respaldado por A+B).
+  const orientacionImpresa = (lineas) => (lineas.length
+    ? `<h3>Para seguir trabajando</h3><div class="final-orientacion">${lineas.map((l) => `<p>${l}</p>`).join("")}</div>` : "");
   function renderImpresion() {
     const todos = cierresDelCurso();
     const sel = $("impresionCurso");
@@ -2172,15 +2215,18 @@
   const overrideDe = (c) => (c.modo === "manual" ? c.manual.categoria : null);
   const efectivaDe = (c) => overrideDe(c) ?? c.sugerida;
   const modificada = (c) => !!(overrideDe(c) && overrideDe(c) !== c.sugerida);
-  // Estado de un estudiante: «Lista» salvo lo que de verdad pide atención.
+  // Estado de un estudiante: «Lista» salvo lo que de verdad pide atención. La
+  // evidencia (pareja, falta de evidencia, respuestas a revisar que podrían
+  // cambiar la lectura de A+B) se señala aunque el docente haya elegido la
+  // categoría: la decisión y el estado de la evidencia son cosas distintas.
   function estadoCierre(c) {
     const pareja = ["ambiguo", "dudoso", "roto", "ilegible"].includes(c.emparejamiento) || c.repetidas > 1 ||
       (c.emparejamiento === "solo-otra" && (c.pares.length > 1 || c.vinculo));
     if (pareja) return "Revisar pareja";
     if (!c.disponibles.some(Boolean)) return "Sin evidencia";
+    if (c.sugerida && c.categoriaTecho !== c.sugerida) return "Provisorio";
     if (overrideDe(c)) return "Lista";
     if (!c.sugerida) return "Sin categoría";
-    if (c.categoriaTecho !== c.sugerida) return "Provisorio";
     return "Lista";
   }
   const CLASE_ESTADO = { Lista: "listo", "Sin categoría": "decision", Provisorio: "provisorio", "Revisar pareja": "pareja", "Sin evidencia": "sin-evidencia" };
@@ -2208,7 +2254,9 @@
     const filasL = lista.map((x) => {
       const e = estadoCierre(x.c);
       const cat = efectivaDe(x.c);
-      return `<tr data-ref="${x.ref}"><td>${esc(x.estudiante)}${x.otroNombre ? ` <span class="nota">(${esc(x.otroNombre)})</span>` : ""}</td>` +
+      const manual = x.c.emparejamiento === "manual";
+      return `<tr data-ref="${x.ref}"><td class="num-lista">${x.num}</td><td>${esc(x.estudiante)}` +
+        `${x.otroNombre || manual ? `<span class="cc-par">↔ ${x.otroNombre ? esc(x.otroNombre) : ""}${manual ? `${x.otroNombre ? " · " : ""}vínculo manual` : ""}</span>` : ""}</td>` +
         INTENTOS.map((l) => `<td class="ab" data-intento="${l}">${presente(x, l) ? "✓" : e === "Revisar pareja" ? "?" : "—"}</td>`).join("") +
         `<td class="cat">${cat ?? "—"}</td>` +
         `<td><span class="cc-estado ${CLASE_ESTADO[e]}">${e}</span>${soloUno(x) ? `<span class="cc-solo">${soloUno(x)}</span>` : ""}` +
@@ -2219,7 +2267,7 @@
     return `<div class="cc-filtros"><label>Curso <select id="ccCurso"><option value="">todos</option>` +
       cursos.map(([k, v]) => `<option value="${esc(k)}"${k === vistaCierre.curso ? " selected" : ""}>${esc(v || "(sin curso)")}</option>`).join("") + `</select></label>` +
       `<span id="ccResumen">Listas ${cuenta("Lista")} de ${lista.length} · Requieren atención ${atencion} · Modificadas por el docente ${lista.filter((x) => modificada(x.c)).length}</span></div>` +
-      (lista.length ? `<table class="cc-lista"><thead><tr><th>Estudiante</th>${INTENTOS.map((l) => `<th>${l}</th>`).join("")}<th>Categoría</th><th>Estado</th><th></th></tr></thead>` +
+      (lista.length ? `<table class="cc-lista"><thead><tr><th>N.º</th><th>Estudiante</th>${INTENTOS.map((l) => `<th>${l}</th>`).join("")}<th>Categoría</th><th>Estado</th><th></th></tr></thead>` +
         `<tbody>${filasL}</tbody></table>` : `<p class="nota">No hay evaluaciones guardadas de A ni de B en este navegador.</p>`) +
       `<div class="cc-secundarias">Acciones secundarias: <button type="button" id="ccImprimir">Imprimir devoluciones o exportar datos anonimizados…</button></div>`;
   }
@@ -2284,7 +2332,7 @@
     // Segundo nivel, plegado.
     const detalle = `<table><thead><tr><th>Parte</th>${INTENTOS.map((l) => `<th>${l}</th>`).join("")}<th>Mejor</th></tr></thead><tbody>` +
       c.partes.map((pp) => `<tr><th scope="row">P${pp.p.n} · ${pp.p.nombre}</th>${INTENTOS.map((l) => `<td>${textoIntento(c, l, pp)}</td>`).join("")}` +
-        `<td>${pp.mejor ? `${pp.mejor.aciertos}/${pp.mejor.total}${pctSpan(pp.mejor.aciertos, pp.mejor.total)} · ${pp.mejor.de.join(" = ")}` : "sin evidencia"}</td></tr>`).join("") + `</tbody></table>`;
+        `<td>${pp.mejor ? `${pp.mejor.aciertos}/${pp.mejor.total}${pctSpan(pp.mejor.aciertos, pp.mejor.total)} · ${pp.mejor.de.join(" = ")}` : "sin evidencia"}</td></tr>`).join("") + `</tbody>${filaTotal(c)}</table>`;
     const tecnica = `<p>Emparejamiento: ${EMPAREJAMIENTO[c.emparejamiento] ?? c.emparejamiento}${c.vinculo && c.emparejamiento === "manual" ? ` · <button type="button" id="ccDesvincular">Desvincular</button>` : ""}</p>` +
       (c.motivos.length ? `<p>Motivos de provisoria: ${c.motivos.join("; ")}.</p>` : "") +
       `<p>Categoría del período: ${override ? `elegida por el docente (${override})` : "la sugerida por la evidencia (no se guarda ninguna decisión)"}.</p>`;
@@ -2394,6 +2442,207 @@
       if (e.target.id === "ccNota" && x) guardarDecision(x.c.clave, { devolucion: e.target.value });
     });
     renderCierreCurso();
+  }
+
+  // ---------- cierre completo (privado), para archivar ----------
+  // Un ZIP con el snapshot del cierre: fuentes crudas de A y B, emparejamiento,
+  // corrección, sugerencia, decisión docente y la devolución entregada. Contiene
+  // datos personales: se genera y descarga en el navegador, y nada más.
+  // ZIP mínimo sin compresión (método «stored»), sin dependencias.
+  const TABLA_CRC = (() => {
+    const t = new Uint32Array(256);
+    for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; }
+    return t;
+  })();
+  const crc32 = (bytes) => { let c = 0xffffffff; for (const b of bytes) c = TABLA_CRC[(c ^ b) & 0xff] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; };
+  function zipSinCompresion(archivos, fecha) {
+    const utf8 = new TextEncoder();
+    const hora = (fecha.getHours() << 11) | (fecha.getMinutes() << 5) | (fecha.getSeconds() >> 1);
+    const dia = ((fecha.getFullYear() - 1980) << 9) | ((fecha.getMonth() + 1) << 5) | fecha.getDate();
+    const locales = [], central = [];
+    let desplazamiento = 0;
+    for (const [nombre, texto] of archivos) {
+      const n = utf8.encode(nombre), d = utf8.encode(texto), crc = crc32(d);
+      const cab = (largo, campos) => { const v = new DataView(new ArrayBuffer(largo)); for (const [pos, tam, valor] of campos) v[tam === 4 ? "setUint32" : "setUint16"](pos, valor, true); return new Uint8Array(v.buffer); };
+      // bit 11: nombres en UTF-8.
+      locales.push(cab(30, [[0, 4, 0x04034b50], [4, 2, 20], [6, 2, 0x0800], [10, 2, hora], [12, 2, dia], [14, 4, crc], [18, 4, d.length], [22, 4, d.length], [26, 2, n.length]]), n, d);
+      central.push(cab(46, [[0, 4, 0x02014b50], [4, 2, 20], [6, 2, 20], [8, 2, 0x0800], [12, 2, hora], [14, 2, dia], [16, 4, crc], [20, 4, d.length], [24, 4, d.length],
+        [28, 2, n.length], [42, 4, desplazamiento]]), n);
+      desplazamiento += 30 + n.length + d.length;
+    }
+    const tamCentral = central.reduce((t, x) => t + x.length, 0);
+    const fin = new DataView(new ArrayBuffer(22));
+    [[0, 4, 0x06054b50], [8, 2, archivos.length], [10, 2, archivos.length], [12, 4, tamCentral], [16, 4, desplazamiento]]
+      .forEach(([pos, tam, valor]) => fin[tam === 4 ? "setUint32" : "setUint16"](pos, valor, true));
+    return new Blob([...locales, ...central, new Uint8Array(fin.buffer)], { type: "application/zip" });
+  }
+  const textoPlano = (html) => { const e = document.createElement("div"); e.innerHTML = html; return e.textContent.replace(/\s+/g, " ").trim(); };
+  const porcentaje = (a, n) => (n ? Math.round((1000 * a) / n) / 10 : null);
+  const ACEPTADAS_DE = { [LETRA]: ACEPTADAS, [OTRA.letra]: OTRA_ACEPTADAS };
+  const EVALUACION_DE = { [LETRA]: EVALUACION, [OTRA.letra]: OTRA.evaluacion };
+  const CLAVE_LOCAL_DE = { [LETRA]: CLAVE_LOCAL, [OTRA.letra]: OTRA.claveLocal };
+  const crudosDe = (l) => { try { return JSON.parse(localStorage.getItem(CLAVE_LOCAL_DE[l]) || "null")?.filas ?? []; } catch { return []; } };
+  // Corrección de un intento, parte por parte e ítem por ítem, con su clave.
+  function correccionIntento(l, f) {
+    const partes = PARTES.map((p, k) => {
+      const r = parteIntento(ACEPTADAS_DE[l], f, k);
+      return { parte: p.n, estado: r.estado === "no cuenta" ? "no_contabilizada" : r.estado, completa: r.completa, aciertos: r.completa ? r.aciertos : null,
+        errores: r.completa ? r.total - r.aciertos - r.revisar : null, revisar: r.completa ? r.revisar : null, total: r.total,
+        porcentaje: r.completa ? porcentaje(r.aciertos, r.total) : null };
+    });
+    const validas = partes.filter((p) => p.estado === "valida");
+    const suma = (k) => validas.reduce((t, p) => t + p[k], 0);
+    return {
+      partes,
+      total_valido: { aciertos: suma("aciertos"), errores: suma("errores"), revisar: suma("revisar"), total: suma("total"), porcentaje: porcentaje(suma("aciertos"), suma("total")),
+        partes: validas.map((p) => p.parte) },
+      items: f.respuestas.map((v, i) => ({ item: i + 1, respuesta: v, aceptadas: ACEPTADAS_DE[l][i],
+        resultado: v === null ? "sin cargar" : v === "-" ? "en blanco" : revisa(v) ? "a revisar" : ACEPTADAS_DE[l][i].includes(v) ? "correcta" : "incorrecta" })),
+    };
+  }
+  // Lo que se imprime para el estudiante, leído del mismo bloque de la impresión.
+  function devolucionEntregada(x) {
+    const e = document.createElement("div");
+    e.innerHTML = bloqueFinal(x);
+    const t = (sel) => e.querySelector(sel)?.textContent.replace(/\s+/g, " ").trim() ?? null;
+    return {
+      categoria_del_periodo: t(".final-cat"), encuadre: t(".final-encuadre"), resultado_considerado: t(".final-encuadre + p"),
+      pendiente: t(".final-pendiente"),
+      resultados: [...e.querySelectorAll("tbody tr, tfoot tr")].map((tr) => [...tr.children].map((c) => c.textContent.replace(/\s+/g, " ").trim())),
+      contenidos: t(".final-contenidos"),
+      orientacion: [...e.querySelectorAll(".final-orientacion p")].map((p) => p.textContent.replace(/\s+/g, " ").trim()),
+      nota_docente: t(".final-texto"),
+    };
+  }
+  function motivosEvidencia(c) {
+    const m = [];
+    if (c.sugerida && c.categoriaTecho !== c.sugerida) m.push("respuestas_a_revisar");
+    if (["ambiguo", "dudoso", "roto", "ilegible"].includes(c.emparejamiento)) m.push(`emparejamiento_${EMPAREJAMIENTO[c.emparejamiento]}`);
+    if (c.repetidas > 1 || (c.emparejamiento === "solo-otra" && c.pares.length > 1)) m.push("registro_duplicado");
+    return m;
+  }
+  function cierreCompleto(elegido) {
+    const generado = new Date();
+    const lista = cierresDelCurso().filter((x) => !elegido || normalizar(x.curso) === elegido);
+    const d = leerDecisiones();
+    // Registros de A y B en el alcance: los de cada estudiante consolidado, sin repetir.
+    const usados = Object.fromEntries(INTENTOS.map((l) => [l, new Set(lista.map((x) => x.reg[l]?.id).filter((id) => id != null))]));
+    const fuentes = Object.fromEntries(INTENTOS.map((l) => [l, { evaluacion: EVALUACION_DE[l], registros: crudosDe(l).filter((f) => usados[l].has(f.id)) }]));
+    const claves = new Set(lista.flatMap((x) => INTENTOS.filter((l) => x.reg[l]).map((l) => `${l}${claveEstudiante(x.reg[l])}`)));
+    const estudiantes = lista.map((x) => {
+      const c = x.c;
+      const override = overrideDe(c);
+      const efectiva = efectivaDe(c);
+      const elegidas = PARTES.filter((p, k) => c.seleccion[k]).map((p) => p.n);
+      const mejor = c.partes.filter((p) => p.mejor);
+      const sumaMejor = { aciertos: mejor.reduce((t, p) => t + p.mejor.aciertos, 0), total: mejor.reduce((t, p) => t + p.mejor.total, 0) };
+      const presentes = INTENTOS.filter((l) => x.reg[l]);
+      return {
+        num: x.num, curso: x.curso, estudiante: x.estudiante,
+        registros: Object.fromEntries(INTENTOS.map((l) => [l, x.reg[l] ? { id: x.reg[l].id, curso: x.reg[l].curso, estudiante: x.reg[l].estudiante } : null])),
+        emparejamiento: {
+          tipo: presentes.length === 1 && ["sin", "solo-otra"].includes(c.emparejamiento) ? `solo_${presentes[0]}` : EMPAREJAMIENTO[c.emparejamiento],
+          vinculo_manual: c.vinculo ? { A: c.vinculo.A, B: c.vinculo.B } : null,
+          anomalias: motivosEvidencia(c).filter((m) => m !== "respuestas_a_revisar"),
+          estado: estadoCierre(c),
+        },
+        correccion: {
+          ...Object.fromEntries(INTENTOS.map((l) => [l, x.reg[l] ? correccionIntento(l, x.reg[l]) : null])),
+          integrada: {
+            partes: c.partes.map((p) => ({ parte: p.p.n, mejor: p.mejor ? { aciertos: p.mejor.aciertos, total: p.mejor.total, porcentaje: porcentaje(p.mejor.aciertos, p.mejor.total),
+              de: p.mejor.de, puede_subir_al_revisar: p.mejor.techo > p.mejor.aciertos } : null })),
+            suma_mejor: { ...sumaMejor, porcentaje: porcentaje(sumaMejor.aciertos, sumaMejor.total) },
+            contenidos: c.contenidos.map((e) => ({ id: e.id, nombre: e.corto, A: e.por.A, B: e.por.B, AB: { aciertos: e.aciertos, errores: e.errores, firme: e.n,
+              porcentaje: porcentaje(e.aciertos, e.n), revisar: e.revisar }, intensidad: e.n ? e.nivel : null, intensidad_incierta: e.incierta })),
+          },
+        },
+        sugerencia: {
+          categoria: c.sugerida,
+          resultado_considerado: { aciertos: c.aciertos, total: c.total, porcentaje: porcentaje(c.aciertos, c.total), partes: elegidas },
+          requisito_p1: { cumple: c.p1.cumple, intentos_validos: c.p1.validos.length, aciertos: c.p1.validos.length ? c.p1.aciertos : null,
+            total: c.p1.validos.length ? c.p1.total : null, minimo: c.p1.minimo, alcanzable_si_se_revisa: !c.p1.cumple && c.p1.alcanzable },
+          provisoria: motivosEvidencia(c).length > 0, motivos: motivosEvidencia(c),
+          categoria_si_lo_pendiente_resultara_correcto: c.categoriaTecho,
+        },
+        decision_docente: {
+          categoria_elegida: override, categoria_final: efectiva, coincide_con_sugerida: efectiva === c.sugerida,
+          partes_elegidas: c.guardada, nota: c.manual.devolucion || null, registro_guardado: d.estudiantes[c.clave] ?? null,
+        },
+        orientacion: lineasOrientacion(c, efectiva, !modificada(c)).map(textoPlano),
+        devolucion_entregada: devolucionEntregada(x),
+      };
+    });
+    const cursos = [...new Map(lista.map((x) => [normalizar(x.curso), x.curso])).values()];
+    const json = {
+      formato: "aula · cierre A+B completo (privado)", version: 1, generado: generado.toISOString(),
+      privacidad: "Contiene datos personales (nombres, respuestas y decisiones docentes). Archivo privado: no publicar ni versionar.",
+      alcance: { seleccion: elegido ? "un curso" : "todos los cursos", cursos, estudiantes: estudiantes.length },
+      evaluaciones: Object.fromEntries(INTENTOS.map((l) => [l, {
+        evaluacion: EVALUACION_DE[l], partes: PARTES.map((p) => ({ parte: p.n, nombre: p.nombre, items: [p.desde, p.hasta], opciones: p.letras })),
+        clave: ACEPTADAS_DE[l], excepciones: ACEPTADAS_DE[l].flatMap((a, i) => (a.length > 1 ? [{ item: i + 1, aceptadas: a }] : [])),
+        ejes: (l === LETRA ? EJES : OTRA_EJES).map(({ id, items }) => ({ id, items })),
+      }])),
+      reglas: { suficiente_desde: 0.55, avanzado_desde: 0.8, avanzado_requiere_cuatro_partes: true, requisito_p1: { dos_intentos: "9/16", un_intento: "6/8" },
+        parte_valida: "contabilizada y completa", mejor_evidencia: "por parte, el mayor puntaje válido entre A y B",
+        categoria_final: "la elegida por el docente si la cambió; si no, la sugerida por la evidencia" },
+      fuentes,
+      vinculos_manuales: d.vinculos.filter((v) => claves.has(`A${v.A}`) || claves.has(`B${v.B}`)),
+      estudiantes,
+    };
+    const tsvIntento = (l) => tsvDe(EVALUACION_DE[l], (l === LETRA ? filas : filasOtra() ?? []).filter((f) => usados[l].has(f.id)));
+    const fila = (cols) => cols.map((v) => limpiar(v == null ? "" : String(v))).join("\t");
+    const resumen = [fila(["curso", "n_lista", "estudiante", "nombre_en_A", "nombre_en_B", "presencia_A", "presencia_B", "emparejamiento",
+      "total_A", "porcentaje_A", "total_B", "porcentaje_B", "mejor_A+B", "porcentaje_A+B", "categoria_sugerida", "categoria_final", "modificada_por_docente", "estado", "nota_docente"]),
+    ...estudiantes.map((e) => {
+      const tot = (l) => e.correccion[l]?.total_valido;
+      const frac = (t) => (t && t.total ? `${t.aciertos}/${t.total}` : "");
+      const pct = (t) => (t && t.total ? String(t.porcentaje).replace(".", ",") : "");
+      const m = e.correccion.integrada.suma_mejor;
+      return fila([e.curso, e.num, e.estudiante, e.registros.A?.estudiante, e.registros.B?.estudiante, e.registros.A ? "sí" : "no", e.registros.B ? "sí" : "no",
+        e.emparejamiento.tipo, frac(tot("A")), pct(tot("A")), frac(tot("B")), pct(tot("B")), m.total ? `${m.aciertos}/${m.total}` : "", m.total ? String(m.porcentaje).replace(".", ",") : "",
+        e.sugerencia.categoria, e.decision_docente.categoria_final, e.decision_docente.categoria_elegida && !e.decision_docente.coincide_con_sugerida ? "sí" : "no",
+        e.emparejamiento.estado, e.decision_docente.nota]);
+    })].join("\n") + "\n";
+    const estilos = [...document.querySelectorAll("style")].map((e) => e.textContent).join("\n");
+    const devoluciones = `<!doctype html>\n<html lang="es">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n` +
+      `<title>Devoluciones de cierre · ${esc(cursos.join(", ") || "sin cursos")}</title>\n<style>${estilos}\nbody { padding: 16px; }</style>\n</head>\n<body>\n` +
+      `<section class="impresion"><div class="hoja">${lista.map(bloqueFinal).join("\n")}</div></section>\n</body>\n</html>\n`;
+    const leeme = [
+      "Cierre A+B · Sistemas Informáticos · archivo completo (PRIVADO)",
+      "",
+      `Generado: ${generado.toLocaleString("es-AR")} (${generado.toISOString()})`,
+      `Cursos: ${cursos.join(", ") || "—"}`,
+      `Estudiantes: ${estudiantes.length}`,
+      "Formato: aula · cierre A+B completo (privado), versión 1",
+      "",
+      "PRIVADO: contiene nombres, respuestas y decisiones docentes. Guardarlo como archivo privado; no publicarlo ni versionarlo.",
+      "",
+      "A y B son dos evaluaciones paralelas sobre los mismos contenidos. Por parte se toma el mejor resultado válido entre las dos.",
+      "La herramienta sugiere una categoría a partir de A+B; la categoría del período es la que decidió el docente si la cambió, y",
+      "si no, la sugerida. A+B describe una evidencia; la categoría valora el período.",
+      "",
+      "Archivos:",
+      "- cierre-completo.json: snapshot completo (fuentes crudas de A y B, emparejamiento, corrección, sugerencia, decisión docente y devolución entregada).",
+      "- resumen.tsv: una fila por estudiante, para abrir en una planilla.",
+      `- evaluacion-a.tsv y evaluacion-b.tsv: los registros de cada evaluación, en el formato de exportación de su herramienta.`,
+      "- devoluciones.html: las devoluciones tal como se imprimen; se abre en cualquier navegador.",
+      "",
+    ].join("\n");
+    return { generado, json, archivos: [["LEEME.txt", leeme], ["cierre-completo.json", JSON.stringify(json, null, 2) + "\n"], ["resumen.tsv", resumen],
+      ["evaluacion-a.tsv", tsvIntento("A")], ["evaluacion-b.tsv", tsvIntento("B")], ["devoluciones.html", devoluciones]] };
+  }
+  function exportarCompleto() {
+    const elegido = $("impresionCurso").value;
+    const { generado, json, archivos } = cierreCompleto(elegido);
+    if (!json.estudiantes.length) return mensaje("No hay estudiantes para exportar.", "error");
+    const fecha = `${generado.getFullYear()}-${String(generado.getMonth() + 1).padStart(2, "0")}-${String(generado.getDate()).padStart(2, "0")}`;
+    const nombre = `cierre-completo-${elegido ? normalizar(json.alcance.cursos[0]).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "curso" : "todos-los-cursos"}-${fecha}.zip`;
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(zipSinCompresion(archivos, generado));
+    a.download = nombre;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    mensaje(`Descargado ${nombre} (privado): ${json.estudiantes.length} estudiante${json.estudiantes.length === 1 ? "" : "s"}.`, "ok");
   }
 
   function abrirImpresion() {
@@ -2596,9 +2845,12 @@
   const CABECERA_TSV = ["evaluacion", "curso", "estudiante", ...Array.from({ length: N }, (_, i) => `i${String(i + 1).padStart(2, "0")}`),
     ...PARTES.map((p) => `parte${p.n}_cuenta`)];
 
-  function tsv() {
+  const tsv = () => tsvDe(EVALUACION, filas);
+  // La misma serialización para cualquier lista de registros (también los de la
+  // otra evaluación, en el cierre completo).
+  function tsvDe(evaluacion, filas) {
     // Un ítem sin cargar (sólo posible en una parte que no se contabiliza) va como campo vacío.
-    const lineas = [CABECERA_TSV, ...filas.map((f) => [EVALUACION, limpiar(f.curso), limpiar(f.estudiante), ...f.respuestas.map((v) => v ?? ""), ...f.cuentan.map((c) => (c ? "1" : "0"))])];
+    const lineas = [CABECERA_TSV, ...filas.map((f) => [evaluacion, limpiar(f.curso), limpiar(f.estudiante), ...f.respuestas.map((v) => v ?? ""), ...f.cuentan.map((c) => (c ? "1" : "0"))])];
     for (const f of filas) {
       if (!f.respuestas.every((v, i) => (v === null ? !cuentaItem(f.cuentan, i) : VALOR.test(v)))) throw new Error(`Fila inválida: ${f.estudiante}`);
       if (!(f.cuentan.length === PARTES.length && f.cuentan.every((c) => typeof c === "boolean"))) throw new Error(`Partes inválidas: ${f.estudiante}`);
@@ -2819,7 +3071,12 @@
   // Otra pestaña cambió el otro intento o las decisiones: redibujar sin escribir nada.
   window.addEventListener("storage", (e) => {
     if (e.key === OTRA.claveLocal || e.key === CLAVE_CIERRE || e.key === CLAVE_LOCAL || e.key === null) {
-      if (MODO_CIERRE) return renderCierreCurso();
+      // En la pantalla de cierre, también lo propio se relee: una corrección
+      // hecha en la herramienta de esta evaluación (otra pestaña) se ve al instante.
+      if (MODO_CIERRE) {
+        if (e.key === CLAVE_LOCAL || e.key === null) cargarLocal();
+        return renderCierreCurso();
+      }
       renderCierre(); renderFilas();
     }
   });
@@ -2831,6 +3088,7 @@
   $("impresionCurso").addEventListener("change", renderImpresion);
   $("btnImprimir").addEventListener("click", () => window.print());
   $("btnExportarAnonimo").addEventListener("click", exportarAnonimo);
+  $("btnExportarCompleto").addEventListener("click", exportarCompleto);
   $("btnCerrarImpresion").addEventListener("click", () => { $("impresion").hidden = true; });
   $("btnImportar").addEventListener("click", () => $("archivoImport").click());
   // El panel se vuelve a dibujar en cada cambio: el botón se atiende por delegación.

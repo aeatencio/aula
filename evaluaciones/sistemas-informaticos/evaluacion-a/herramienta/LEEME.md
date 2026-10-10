@@ -300,11 +300,18 @@ categoría con las reglas de abajo (incluida la Parte 1), y esa sugerencia es la
 **categoría efectiva** mientras el docente no elija otra. Aceptarla no requiere
 ningún paso ni guarda nada: el docente interviene sólo en las excepciones.
 
-- **Lista del curso** (filtro por curso): estudiante, A y B presentes (✓, —, o
+- **Lista del curso** (filtro por curso): N.º de lista (orden alfabético dentro
+  de cada curso, 01, 02…; una pareja A+B es un solo número; se deriva, no se
+  guarda, y también se imprime junto al nombre para ordenar y repartir),
+  estudiante (si los nombres de A y B difieren o el vínculo es manual, se ven los
+  dos), A y B presentes (✓, —, o
   «?» si hay un problema de pareja), la categoría efectiva y un estado: **Lista**
   o lo que pide atención: **Provisorio** (respuestas a revisar que podrían
   cambiar la sugerencia), **Revisar pareja**, **Sin evidencia** o **Sin
-  categoría** (ninguna parte elegida). Con un solo intento, «Sólo A» o «Sólo B».
+  categoría** (ninguna parte elegida). El estado describe la evidencia: cambiar
+  la categoría no lo oculta (por ejemplo, «Provisorio ≠ sugerida»). Una
+  corrección hecha en la herramienta de A o de B, en otra pestaña del mismo
+  navegador, se ve al instante. Con un solo intento, «Sólo A» o «Sólo B».
   Si el docente eligió una categoría distinta de la sugerida, una marca discreta
   «≠ sugerida», sólo para el docente (no se imprime ni se exporta). Imprimir y
   exportar quedan como acción secundaria: el curso se puede imprimir sin entrar
@@ -474,17 +481,29 @@ filtro por curso. «Imprimir» imprime sólo esas devoluciones, para hoja Oficio
 páginas (`break-inside: avoid`) y lleva, en este orden:
 
 1. estudiante (si un vínculo manual une nombres distintos, los dos), curso y
-   «Categoría del período»: la efectiva (la elegida por el docente o, si no, la
-   de la evidencia, con «provisoria» si corresponde), sin decir de dónde sale. Debajo, el mismo encuadre para todos: «La categoría valora el
-   proceso del período. Las Evaluaciones A y B son una de las evidencias
-   consideradas.» (A+B describe una evidencia; la categoría valora el período);
-2. resultado considerado (si la categoría es la de la evidencia);
-3. «Resultados en las Evaluaciones A y B»: A, B y el mejor, con porcentajes, y
-   qué partes cuentan (si la categoría es la de la evidencia);
+   «Calificación del Tercer Bimestre» (así se llama en el papel, como en el
+   boletín): la categoría efectiva (la elegida por el docente o, si no, la
+   de la evidencia, con «provisoria» si corresponde), sin decir de dónde sale.
+   Debajo, el mismo encuadre para todos: «La calificación del tercer bimestre
+   valora el proceso del período. Las Evaluaciones A y B son una de las
+   evidencias consideradas.» (A+B describe una evidencia; la categoría valora el
+   período);
+2. resultado considerado (si la categoría es la de la evidencia); si hay
+   respuestas pendientes de revisión, una línea lo dice («estos resultados
+   todavía pueden cambiar»), sea cual sea la categoría;
+3. «Resultados en las Evaluaciones A y B»: A, B y el mejor, con porcentajes (sin
+   la columna «Cuenta»: las partes consideradas ya las dice «Resultado
+   considerado»), con una fila
+   **Total**: para A y para B, la suma de sus partes válidas con su propio
+   denominador (14/24 si una parte no es válida, nunca sobre 30 inventado) y lo
+   que queda a revisar; para «Mejor», la suma de la mejor evidencia de cada parte
+   (no es una evaluación completa). La misma fila está en el detalle por parte de
+   la revisión individual;
 4. por contenidos, A y B juntos, con las dificultades marcadas;
 5. para seguir trabajando: la orientación por contenidos respaldada por A+B. Si
    la categoría final difiere de la sugerida, no se agregan frases generales de
-   respaldo ni la Parte 1 como explicación: eso lo dice la nota;
+   respaldo ni la Parte 1 como explicación (eso lo dice la nota), y si no queda
+   nada respaldado la sección no aparece;
 6. la nota docente, si se escribió;
 7. la **clave de corrección** de A y de B, una línea por evaluación separada
    por partes (`A | P1 1B 2A … 8C | P2 9D … | P3 17B 18B/D … | P4 … 30A`), para que
@@ -521,6 +540,34 @@ vínculos manuales, respuestas por ítem, devoluciones ni textos del docente, ni
 claves de almacenamiento. Aun así, el archivo es sensible: un curso chico y una
 categoría pueden bastar para reconocer a alguien; guardarlo fuera del
 repositorio.
+
+**Cierre completo (privado).** En la misma vista, separado del anonimizado y
+con su advertencia, «Exportar cierre completo (privado) (.zip)» descarga, del
+curso elegido o de todos, `cierre-completo-<curso | todos-los-cursos>-<fecha>.zip`:
+un snapshot del cierre para archivar (por ejemplo, en Drive como archivo
+privado). Contiene datos personales: nombres, respuestas y decisiones docentes.
+Se genera en el navegador (un ZIP sin compresión armado por la propia página, sin
+dependencias), no se envía a ningún lado, no se guarda en el navegador y no se
+puede reimportar: es un archivo documental. Adentro:
+
+- `LEEME.txt`: fecha, cursos, cantidad de estudiantes, aviso de privacidad y
+  qué es cada archivo;
+- `cierre-completo.json` (formato, versión, generado): las claves aplicadas
+  (con la excepción de A18), las reglas vigentes, las **fuentes** de A y B tal
+  como están guardadas (respuestas crudas incluidas), los vínculos manuales y,
+  por estudiante, el emparejamiento, la **corrección** (por intento, parte por
+  parte e ítem por ítem; integrada por parte, contenidos), la **sugerencia** de
+  la herramienta (categoría, resultado considerado, P1, provisoria y motivos),
+  la **decisión docente** (categoría elegida si la cambió, final, partes
+  elegidas, nota y el registro guardado; si no hizo nada, no se inventa una
+  decisión) y la **devolución entregada** (lo que se imprime);
+- `resumen.tsv`: una fila por estudiante para abrir en una planilla;
+- `evaluacion-a.tsv` y `evaluacion-b.tsv`: los registros del alcance con la misma
+  serialización que el TSV de cada herramienta;
+- `devoluciones.html`: las devoluciones tal como se imprimen, con los estilos
+  incluidos y sin JavaScript; se abre en cualquier navegador.
+
+No incluye otras claves del navegador ni datos del dispositivo.
 
 **Qué se guarda:** sólo las decisiones que no se pueden derivar, en
 `aula-evaluacion-cierre-v1`:

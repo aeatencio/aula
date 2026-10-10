@@ -334,7 +334,7 @@ await cdp("Emulation.setEmulatedMedia", { media: "" });
 // Datos anonimizados para análisis: un curso y todos, desde la UI, con descarga real.
 const descargas = join(salida, "descargas-anonimizado");
 mkdirSync(descargas, { recursive: true });
-for (const f of readdirSync(descargas)) if (f.startsWith("cierre-anonimizado-")) unlinkSync(join(descargas, f));
+for (const f of readdirSync(descargas)) if (f.startsWith("cierre-anonimizado-") || f.startsWith("cierre-completo-")) unlinkSync(join(descargas, f));
 await cdp("Browser.setDownloadBehavior", { behavior: "allow", downloadPath: descargas });
 const NOMBRES = ["Zoila Ficticia", "Quintín Inventado", "Ramón Prueba", "Wanda Ejemplo", "Texto secreto 4417"];
 const A5 = almacen([fila("A", "Zoila Ficticia", [7, 6, 6, 5]), fila("A", "Quintín Inventado", [5, 5, 5, 4]), { ...fila("A", "Wanda Ejemplo", [6, 6, 6, 4]), curso: "Curso Y" }]);
@@ -370,6 +370,29 @@ const sinAcentos = (t) => t.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase(
 verificar(NOMBRES.every((n) => !sinAcentos(ex1.texto + ex2.texto).includes(sinAcentos(n))), "ningún nombre ni texto privado sintético en los archivos");
 verificar(d2.estudiantes.every((e) => /^Curso [XY] · \d{2}$/.test(e.id)), `ids anónimos → ${d2.estudiantes.map((e) => e.id).join(", ")}`);
 verificar((await almacenes()) === antesExport, "A, B y decisiones idénticos antes y después de exportar");
+// Cierre completo (privado): ZIP con nombres, respuestas y decisiones.
+const aviso2 = await evaluar('document.querySelector(".impresion-privado").textContent.replace(/\\s+/g, " ").trim()');
+verificar(/Privado: incluye nombres, respuestas y decisiones docentes/.test(aviso2), "advertencia de privacidad junto al export completo");
+await evaluar('(() => { const s = document.getElementById("impresionCurso"); s.value = ""; s.dispatchEvent(new Event("change")); })()');
+const previosZip = new Set(readdirSync(descargas));
+await clic("#btnExportarCompleto");
+let zipNombre = null;
+for (let i = 0; i < 100 && !zipNombre; i++) { zipNombre = readdirSync(descargas).find((f) => !previosZip.has(f) && f.endsWith(".zip")) ?? null; await espera(100); }
+const zipBytes = zipNombre ? readFileSync(join(descargas, zipNombre)) : Buffer.alloc(0);
+const leerEntradas = (b) => {
+  const fin = b.length - 22; const n = b.readUInt16LE(fin + 10); let p = b.readUInt32LE(fin + 16); const out = {};
+  for (let i = 0; i < n; i++) { const l = b.readUInt16LE(p + 28), tam = b.readUInt32LE(p + 20), off = b.readUInt32LE(p + 42);
+    const nombre = b.subarray(p + 46, p + 46 + l).toString("utf8"); const ini = off + 30 + b.readUInt16LE(off + 26); out[nombre] = b.subarray(ini, ini + tam).toString("utf8"); p += 46 + l; }
+  return out;
+};
+const zipArch = zipNombre ? leerEntradas(zipBytes) : {};
+const zipJson = zipArch["cierre-completo.json"] ? JSON.parse(zipArch["cierre-completo.json"]) : {};
+verificar(/^cierre-completo-todos-los-cursos-\d{4}-\d{2}-\d{2}\.zip$/.test(zipNombre ?? "") &&
+  Object.keys(zipArch).join(",") === "LEEME.txt,cierre-completo.json,resumen.tsv,evaluacion-a.tsv,evaluacion-b.tsv,devoluciones.html",
+  `cierre completo descargado → ${zipNombre}: ${Object.keys(zipArch).join(", ")}`);
+verificar(zipJson.estudiantes?.length === 4 && zipJson.fuentes?.A.registros.some((f) => f.estudiante === "Zoila Ficticia" && f.respuestas.length === 30) &&
+  zipArch["resumen.tsv"].includes("Zoila Ficticia") && zipArch["devoluciones.html"].includes("Calificación del Tercer Bimestre"), "el privado sí tiene nombres, respuestas crudas y devoluciones");
+verificar((await almacenes()) === antesExport, "A, B y decisiones idénticos tras el cierre completo");
 
 // Pantalla «Cierre A+B»: lista austera, revisión, P1, Confirmar → siguiente, Manual.
 await cdp("Emulation.setDeviceMetricsOverride", { width: 1280, height: 1000, deviceScaleFactor: 1, mobile: false });
@@ -380,21 +403,26 @@ const B6 = almacen([fila("B", "Estudiante 21", [6, 6, 6, 4]), fila("B", "Estudia
   fila("B", "Estudiante 25", [6, 6, 4, 4])]);
 await evaluar(`localStorage.clear(); localStorage.setItem("aula-evaluacion-a-v1", ${JSON.stringify(A6)}); localStorage.setItem("aula-evaluacion-b-v1", ${JSON.stringify(B6)}); localStorage.setItem("aula-evaluacion-cierre-v1", ${JSON.stringify(JSON.stringify({ estudiantes: { "curso x\testudiante 22": { modo: "procesado", partes: [true, true, true, true] } } }))})`);
 await ir(urlCierre);
-const lista6 = () => evaluar(`[...document.querySelectorAll(".cc-lista tbody tr")].map((tr) => [...tr.children].slice(0, 5).map((td) => td.textContent).join(" | "))`);
+const lista6 = () => evaluar(`[...document.querySelectorAll(".cc-lista tbody tr")].map((tr) => [...tr.children].slice(1, 6).map((td) => td.textContent).join(" | "))`);
 let l6 = await lista6();
 verificar(await evaluar("document.title") === "Cierre A+B · Sistemas Informáticos" && await evaluar('document.querySelector("main.pagina").hidden'), `pantalla Cierre A+B en ${urlCierre}`);
 verificar(l6.join(" / ") === "Estudiante 21 | ✓ | ✓ | Suficiente | Lista / Estudiante 22 | ✓ | ✓ | Avanzado | Lista / " +
   "Estudiante 23 | ✓ | ✓ | En proceso | Lista / Estudiante 24 | ✓ | — | Suficiente | ListaSólo A / Estudiante 25 | — | ✓ | Suficiente | ListaSólo B",
   `curso recién abierto: la sugerida ya es la categoría → ${l6.join(" / ")}`);
 await captura("cierre-ab-lista.png");
+const nums = await evaluar('[...document.querySelectorAll(".cc-lista tbody td.num-lista")].map((td) => td.textContent).join(" ")');
+verificar(nums === "01 02 03 04 05", `N.º de lista en el curso → ${nums}`);
 // Imprimir el curso entero sin entrar a ningún estudiante.
 const papelDe = () => evaluar(`(() => { const bs = [...document.querySelectorAll("#impresionBloques article.final")];
   return { cats: bs.map((b) => b.querySelector(".final-nombre").textContent + ":" + b.querySelector(".final-cat b").textContent).join(" "),
-    limpio: bs.every((b) => /^Categoría del período: /.test(b.querySelector(".final-cat").textContent) && !/sugerid|automátic|sin confirmar|≠/i.test(b.textContent)),
-    encuadre: bs.every((b) => b.querySelector(".final-encuadre")?.textContent === "La categoría valora el proceso del período. Las Evaluaciones A y B son una de las evidencias consideradas."),
+    limpio: bs.every((b) => /^Calificación del Tercer Bimestre: /.test(b.querySelector(".final-cat").textContent) && !/sugerid|automátic|sin confirmar|≠|Cuenta|Categoría del período/i.test(b.textContent)),
+    encuadre: bs.every((b) => b.querySelector(".final-encuadre")?.textContent === "La calificación del tercer bimestre valora el proceso del período. Las Evaluaciones A y B son una de las evidencias consideradas."),
     nota: bs.find((b) => b.querySelector(".final-nombre").textContent === "Estudiante 23")?.querySelector(".final-texto")?.textContent ?? null }; })()`);
 await clic("#ccImprimir");
 let papel = await papelDe();
+verificar(await evaluar('[...document.querySelectorAll("#impresionBloques .final-num")].map((e) => e.textContent).join(" ")') === "01 02 03 04 05", "el mismo N.º en el papel");
+const total21 = await evaluar('[...document.querySelector("#impresionBloques article.final tfoot tr").children].slice(0, 4).map((c) => c.textContent).join(" | ")');
+verificar(total21 === "Total | 22/30 (73,3 %) | 22/30 (73,3 %) | 22/30 (73,3 %)", `fila Total en el papel → ${total21}`);
 verificar(papel.cats === "Estudiante 21:Suficiente Estudiante 22:Avanzado Estudiante 23:En proceso Estudiante 24:Suficiente Estudiante 25:Suficiente" && papel.limpio && papel.encuadre,
   `impresión sin confirmar nada → ${papel.cats}`);
 verificar(await evaluar('localStorage.getItem("aula-evaluacion-cierre-v1")') === JSON.stringify({ estudiantes: { "curso x\testudiante 22": { modo: "procesado", partes: [true, true, true, true] } } }),
@@ -446,6 +474,28 @@ verificar(papel.cats === "Estudiante 21:Suficiente Estudiante 22:Avanzado Estudi
 const ex6 = await bajar("");
 verificar(!ex6.texto.includes("8812") && !/≠|sugerid/i.test(ex6.texto), "ni la nota ni la marca en el export");
 await captura("cierre-ab-lista-final.png");
+// Un cambio de categoría no oculta evidencia pendiente; el papel la dice.
+const A7 = almacen([fila("A", "Estudiante 27", [7, 6, 5, 5]), fila("A", "Estudiante 28", [8, 8, 7, 6])]);
+const B7 = almacen([{ ...fila("B", "Estudiante 27", [7, 6, 5, 5]), respuestas: fila("B", "Estudiante 27", [7, 6, 5, 5]).respuestas.map((v, i) => (i === 7 ? "?" : v)) },
+  fila("B", "Estudiante 28", [7, 8, 8, 6])]);
+await evaluar(`localStorage.clear(); localStorage.setItem("aula-evaluacion-a-v1", ${JSON.stringify(A7)}); localStorage.setItem("aula-evaluacion-b-v1", ${JSON.stringify(B7)})`);
+// Misma URL: recargar de verdad (con «#cierre», navegar no recarga).
+await cdp("Page.reload");
+await espera(900);
+await clic('.cc-lista tbody tr:nth-child(1) [data-revisar]');
+await clic('[data-cc-final="Avanzado"]');
+await clic("#ccSiguiente");
+await clic('[data-cc-final="En proceso"]');
+await clic("#ccVolver");
+l6 = await lista6();
+verificar(l6.join(" / ") === "Estudiante 27 | ✓ | ✓ | Avanzado | Provisorio≠ sugerida / Estudiante 28 | ✓ | ✓ | En proceso | Lista≠ sugerida",
+  `el cambio no oculta lo pendiente → ${l6.join(" / ")}`);
+await clic("#ccImprimir");
+const p7 = await evaluar(`[...document.querySelectorAll("#impresionBloques article.final")].map((b) => ({ cat: b.querySelector(".final-cat").textContent,
+  pendiente: b.querySelector(".final-pendiente")?.textContent ?? "", seguir: [...b.querySelectorAll("h3")].some((h) => h.textContent === "Para seguir trabajando") }))`);
+verificar(p7[0].cat === "Calificación del Tercer Bimestre: Avanzado" && /pendientes de revisión/.test(p7[0].pendiente) &&
+  p7[1].cat === "Calificación del Tercer Bimestre: En proceso" && !p7[1].seguir, "papel: categoría del docente, lo pendiente dicho, sin orientación sin respaldo");
+
 
 await evaluar("localStorage.clear()");
 console.log(fallas.length ? `\n${fallas.length} fallas` : "\nsin fallas");

@@ -8,6 +8,7 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { JSDOM } from "jsdom";
+import { crc32 } from "node:zlib";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const herramienta = (x) => readFileSync(join(root, "evaluaciones", "sistemas-informaticos", `evaluacion-${x}`, "herramienta", "index.html"), "utf8");
@@ -1149,7 +1150,7 @@ test("impresión: un bloque por estudiante del curso (A y B), en orden, con todo
   // La clave, siempre al final de cada bloque.
   for (const b of bs) assert.equal(b.lastElementChild.className, "clave-compacta");
   // Resultados por parte con porcentajes y lo que cuenta para el cierre.
-  assert.match(bs[0].querySelector("tbody tr").textContent, /^P1 · Reconocer7\/8 \(87,5 %\)6\/8 \(75 %\)7\/8 \(87,5 %\) · A✓$/);
+  assert.match(bs[0].querySelector("tbody tr").textContent, /^P1 · Reconocer7\/8 \(87,5 %\)6\/8 \(75 %\)7\/8 \(87,5 %\) · A$/);
   // Filtrar por curso.
   t.$("impresionCurso").value = "curso y";
   t.$("impresionCurso").dispatchEvent(new t.w.Event("change"));
@@ -1220,7 +1221,7 @@ test("sin publicación: ninguna ruta nueva y nada de evaluaciones, claves ni her
   for (const r of recorrer(dist, [])) {
     assert.doesNotMatch(r.slice(dist.length), /evaluac|herramienta|clave|cierre/i, r);
     if (/\.(html|js|css|json|txt|xml)$/.test(r)) {
-      assert.doesNotMatch(readFileSync(r, "utf8"), /aula-evaluacion|clave-docente|Clave de corrección|Cierre A\+B|Devoluciones de cierre/, r);
+      assert.doesNotMatch(readFileSync(r, "utf8"), /aula-evaluacion|clave-docente|Clave de corrección|Cierre A\+B|Devoluciones de cierre|cierre-completo|cierre completo/i, r);
     }
   }
 });
@@ -1402,11 +1403,11 @@ const URL_CIERRE = "http://localhost/herramientas/cierre-evaluaciones/";
 const pantalla = (opciones) => abrir("A", { ...opciones, url: URL_CIERRE });
 const listaCC = (t) => [...t.$("cierreCurso").querySelectorAll(".cc-lista tbody tr")].map((tr) => {
   const td = [...tr.children];
-  return { nombre: td[0].textContent, A: td[1].textContent, B: td[2].textContent, cat: td[3].textContent, estado: td[4].querySelector(".cc-estado").textContent,
-    solo: td[4].querySelector(".cc-solo")?.textContent ?? "", propuesta: td[3].classList.contains("propuesta") };
+  return { num: td[0].textContent, nombre: td[1].textContent, A: td[2].textContent, B: td[3].textContent, cat: td[4].textContent, estado: td[5].querySelector(".cc-estado").textContent,
+    solo: td[5].querySelector(".cc-solo")?.textContent ?? "", propuesta: td[4].classList.contains("propuesta") };
 });
 const revisar = (t, nombre) => {
-  const tr = [...t.$("cierreCurso").querySelectorAll(".cc-lista tbody tr")].find((r) => r.children[0].textContent.startsWith(nombre));
+  const tr = [...t.$("cierreCurso").querySelectorAll(".cc-lista tbody tr")].find((r) => r.children[1].textContent.startsWith(nombre));
   tr.querySelector("[data-revisar]").click();
 };
 const quien = (t) => t.$("ccQuien")?.textContent ?? null;
@@ -1460,17 +1461,17 @@ test("Cierre A+B: URL propia, título neutral, sólo la pantalla de cierre y enl
 const finalCC = (t, cat) => t.$("cierreCurso").querySelector(`[data-cc-final="${cat}"]`).click();
 const decisionDe = (t, clave) => JSON.parse(t.w.localStorage.getItem(CIERRE) ?? "{}").estudiantes?.[clave];
 const pulsada = (t) => t.$("cierreCurso").querySelector('[data-cc-final][aria-pressed="true"]')?.dataset.ccFinal ?? null;
-const marca = (t, n) => [...t.$("cierreCurso").querySelectorAll(".cc-lista tbody tr")].find((r) => r.children[0].textContent.startsWith(n)).querySelector(".cc-difiere")?.textContent ?? "";
+const marca = (t, n) => [...t.$("cierreCurso").querySelectorAll(".cc-lista tbody tr")].find((r) => r.children[1].textContent.startsWith(n)).querySelector(".cc-difiere")?.textContent ?? "";
 
 test("Cierre A+B: un curso recién abierto ya tiene sus categorías (la sugerida es la efectiva) y sólo se señala lo que pide atención", () => {
   const escrituras = [];
   const t = pantalla({ ...cursoCierre(), escrituras });
   const tabla = t.$("cierreCurso").querySelector(".cc-lista");
-  assert.deepEqual([...tabla.querySelectorAll("thead th")].map((th) => th.textContent), ["Estudiante", "A", "B", "Categoría", "Estado", ""]);
+  assert.deepEqual([...tabla.querySelectorAll("thead th")].map((th) => th.textContent), ["N.º", "Estudiante", "A", "B", "Categoría", "Estado", ""]);
   assert.doesNotMatch(tabla.textContent, /%|\d+\/\d+|sugerida|Requiere decisión/, "sin puntajes ni «pendientes» de confirmar");
   const l = listaCC(t);
   const por = (n) => l.find((x) => x.nombre.startsWith(n));
-  assert.deepEqual(por("Estudiante 01"), { nombre: "Estudiante 01", A: "✓", B: "✓", cat: "Suficiente", estado: "Lista", solo: "", propuesta: false });
+  assert.deepEqual(por("Estudiante 01"), { num: "01", nombre: "Estudiante 01", A: "✓", B: "✓", cat: "Suficiente", estado: "Lista", solo: "", propuesta: false });
   assert.deepEqual([por("Estudiante 02").cat, por("Estudiante 02").estado], ["Avanzado", "Lista"]);
   // Lo que de verdad pide atención sigue a la vista.
   assert.equal(por("Estudiante 03").estado, "Provisorio");
@@ -1579,7 +1580,7 @@ test("Cierre A+B: los casos que requieren atención siguen señalados y bloquean
   assert.equal(t.$("ccEstado").textContent, "Provisorio");
   assert.match(t.$("cierreCurso").querySelector(".cc-decision").textContent, /Hay respuestas a revisar que podrían cambiar la sugerencia/);
   t.$("ccVolver").click();
-  const filaB04 = [...t.$("cierreCurso").querySelectorAll(".cc-lista tbody tr")].find((r) => r.children[0].textContent.startsWith("Estudiante 04") && r.children[2].textContent === "✓");
+  const filaB04 = [...t.$("cierreCurso").querySelectorAll(".cc-lista tbody tr")].find((r) => r.children[1].textContent.startsWith("Estudiante 04") && r.children[3].textContent === "✓");
   filaB04.querySelector("[data-revisar]").click();
   assert.equal(t.$("ccEstado").textContent, "Revisar pareja");
   assert.ok([...t.$("cierreCurso").querySelectorAll("[data-cc-final]")].every((b) => b.disabled));
@@ -1599,10 +1600,377 @@ test("impresión del curso completo sin confirmar nada: la categoría efectiva (
   assert.equal(de("Estudiante 02").querySelector(".final-cat b").textContent, "Avanzado");
   assert.match(de("Estudiante 05").textContent, /Resultado considerado: 20\/30/);
   for (const b of bs) {
-    assert.match(b.querySelector(".final-cat").textContent, /^Categoría del período: /);
-    assert.equal(b.querySelector(".final-encuadre").textContent, "La categoría valora el proceso del período. Las Evaluaciones A y B son una de las evidencias consideradas.");
+    assert.match(b.querySelector(".final-cat").textContent, /^Calificación del Tercer Bimestre: /);
+    assert.equal(b.querySelector(".final-encuadre").textContent, "La calificación del tercer bimestre valora el proceso del período. Las Evaluaciones A y B son una de las evidencias consideradas.");
     assert.equal(b.querySelector("h3").textContent, "Resultados en las Evaluaciones A y B");
     assert.doesNotMatch(b.textContent, /sugerid|automátic|sin confirmar|≠|pendiente de decisión/i);
+  }
+  t.cerrar();
+});
+
+test("trabajo por excepción: un cambio de categoría no oculta el estado de la evidencia (Provisorio, pareja, sin evidencia)", () => {
+  const P = [T, T, T, T];
+  const a = [
+    fila("A", "Estudiante 51", [7, 6, 5, 5]),
+    fila("A", "Estudiante 52", [6, 6, 6, 4], { curso: "Curso Z" }),
+    fila("A", "Estudiante 53", [null, null, null, null], { cuentan: [F, F, F, F] }),
+    fila("A", "Estudiante 54", [6, 6, 6, 4]),
+  ];
+  const b = [
+    fila("B", "Estudiante 51", [7, 6, 5, 5], { cambios: { 8: "?" } }),
+    fila("B", "Estudiante 52", [6, 6, 6, 4]),
+    fila("B", "Estudiante 54", [6, 6, 6, 4]), fila("B", "estudiante 54", [2, 2, 2, 2]),
+  ];
+  const cierre = JSON.stringify({ estudiantes: Object.fromEntries(["51", "52", "53", "54"].map((n) => [`curso ${n === "52" ? "z" : "x"}\testudiante ${n}`, { modo: "manual", categoria: "Avanzado", partes: P }])) });
+  const t = pantalla({ a, b, cierre });
+  const est = (n) => listaCC(t).find((x) => x.nombre.startsWith(n));
+  // 51: respuestas a revisar que podrían cambiar la lectura → Provisorio, aunque el docente eligió Avanzado.
+  assert.deepEqual([est("Estudiante 51").cat, est("Estudiante 51").estado], ["Avanzado", "Provisorio"]);
+  assert.equal(marca(t, "Estudiante 51"), "≠ sugerida");
+  // 52: mismo estudiante en otro curso → Revisar pareja.
+  assert.ok(listaCC(t).filter((x) => x.nombre === "Estudiante 52").every((x) => x.estado === "Revisar pareja"));
+  // 53: ninguna parte válida → Sin evidencia.
+  assert.equal(est("Estudiante 53").estado, "Sin evidencia");
+  // 54: dos registros de B → Revisar pareja.
+  assert.equal(est("Estudiante 54").estado, "Revisar pareja");
+  // 7 filas: 52 aparece en sus dos cursos y los dos registros de B de 54 también se listan; todas piden atención.
+  assert.match(t.$("ccResumen").textContent, /^Listas 0 de 7 · Requieren atención 7/);
+  // En el papel: la categoría del docente, y lo pendiente dicho como evidencia.
+  const bs = bloques(t);
+  const b51 = bs.find((x) => x.querySelector(".final-nombre").textContent === "Estudiante 51");
+  assert.equal(b51.querySelector(".final-cat").textContent, "Calificación del Tercer Bimestre: Avanzado");
+  assert.equal(b51.querySelector(".final-pendiente").textContent, "Hay respuestas pendientes de revisión en A o B: estos resultados todavía pueden cambiar.");
+  t.cerrar();
+});
+
+test("Cierre A+B: una corrección hecha en la herramienta de A o de B (otra pestaña) se ve al instante", () => {
+  const t = pantalla({
+    a: [fila("A", "Estudiante 71", [5, 5, 5, 4]), fila("A", "Estudiante 72", [7, 6, 5, 5])],
+    b: [fila("B", "Estudiante 72", [7, 6, 5, 5], { cambios: { 8: "?" } })],
+  });
+  const de = (n) => listaCC(t).find((x) => x.nombre === n);
+  assert.deepEqual([de("Estudiante 71").cat, de("Estudiante 72").estado], ["En proceso", "Provisorio"], "71: sólo A con P1 5/8");
+  const corregir = (x, fila0, item, valor) => {
+    const d = JSON.parse(t.w.localStorage.getItem(CLAVE[x]));
+    d.filas[fila0].respuestas[item - 1] = valor;
+    t.w.localStorage.setItem(CLAVE[x], JSON.stringify(d));
+    t.w.dispatchEvent(new t.w.StorageEvent("storage", { key: CLAVE[x] }));
+  };
+  // En la herramienta de A, el ítem 6 de 71 estaba mal transcripto: P1 6/8 → Suficiente.
+  corregir("A", 0, 6, BUENAS.A[5]);
+  assert.equal(de("Estudiante 71").cat, "Suficiente");
+  // En la de B se resuelve el «?» de 72.
+  corregir("B", 0, 8, BUENAS.B[7]);
+  assert.equal(de("Estudiante 72").estado, "Lista");
+  t.cerrar();
+});
+
+test("N.º de lista: alfabético dentro del curso, una pareja = un número, reinicia por curso, igual en el papel y sin guardarse", () => {
+  const escrituras = [];
+  const t = pantalla({ ...cursoCierre(), escrituras });
+  const filtrar = (k) => { t.$("ccCurso").value = k; t.$("ccCurso").dispatchEvent(new t.w.Event("change", { bubbles: true })); };
+  filtrar("curso x");
+  const lista = () => listaCC(t).map((x) => `${x.num} ${x.nombre}${x.solo ? ` (${x.solo})` : ""}`);
+  const esperado = ["01 Estudiante 01", "02 Estudiante 02", "03 Estudiante 03", "04 Estudiante 04", "05 Estudiante 05 (Sólo A)", "06 Estudiante 06 (Sólo A)", "07 Estudiante 07 (Sólo B)"];
+  assert.deepEqual(lista(), esperado, "pareja A+B (01, 02, 03) en una fila; Sólo A / Sólo B también numerados");
+  // Estable: no depende de categorías ni decisiones.
+  revisar(t, "Estudiante 02");
+  finalCC(t, "En proceso");
+  t.$("ccVolver").click();
+  assert.deepEqual(lista(), esperado);
+  // Reinicia en cada curso (también en «todos»).
+  filtrar("");
+  assert.deepEqual(listaCC(t).filter((x) => ["Estudiante 08", "Estudiante 04"].includes(x.nombre) && x.num === "01").length, 2, "Curso Y y Curso Z empiezan en 01");
+  filtrar("curso y");
+  assert.deepEqual(lista(), ["01 Estudiante 08 (Sólo A)"]);
+  // En el papel, el mismo número junto al nombre.
+  filtrar("curso x");
+  t.$("ccImprimir").click();
+  const bs = [...t.$("impresionBloques").querySelectorAll("article.final")];
+  assert.deepEqual(bs.map((b) => `${b.querySelector(".final-num").textContent} ${b.querySelector(".final-nombre").textContent}`), esperado.map((e) => e.replace(/ \(.*\)$/, "")));
+  // Nada nuevo guardado: sólo el override de 02.
+  assert.deepEqual(Object.keys(JSON.parse(t.w.localStorage.getItem(CIERRE)).estudiantes).sort(), ["curso x\testudiante 02"]);
+  assert.doesNotMatch(t.w.localStorage.getItem(CIERRE), /"num"|"01"/);
+  t.cerrar();
+});
+
+test("fila Total por intento y Mejor: partes válidas con su propio denominador, a revisar aparte, en el detalle y en el papel", () => {
+  const casos = [
+    // [opciones A, opciones B, esperado A, esperado B, esperado Mejor]
+    [{}, {}, "16/30 (53,3 %)", "13/30 (43,3 %)", "17/30 (56,7 %)"],
+    // A sin la Parte 4 (no contabilizada y sin cargar): 14/24, no 14/30; Mejor toma P4 de B.
+    [{ cuentan: [T, T, T, F], p4: null }, {}, "14/24 (58,3 %)", "13/30 (43,3 %)", "17/30 (56,7 %)"],
+    // A y B con distintas partes válidas: A sin P4, B sin P1.
+    [{ cuentan: [T, T, T, F], p4: null }, { cuentan: [F, T, T, T] }, "14/24 (58,3 %)", "9/22 (40,9 %)", "17/30 (56,7 %)"],
+    // Una respuesta a revisar en B (ítem 11): no suma ni resta, se indica.
+    [{}, { cambios: { 11: "?" } }, "16/30 (53,3 %)", "13/30 (43,3 %) · 1 a revisar", "17/30 (56,7 %)"],
+  ];
+  for (const [oa, ob, ea, eb, em] of casos) {
+    const escrituras = [];
+    const pa = [6, 3, 5, "p4" in oa ? oa.p4 : 2];
+    const t = pantalla({
+      a: [fila("A", "Estudiante 81", pa, { cuentan: oa.cuentan })],
+      b: [fila("B", "Estudiante 81", [4, 2, 4, 3], { cuentan: ob.cuentan, cambios: ob.cambios })],
+      escrituras,
+    });
+    revisar(t, "Estudiante 81");
+    const total = [...t.$("cierreCurso").querySelector(".cc-pliegues tfoot tr").children].map((c) => c.textContent);
+    assert.deepEqual(total, ["Total", ea, eb, em], JSON.stringify([oa, ob]));
+    // El papel muestra la misma fila.
+    const [b] = bloques(t);
+    const papel = [...b.querySelector("tfoot tr").children].map((c) => c.textContent);
+    assert.deepEqual(papel.slice(0, 4), ["Total", ea, eb, em]);
+    assert.equal(b.querySelectorAll("tbody tr").length, 4, "las partes siguen siendo cuatro filas");
+    // Sólo visual: nada se guarda.
+    assert.deepEqual(escrituras.filter((k) => k === CIERRE), []);
+    t.cerrar();
+  }
+});
+
+// ---------- Cierre completo (privado) ----------
+// Lee un ZIP «stored» por su directorio central y comprueba el CRC de cada entrada.
+function leerZip(bytes) {
+  const v = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const fin = bytes.length - 22;
+  assert.equal(v.getUint32(fin, true), 0x06054b50, "fin de directorio central");
+  const n = v.getUint16(fin + 10, true);
+  let p = v.getUint32(fin + 16, true);
+  const entradas = [];
+  for (let i = 0; i < n; i++) {
+    assert.equal(v.getUint32(p, true), 0x02014b50);
+    const largo = v.getUint16(p + 28, true), tam = v.getUint32(p + 20, true), crc = v.getUint32(p + 16, true), off = v.getUint32(p + 42, true);
+    const nombre = new TextDecoder().decode(bytes.subarray(p + 46, p + 46 + largo));
+    assert.equal(v.getUint32(off, true), 0x04034b50, `cabecera local de ${nombre}`);
+    const ini = off + 30 + v.getUint16(off + 26, true);
+    const datos = bytes.subarray(ini, ini + tam);
+    assert.equal(crc32(datos), crc, `CRC de ${nombre}`);
+    entradas.push([nombre, new TextDecoder().decode(datos)]);
+    p += 46 + largo;
+  }
+  return entradas;
+}
+async function exportarCompleto(t, curso = "") {
+  const capturas = [];
+  t.w.URL.createObjectURL = (blob) => { capturas.push({ blob }); return "blob:prueba"; };
+  t.w.URL.revokeObjectURL = () => {};
+  t.w.HTMLAnchorElement.prototype.click = function () { capturas.at(-1).nombre = this.download; };
+  if (t.$("impresion").hidden) t.$("btnImpresion").click();
+  t.$("impresionCurso").value = curso;
+  t.$("impresionCurso").dispatchEvent(new t.w.Event("change"));
+  t.$("btnExportarCompleto").click();
+  const { blob, nombre } = capturas.at(-1);
+  const entradas = leerZip(new Uint8Array(await blob.arrayBuffer()));
+  const archivos = Object.fromEntries(entradas);
+  return { nombre, tipo: blob.type, entradas: entradas.map(([n]) => n), archivos, json: JSON.parse(archivos["cierre-completo.json"]) };
+}
+// Curso sintético con todos los casos del cierre.
+function cursoCompleto() {
+  const a = [
+    fila("A", "Estudiante 01", [6, 6, 6, 4]),
+    fila("A", "Pérez, Juan", [4, 8, 8, 6]),
+    fila("A", "Estudiante 03", [6, 5, 5, 4]),
+    fila("A", "Estudiante 04", [6, 6, 6, 4]),
+    fila("A", "Estudiante 05", [6, 6, 6, 4]),
+    fila("A", "Estudiante 06", [4, 8, 8, 6]),
+    fila("A", "Estudiante 07", [6, 6, 6, 4], { curso: "Curso Y" }),
+  ];
+  const b = [
+    fila("B", "Estudiante 01", [6, 2, 6, 4], { cambios: { 11: "?" } }),
+    fila("B", "Juan Pérez", [5, 2, 3, 2]),
+    fila("B", "Estudiante 04", [6, 6, 6, 4]),
+    fila("B", "Estudiante 05", [6, 6, 6, 4]),
+    fila("B", "Estudiante 06", [4, 8, 8, 6]),
+    fila("B", "Estudiante 07", [6, 6, 6, 4], { curso: "Curso Y" }),
+    fila("B", "Estudiante 08", [6, 6, 5, 4]),
+  ];
+  const cierre = JSON.stringify({
+    estudiantes: {
+      "curso x\testudiante 04": { modo: "manual", categoria: "En proceso", devolucion: "Nota privada 9911: completar los trabajos pendientes." },
+      "curso x\testudiante 05": { modo: "procesado", partes: [T, T, T, F] },
+    },
+    vinculos: [{ A: "curso x\tperez, juan", B: "curso x\tjuan perez" }],
+  });
+  return { a, b, cierre };
+}
+
+test("cierre completo: un ZIP válido con LEEME, JSON maestro, resumen, TSV de A y B y devoluciones", async () => {
+  const t = pantalla(cursoCompleto());
+  t.$("ccImprimir").click();
+  const { nombre, tipo, entradas, json, archivos } = await exportarCompleto(t);
+  assert.match(nombre, /^cierre-completo-todos-los-cursos-\d{4}-\d{2}-\d{2}\.zip$/);
+  assert.equal(tipo, "application/zip");
+  assert.deepEqual(entradas, ["LEEME.txt", "cierre-completo.json", "resumen.tsv", "evaluacion-a.tsv", "evaluacion-b.tsv", "devoluciones.html"]);
+  assert.deepEqual(Object.keys(json), ["formato", "version", "generado", "privacidad", "alcance", "evaluaciones", "reglas", "fuentes", "vinculos_manuales", "estudiantes"]);
+  assert.equal(json.version, 1);
+  assert.ok(!Number.isNaN(Date.parse(json.generado)));
+  assert.deepEqual(json.alcance, { seleccion: "todos los cursos", cursos: ["Curso X", "Curso Y"], estudiantes: 8 });
+  assert.match(archivos["LEEME.txt"], /PRIVADO/);
+  assert.match(archivos["LEEME.txt"], /Estudiantes: 8/);
+  assert.match(archivos["LEEME.txt"], /A y B son dos evaluaciones paralelas/);
+  assert.match(archivos["LEEME.txt"], /la categoría del período es la que decidió el docente si la cambió/);
+  // La clave aplicada, con la excepción de A18.
+  assert.deepEqual(json.evaluaciones.A.excepciones, [{ item: 18, aceptadas: ["B", "D", "B+D"] }]);
+  assert.deepEqual(json.evaluaciones.B.excepciones, []);
+  t.cerrar();
+});
+
+test("cierre completo: fuentes crudas exactas, emparejamiento por estudiante y sin duplicar parejas", async () => {
+  const t = pantalla(cursoCompleto());
+  t.$("ccImprimir").click();
+  const { json } = await exportarCompleto(t);
+  for (const x of ["A", "B"]) assert.deepEqual(json.fuentes[x].registros, JSON.parse(t.w.localStorage.getItem(CLAVE[x])).filas, `fuente ${x}: tal como está guardada`);
+  assert.deepEqual(json.fuentes.B.registros[0].respuestas[10], "?", "respuestas crudas, sin limpiar");
+  const de = (n) => json.estudiantes.find((e) => e.estudiante === n);
+  assert.equal(json.estudiantes.length, 8, "una pareja es un solo estudiante");
+  assert.equal(de("Estudiante 01").emparejamiento.tipo, "automatico");
+  assert.deepEqual(de("Pérez, Juan").emparejamiento, { tipo: "manual", vinculo_manual: { A: "curso x\tperez, juan", B: "curso x\tjuan perez" }, anomalias: [], estado: "Lista" });
+  assert.deepEqual([de("Pérez, Juan").registros.A.estudiante, de("Pérez, Juan").registros.B.estudiante], ["Pérez, Juan", "Juan Pérez"]);
+  assert.equal(de("Estudiante 03").emparejamiento.tipo, "solo_A");
+  assert.equal(de("Estudiante 08").emparejamiento.tipo, "solo_B");
+  assert.deepEqual(json.vinculos_manuales, [{ A: "curso x\tperez, juan", B: "curso x\tjuan perez" }]);
+  t.cerrar();
+});
+
+test("cierre completo: corrección, sugerencia y decisión docente separadas (implícita, override, partes, nota, P1, a revisar)", async () => {
+  const t = pantalla(cursoCompleto());
+  t.$("ccImprimir").click();
+  const { json } = await exportarCompleto(t);
+  const de = (n) => json.estudiantes.find((e) => e.estudiante === n);
+  // 01: sugerencia aceptada sin hacer nada; una respuesta a revisar en B.
+  const e01 = de("Estudiante 01");
+  assert.deepEqual(e01.correccion.A.total_valido, { aciertos: 22, errores: 8, revisar: 0, total: 30, porcentaje: 73.3, partes: [1, 2, 3, 4] });
+  assert.equal(e01.correccion.B.total_valido.revisar, 1);
+  assert.deepEqual(e01.correccion.B.items[10], { item: 11, respuesta: "?", aceptadas: ["C"], resultado: "a revisar" });
+  assert.deepEqual(e01.correccion.A.items[0], { item: 1, respuesta: "B", aceptadas: ["B"], resultado: "correcta" });
+  assert.equal(e01.sugerencia.categoria, "Suficiente");
+  assert.deepEqual(e01.decision_docente, { categoria_elegida: null, categoria_final: "Suficiente", coincide_con_sugerida: true, partes_elegidas: null, nota: null, registro_guardado: null },
+    "no se infiere una decisión docente");
+  // 04: override con nota; la sugerida y la final quedan las dos.
+  const e04 = de("Estudiante 04");
+  assert.equal(e04.sugerencia.categoria, "Suficiente");
+  assert.deepEqual([e04.decision_docente.categoria_elegida, e04.decision_docente.categoria_final, e04.decision_docente.coincide_con_sugerida], ["En proceso", "En proceso", false]);
+  assert.equal(e04.decision_docente.nota, "Nota privada 9911: completar los trabajos pendientes.");
+  assert.equal(e04.devolucion_entregada.categoria_del_periodo, "Calificación del Tercer Bimestre: En proceso");
+  assert.equal(e04.devolucion_entregada.nota_docente, "Nota privada 9911: completar los trabajos pendientes.");
+  // 05: partes elegidas por el docente.
+  const e05 = de("Estudiante 05");
+  assert.deepEqual(e05.decision_docente.partes_elegidas, [T, T, T, F]);
+  assert.deepEqual(e05.sugerencia.resultado_considerado, { aciertos: 18, total: 24, porcentaje: 75, partes: [1, 2, 3] });
+  assert.equal(e05.decision_docente.categoria_elegida, null);
+  // 06: P1 8/16 → la sugerencia es En proceso aunque el porcentaje alcance.
+  const e06 = de("Estudiante 06");
+  assert.deepEqual([e06.sugerencia.categoria, e06.sugerencia.requisito_p1.cumple, e06.sugerencia.requisito_p1.aciertos], ["En proceso", false, 8]);
+  assert.match(e06.devolucion_entregada.resultado_considerado, /requisito de la Parte 1/);
+  // Mejor evidencia integrada y devolución entregada.
+  assert.deepEqual(e01.correccion.integrada.suma_mejor, { aciertos: 22, total: 30, porcentaje: 73.3 });
+  assert.deepEqual(e01.devolucion_entregada.resultados.at(-1), ["Total", "22/30 (73,3 %)", "18/30 (60 %) · 1 a revisar", "22/30 (73,3 %)"]);
+  assert.match(e01.devolucion_entregada.encuadre, /^La calificación del tercer bimestre valora el proceso del período/);
+  assert.ok(e01.orientacion.length > 0);
+  t.cerrar();
+});
+
+test("cierre completo: evaluacion-a.tsv y evaluacion-b.tsv son exactamente los exports de cada herramienta; resumen.tsv por estudiante", async () => {
+  const datos = cursoCompleto();
+  const t = pantalla(datos);
+  t.$("ccImprimir").click();
+  const { archivos } = await exportarCompleto(t);
+  for (const x of ["A", "B"]) {
+    const h = abrir(x, datos);
+    assert.equal(archivos[`evaluacion-${x.toLowerCase()}.tsv`], h.$("vista").textContent, `TSV de ${x}`);
+    h.cerrar();
+  }
+  const filasR = archivos["resumen.tsv"].replace(/\n$/, "").split("\n").map((l) => l.split("\t"));
+  assert.deepEqual(filasR[0], ["curso", "n_lista", "estudiante", "nombre_en_A", "nombre_en_B", "presencia_A", "presencia_B", "emparejamiento",
+    "total_A", "porcentaje_A", "total_B", "porcentaje_B", "mejor_A+B", "porcentaje_A+B", "categoria_sugerida", "categoria_final", "modificada_por_docente", "estado", "nota_docente"]);
+  assert.equal(filasR.length, 9);
+  assert.ok(filasR.every((f) => f.length === 19));
+  const fila04 = filasR.find((f) => f[2] === "Estudiante 04");
+  assert.deepEqual(fila04.slice(14), ["Suficiente", "En proceso", "sí", "Lista", "Nota privada 9911: completar los trabajos pendientes."]);
+  const filaPerez = filasR.find((f) => f[2] === "Pérez, Juan");
+  assert.deepEqual(filaPerez.slice(0, 8), ["Curso X", "07", "Pérez, Juan", "Pérez, Juan", "Juan Pérez", "sí", "sí", "manual"]);
+  assert.deepEqual(filasR.find((f) => f[2] === "Estudiante 08").slice(5, 8), ["no", "sí", "solo_B"]);
+  t.cerrar();
+});
+
+test("cierre completo: devoluciones.html autocontenido con lo que se entrega", async () => {
+  const t = pantalla(cursoCompleto());
+  t.$("ccImprimir").click();
+  const { archivos } = await exportarCompleto(t);
+  const html = archivos["devoluciones.html"];
+  assert.match(html, /^<!doctype html>/);
+  assert.doesNotMatch(html, /<script|localStorage|aula-evaluacion/i, "sin JavaScript ni datos del navegador");
+  const doc = new JSDOM(html).window.document;
+  const bs = [...doc.querySelectorAll("article.final")];
+  assert.equal(bs.length, 8);
+  const b04 = bs.find((b) => b.querySelector(".final-nombre").textContent === "Estudiante 04");
+  assert.equal(b04.querySelector(".final-num").textContent, "03", "N.º de lista: 01, 03, 04… y Pérez al final");
+  assert.equal(b04.querySelector(".final-cat").textContent, "Calificación del Tercer Bimestre: En proceso");
+  assert.equal(b04.querySelector(".final-texto").textContent, "Nota privada 9911: completar los trabajos pendientes.");
+  assert.ok(b04.querySelector(".clave-compacta"));
+  assert.ok(doc.querySelector("style").textContent.includes(".final {"), "estilos incorporados");
+  t.cerrar();
+});
+
+test("cierre completo: un curso sólo incluye sus estudiantes y registros; nada se escribe; el anonimizado sigue sin datos privados", async () => {
+  const escrituras = [];
+  const t = pantalla({ ...cursoCompleto(), escrituras });
+  const antes = Object.fromEntries([CLAVE.A, CLAVE.B, CIERRE].map((k) => [k, t.w.localStorage.getItem(k)]));
+  t.$("ccImprimir").click();
+  const desde = escrituras.length;
+  const { nombre, json, archivos } = await exportarCompleto(t, "curso y");
+  assert.match(nombre, /^cierre-completo-curso-y-\d{4}-\d{2}-\d{2}\.zip$/);
+  assert.deepEqual(json.alcance, { seleccion: "un curso", cursos: ["Curso Y"], estudiantes: 1 });
+  assert.deepEqual(json.fuentes.A.registros.map((f) => f.estudiante), ["Estudiante 07"]);
+  assert.deepEqual(json.fuentes.B.registros.map((f) => f.estudiante), ["Estudiante 07"]);
+  assert.deepEqual(json.vinculos_manuales, []);
+  assert.equal(archivos["evaluacion-a.tsv"].trimEnd().split("\n").length, 2);
+  assert.doesNotMatch(archivos["devoluciones.html"], /Estudiante 0[1-68]|Pérez/);
+  // Nada se escribe: ni A, ni B, ni las decisiones.
+  await exportarCompleto(t);
+  assert.deepEqual(escrituras.slice(desde), []);
+  for (const [k, v] of Object.entries(antes)) assert.equal(t.w.localStorage.getItem(k), v, k);
+  // El export anonimizado no cambió: sin nombres, notas ni respuestas.
+  const anon = await exportar(t);
+  assert.doesNotMatch(anon.texto, /Pérez|Estudiante 0|9911|"respuestas"|"vinculos?"|perez/);
+  t.cerrar();
+});
+
+test("papel: «Calificación del Tercer Bimestre», encuadre nuevo y sin columna «Cuenta»; las partes consideradas en la línea de resultado", async () => {
+  const t = pantalla(cursoCompleto());
+  t.$("ccImprimir").click();
+  const bs = [...t.$("impresionBloques").querySelectorAll("article.final")];
+  const { archivos, json } = await exportarCompleto(t);
+  const html = new JSDOM(archivos["devoluciones.html"]).window.document;
+  for (const [donde, bloques] of [["impresión", bs], ["devoluciones.html", [...html.querySelectorAll("article.final")]]]) {
+    assert.equal(bloques.length, 8, donde);
+    for (const b of bloques) {
+      assert.match(b.querySelector(".final-cat").textContent, /^Calificación del Tercer Bimestre: (En proceso|Suficiente|Avanzado)/, donde);
+      assert.equal(b.querySelector(".final-encuadre").textContent, "La calificación del tercer bimestre valora el proceso del período. Las Evaluaciones A y B son una de las evidencias consideradas.", donde);
+      assert.deepEqual([...b.querySelectorAll("thead th")].map((th) => th.textContent), ["Parte", "Evaluación A", "Evaluación B", "Mejor resultado"], `${donde}: sin «Cuenta»`);
+      assert.ok([...b.querySelectorAll("tbody tr, tfoot tr")].every((tr) => tr.children.length === 4), donde);
+      assert.doesNotMatch(b.textContent, /Categoría del período|Cuenta|✓/, donde);
+    }
+  }
+  // Las partes consideradas siguen en «Resultado considerado» (5: sin la Parte 4).
+  const b05 = bs.find((b) => b.querySelector(".final-nombre").textContent === "Estudiante 05");
+  assert.match(b05.textContent, /Resultado considerado: 18\/24 · 75 % \(partes 1, 2 y 3\)/);
+  assert.match(bs.find((b) => b.querySelector(".final-nombre").textContent === "Estudiante 01").textContent, /Resultado considerado: 22\/30 · 73,3 % \(partes 1, 2, 3 y 4\)/);
+  // Lo estructurado del export guarda el rótulo entregado; la decisión y los cálculos, iguales.
+  const e05 = json.estudiantes.find((e) => e.estudiante === "Estudiante 05");
+  assert.equal(e05.devolucion_entregada.categoria_del_periodo, "Calificación del Tercer Bimestre: Suficiente");
+  assert.deepEqual(e05.decision_docente.partes_elegidas, [T, T, T, F]);
+  assert.deepEqual(e05.sugerencia.resultado_considerado, { aciertos: 18, total: 24, porcentaje: 75, partes: [1, 2, 3] });
+  t.cerrar();
+});
+
+test("papel: sin textos técnicos ni rótulos internos, también con pareja ambigua", () => {
+  const a = [fila("A", "Estudiante 61", [6, 6, 6, 4]), fila("A", "Estudiante 62", [7, 7, 7, 5])];
+  const b = [fila("B", "Estudiante 61", [6, 6, 6, 4]), fila("B", "Estudiante 61", [1, 1, 1, 1]), fila("B", "Estudiante 62", [7, 7, 7, 5])];
+  const cierre = JSON.stringify({ estudiantes: { "curso x\testudiante 62": { modo: "manual", categoria: "Suficiente" } } });
+  const t = pantalla({ a, b, cierre });
+  for (const bl of bloques(t)) {
+    assert.doesNotMatch(bl.textContent, /ambiguo|emparejamiento|procesado|manual|override|sugerid|Provisorio|Revisar pareja|Lista|≠|automátic|sin confirmar|pendiente de decisión/i,
+      bl.querySelector(".final-nombre").textContent);
   }
   t.cerrar();
 });
@@ -1620,7 +1988,8 @@ test("final ≠ sugerida: la evidencia queda intacta, sin frases de respaldo ni 
   assert.equal(b.querySelector(".final-cat b").textContent, "En proceso");
   assert.equal(b.querySelectorAll("tbody tr").length, 4, "los resultados siguen");
   assert.match(b.querySelector(".final-contenidos").textContent, /Hardware y software 6\/6/);
-  assert.equal(b.querySelector(".final-orientacion").textContent, "—", "sin respaldo contradictorio");
+  assert.equal(b.querySelector(".final-orientacion"), null, "sin respaldo contradictorio ni sección vacía");
+  assert.ok(![...b.querySelectorAll("h3")].some((h) => h.textContent === "Para seguir trabajando"));
   t.cerrar();
   // P1: sugerida En proceso por la Parte 1; si el docente elige Suficiente, P1 no aparece como explicación.
   const p1 = { a: [fila("A", "Estudiante 42", [4, 8, 8, 6])], b: [fila("B", "Estudiante 42", [4, 8, 8, 6])] };
@@ -1679,7 +2048,7 @@ test("Cierre A+B: Sólo A y Sólo B se pueden consolidar a mano desde cualquiera
   assert.equal(quien(t), "Pérez, Juan");
   assert.equal(t.$("ccSugerida").textContent, "Avanzado");
   t.$("ccVolver").click();
-  assert.deepEqual(listaCC(t).map((x) => [x.nombre, x.A, x.B, x.solo]), [["Pérez, Juan (B: Juan Pérez)", "✓", "✓", ""]]);
+  assert.deepEqual(listaCC(t).map((x) => [x.num, x.nombre, x.A, x.B, x.solo]), [["01", "Pérez, Juan↔ B: Juan Pérez · vínculo manual", "✓", "✓", ""]]);
   assert.deepEqual(JSON.parse(t.w.localStorage.getItem(CIERRE)).vinculos, [{ A: "curso x\tperez, juan", B: "curso x\tjuan perez" }]);
   t.cerrar();
 });
