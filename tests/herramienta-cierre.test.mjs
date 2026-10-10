@@ -46,9 +46,9 @@ const almacen = (filas) => JSON.stringify({
 
 // Abre la herramienta x con los datos de A, B y decisiones dados; registra
 // cada escritura en localStorage.
-function abrir(x, { a = null, b = null, cierre = null, escrituras = [] } = {}) {
+function abrir(x, { a = null, b = null, cierre = null, escrituras = [], url = "http://localhost/" } = {}) {
   const dom = new JSDOM(HTML[x], {
-    url: "http://localhost/",
+    url,
     runScripts: "dangerously",
     pretendToBeVisual: true,
     beforeParse(w) {
@@ -1140,10 +1140,11 @@ test("impresión: un bloque por estudiante del curso (A y B), en orden, con todo
   // Sólo A (03), sólo B (04), parejas (01, 02, Pérez) y otro curso (06): cada uno una vez.
   assert.deepEqual(bs.map((b) => datosBloque(b).nombre), ["Estudiante 01", "Estudiante 02", "Estudiante 03", "Estudiante 04", "Pérez, Juan", "Estudiante 06"]);
   assert.match(bs[4].querySelector(".final-cab").textContent, /\(B: Juan Pérez\)/, "vínculo manual: los dos nombres");
+  // Sin override docente: la categoría efectiva es la de la evidencia.
   assert.deepEqual(datosBloque(bs[0]), { nombre: "Estudiante 01", modo: "procesado", cat: "Avanzado",
-    secciones: ["Resultados por parte", "Por contenidos (A y B juntos)", "Para seguir trabajando"] });
+    secciones: ["Resultados en las Evaluaciones A y B", "Por contenidos (A y B juntos)", "Para seguir trabajando"] });
   assert.deepEqual(datosBloque(bs[1]), { nombre: "Estudiante 02", modo: "manual", cat: "Suficiente",
-    secciones: ["Resultados por parte", "Por contenidos (A y B juntos)", "Para seguir trabajando", "Devolución"] });
+    secciones: ["Resultados en las Evaluaciones A y B", "Por contenidos (A y B juntos)", "Para seguir trabajando", "Nota docente"] });
   assert.equal(bs[1].querySelector(".final-texto").textContent, "Texto sintético de la devolución.\nSegunda línea.");
   // La clave, siempre al final de cada bloque.
   for (const b of bs) assert.equal(b.lastElementChild.className, "clave-compacta");
@@ -1197,11 +1198,13 @@ test("impresión: el mismo curso desde la herramienta A y desde la B", () => {
 });
 
 test("sin publicación: ninguna ruta nueva y nada de evaluaciones, claves ni herramientas en dist/", () => {
-  // Las únicas rutas locales son las dos herramientas, sólo en `astro dev`.
+  // Las únicas rutas locales son las dos herramientas y el Cierre A+B (la misma
+  // página en modo cierre), sólo en `astro dev`.
   const config = readFileSync(join(root, "astro.config.mjs"), "utf8");
   assert.match(config, /apply: "serve"/);
   assert.match(config, /\["a", "b"\]\.flatMap/);
-  assert.doesNotMatch(config, /clave|cierre|imprim/i);
+  assert.deepEqual([...config.matchAll(/"(\/herramientas\/[^"]*)"/g)].map((m) => m[1]), ["/herramientas/cierre-evaluaciones/", "/herramientas/evaluacion-a/", "/herramientas/evaluacion-a/"]);
+  assert.doesNotMatch(config, /clave|imprim/i);
   const paginas = [];
   const recorrer = (dir, salida) => {
     for (const e of readdirSync(dir, { withFileTypes: true })) {
@@ -1392,6 +1395,309 @@ test("export anonimizado: un curso o todos; el mismo contenido desde A y desde B
   const sinId = (d) => d.estudiantes.map(({ id, ...resto }) => JSON.stringify(resto)).sort();
   assert.deepEqual(sinId(desdeA), sinId(desdeB));
   assert.deepEqual(desdeA.alcance, desdeB.alcance);
+});
+
+// ---------- 5 septies. Pantalla «Cierre A+B» ----------
+const URL_CIERRE = "http://localhost/herramientas/cierre-evaluaciones/";
+const pantalla = (opciones) => abrir("A", { ...opciones, url: URL_CIERRE });
+const listaCC = (t) => [...t.$("cierreCurso").querySelectorAll(".cc-lista tbody tr")].map((tr) => {
+  const td = [...tr.children];
+  return { nombre: td[0].textContent, A: td[1].textContent, B: td[2].textContent, cat: td[3].textContent, estado: td[4].querySelector(".cc-estado").textContent,
+    solo: td[4].querySelector(".cc-solo")?.textContent ?? "", propuesta: td[3].classList.contains("propuesta") };
+});
+const revisar = (t, nombre) => {
+  const tr = [...t.$("cierreCurso").querySelectorAll(".cc-lista tbody tr")].find((r) => r.children[0].textContent.startsWith(nombre));
+  tr.querySelector("[data-revisar]").click();
+};
+const quien = (t) => t.$("ccQuien")?.textContent ?? null;
+// Curso X: decisiones variadas; Curso Y: uno pendiente (no debe alcanzarse desde X).
+function cursoCierre() {
+  const a = [
+    fila("A", "Estudiante 01", [6, 6, 6, 4]),
+    fila("A", "Estudiante 02", [7, 7, 7, 5]),
+    fila("A", "Estudiante 03", [7, 6, 5, 5]),
+    fila("A", "Estudiante 04", [6, 6, 6, 4], { curso: "Curso Z" }),
+    fila("A", "Estudiante 05", [6, 5, 5, 4]),
+    fila("A", "Estudiante 06", [5, 5, 5, 4]),
+    fila("A", "Estudiante 08", [6, 6, 6, 4], { curso: "Curso Y" }),
+  ];
+  const b = [
+    fila("B", "Estudiante 01", [6, 6, 6, 4]),
+    fila("B", "Estudiante 02", [7, 7, 7, 5]),
+    fila("B", "Estudiante 03", [7, 6, 5, 5], { cambios: { 8: "?" } }),
+    fila("B", "Estudiante 04", [6, 6, 6, 4]),
+    fila("B", "Estudiante 07", [6, 6, 4, 4]),
+  ];
+  const cierre = JSON.stringify({ estudiantes: { "curso x\testudiante 02": { modo: "procesado", partes: [T, T, T, T] } } });
+  return { a, b, cierre };
+}
+
+test("Cierre A+B: URL propia, título neutral, sólo la pantalla de cierre y enlaces a A y B", () => {
+  const t = pantalla(cursoCierre());
+  assert.equal(t.d.title, "Cierre A+B · Sistemas Informáticos");
+  assert.equal(t.d.querySelector("main.pagina").hidden, true, "sin carga ni corrección");
+  assert.equal(t.$("cierreCurso").hidden, false);
+  assert.doesNotMatch(t.$("cierreCurso").querySelector(".cc-cab").textContent, /Corrección/);
+  assert.deepEqual([...t.$("cierreCurso").querySelectorAll(".cc-cab nav a")].map((a) => [a.textContent, a.getAttribute("href")]),
+    [["Evaluación A", "/herramientas/evaluacion-a/"], ["Evaluación B", "/herramientas/evaluacion-b/"]]);
+  t.cerrar();
+  // Desde las herramientas, el enlace; sin servidor, «#cierre» abre el mismo modo.
+  for (const x of ["A", "B"]) {
+    const h = abrir(x, cursoCierre());
+    assert.equal(h.$("irCierre").textContent, "Ir a Cierre A+B →");
+    assert.equal(h.$("irCierre").getAttribute("href"), "/herramientas/cierre-evaluaciones/");
+    assert.equal(h.$("cierreCurso").hidden, true);
+    h.cerrar();
+  }
+  // (jsdom no da localStorage a un origen file://: sin datos alcanza para ver el modo y los enlaces.)
+  const local = abrir("B", { url: "file:///C:/aula/evaluacion-b/herramienta/index.html#cierre" });
+  assert.equal(local.$("cierreCurso").hidden, false);
+  assert.equal(local.d.title, "Cierre A+B · Sistemas Informáticos");
+  assert.equal(local.$("cierreCurso").querySelector(".cc-cab nav a").getAttribute("href"), "../../evaluacion-a/herramienta/index.html");
+  local.cerrar();
+});
+
+const finalCC = (t, cat) => t.$("cierreCurso").querySelector(`[data-cc-final="${cat}"]`).click();
+const decisionDe = (t, clave) => JSON.parse(t.w.localStorage.getItem(CIERRE) ?? "{}").estudiantes?.[clave];
+const pulsada = (t) => t.$("cierreCurso").querySelector('[data-cc-final][aria-pressed="true"]')?.dataset.ccFinal ?? null;
+const marca = (t, n) => [...t.$("cierreCurso").querySelectorAll(".cc-lista tbody tr")].find((r) => r.children[0].textContent.startsWith(n)).querySelector(".cc-difiere")?.textContent ?? "";
+
+test("Cierre A+B: un curso recién abierto ya tiene sus categorías (la sugerida es la efectiva) y sólo se señala lo que pide atención", () => {
+  const escrituras = [];
+  const t = pantalla({ ...cursoCierre(), escrituras });
+  const tabla = t.$("cierreCurso").querySelector(".cc-lista");
+  assert.deepEqual([...tabla.querySelectorAll("thead th")].map((th) => th.textContent), ["Estudiante", "A", "B", "Categoría", "Estado", ""]);
+  assert.doesNotMatch(tabla.textContent, /%|\d+\/\d+|sugerida|Requiere decisión/, "sin puntajes ni «pendientes» de confirmar");
+  const l = listaCC(t);
+  const por = (n) => l.find((x) => x.nombre.startsWith(n));
+  assert.deepEqual(por("Estudiante 01"), { nombre: "Estudiante 01", A: "✓", B: "✓", cat: "Suficiente", estado: "Lista", solo: "", propuesta: false });
+  assert.deepEqual([por("Estudiante 02").cat, por("Estudiante 02").estado], ["Avanzado", "Lista"]);
+  // Lo que de verdad pide atención sigue a la vista.
+  assert.equal(por("Estudiante 03").estado, "Provisorio");
+  assert.equal(por("Estudiante 04").estado, "Revisar pareja");
+  assert.equal(por("Estudiante 04").A, "?");
+  assert.deepEqual([por("Estudiante 05").estado, por("Estudiante 05").solo, por("Estudiante 05").cat], ["Lista", "Sólo A", "Suficiente"]);
+  assert.deepEqual([por("Estudiante 07").solo, por("Estudiante 07").estado], ["Sólo B", "Lista"]);
+  assert.match(t.$("ccResumen").textContent, /^Listas 6 de 9 · Requieren atención 3 · Modificadas por el docente 0$/);
+  // Mirar, revisar y recorrer no guarda nada.
+  revisar(t, "Estudiante 01");
+  t.$("ccSiguiente").click();
+  t.$("ccVolver").click();
+  assert.deepEqual(escrituras.filter((k) => k === CIERRE), []);
+  t.$("ccCurso").value = "curso y";
+  t.$("ccCurso").dispatchEvent(new t.w.Event("change", { bubbles: true }));
+  assert.deepEqual(listaCC(t).map((x) => x.nombre), ["Estudiante 08"]);
+  t.cerrar();
+});
+
+test("Cierre A+B: revisión con la sugerida marcada como efectiva, sin confirmar nada; lo demás plegado", () => {
+  const escrituras = [];
+  const t = pantalla({ ...cursoCierre(), escrituras });
+  revisar(t, "Estudiante 01");
+  const dec = t.$("cierreCurso").querySelector(".cc-decision");
+  assert.match(dec.textContent, /Categoría sugerida por la evidencia:Suficiente/);
+  assert.match(t.$("ccResultado").textContent, /^Resultado integrado: 22\/30 · 73,3 %/);
+  assert.match(dec.textContent, /Categoría del período: En proceso/);
+  assert.deepEqual([...dec.querySelectorAll("[data-cc-final]")].map((b) => b.dataset.ccFinal), ["En proceso", "Suficiente", "Avanzado"]);
+  assert.equal(pulsada(t), "Suficiente", "la sugerida, marcada como valor efectivo");
+  assert.equal(t.$("ccConfirmar"), null, "no hace falta confirmar");
+  assert.equal(t.$("ccVolverSugerencia"), null);
+  assert.equal(t.$("ccNotaDetalle").open, false);
+  assert.doesNotMatch(dec.textContent, /Procesado|Manual|Hardware y software|Emparejamiento/);
+  const pliegues = [...t.$("cierreCurso").querySelectorAll(".cc-pliegues > details")];
+  assert.deepEqual(pliegues.map((d) => d.querySelector("summary").textContent),
+    ["Detalle por parte: A, B y mejor resultado", "Contenidos y orientación", "Devoluciones de cada intento", "Información técnica"]);
+  assert.ok(pliegues.every((d) => !d.open));
+  const id = (x) => JSON.parse(t.w.localStorage.getItem(CLAVE[x])).filas[0].id;
+  assert.deepEqual([...pliegues[2].querySelectorAll("a")].map((a) => a.getAttribute("href")), [`/herramientas/evaluacion-a/#ver=${id("A")}`, `/herramientas/evaluacion-b/#ver=${id("B")}`]);
+  assert.deepEqual(escrituras.filter((k) => k === CIERRE), []);
+  // Las partes que cuentan sí son una decisión: se guardan y la sugerencia se recalcula.
+  t.$("cierreCurso").querySelector('[data-cc-parte="3"]').click();
+  assert.match(t.$("ccResultado").textContent, /18\/24/);
+  assert.deepEqual(decisionDe(t, "curso x\testudiante 01"), { modo: "procesado", partes: [T, T, T, F] });
+  t.cerrar();
+});
+
+test("Cierre A+B: P1 sin cumplir nunca sugiere Suficiente/Avanzado (21/24 con P1 8/16 → En proceso)", () => {
+  const t = pantalla({ a: [fila("A", "Estudiante 09", [5, 8, 8, 5])], b: [fila("B", "Estudiante 09", [3, 7, 7, 5])] });
+  revisar(t, "Estudiante 09");
+  t.$("cierreCurso").querySelector('[data-cc-parte="3"]').click();
+  assert.match(t.$("ccResultado").textContent, /21\/24 · 87,5 %/);
+  assert.equal(t.$("ccSugerida").textContent, "En proceso");
+  assert.equal(pulsada(t), "En proceso");
+  assert.match(t.$("ccP1").textContent, /Parte 1 · Reconocer: 8\/16 \(A 5\/8 \+ B 3\/8\) · no alcanza el mínimo de 9\/16: la sugerencia no puede ser Suficiente ni Avanzado/);
+  t.$("ccVolver").click();
+  assert.equal(listaCC(t)[0].cat, "En proceso");
+  t.cerrar();
+});
+
+test("Cierre A+B: overrides del docente (S→EP, S→A, A→S, EP→S); volver a la sugerencia los quita", () => {
+  // Sugerencias: 22/30 Suficiente, 26/30 Avanzado, 15/30 En proceso (mismos puntajes en A y B).
+  const puntajes = [["Estudiante 31", [6, 6, 6, 4]], ["Estudiante 32", [6, 6, 6, 4]], ["Estudiante 33", [7, 7, 7, 5]],
+    ["Estudiante 34", [4, 4, 4, 3]], ["Estudiante 35", [6, 6, 6, 4]]];
+  const t = pantalla({ a: puntajes.map(([n, p]) => fila("A", n, p)), b: puntajes.map(([n, p]) => fila("B", n, p)) });
+  const casos = [["Estudiante 31", "Suficiente", "En proceso"], ["Estudiante 32", "Suficiente", "Avanzado"],
+    ["Estudiante 33", "Avanzado", "Suficiente"], ["Estudiante 34", "En proceso", "Suficiente"]];
+  for (const [nombre, sugerida, final] of casos) {
+    t.$("ccVolver")?.click();
+    revisar(t, nombre);
+    assert.equal(t.$("ccSugerida").textContent, sugerida, nombre);
+    finalCC(t, final);
+    assert.equal(pulsada(t), final);
+    assert.deepEqual(decisionDe(t, `curso x\t${nombre.toLowerCase()}`), { modo: "manual", categoria: final }, nombre);
+    assert.match(t.$("ccOverride").textContent, new RegExp(`Elegida por el docente; la sugerida es ${sugerida}`));
+    assert.ok(t.$("ccVolverSugerencia"));
+  }
+  t.$("ccVolver").click();
+  assert.deepEqual(listaCC(t).map((x) => [x.nombre, x.cat, x.estado]),
+    [...casos.map(([n, , f]) => [n, f, "Lista"]), ["Estudiante 35", "Suficiente", "Lista"]]);
+  assert.deepEqual(puntajes.map(([n]) => marca(t, n)), ["≠ sugerida", "≠ sugerida", "≠ sugerida", "≠ sugerida", ""]);
+  assert.match(t.$("ccResumen").textContent, /Modificadas por el docente 4$/);
+  // Elegir la sugerida (35) no guarda nada.
+  revisar(t, "Estudiante 35");
+  finalCC(t, "Suficiente");
+  assert.equal(decisionDe(t, "curso x\testudiante 35"), undefined);
+  // «Volver a la sugerencia» elimina el override.
+  t.$("ccVolver").click();
+  revisar(t, "Estudiante 31");
+  t.$("ccVolverSugerencia").click();
+  assert.equal(pulsada(t), "Suficiente");
+  assert.equal(decisionDe(t, "curso x\testudiante 31"), undefined, "sin decisión guardada");
+  assert.equal(t.$("ccVolverSugerencia"), null);
+  // Elegir la sugerida sobre un override también lo quita, y conserva otros datos humanos (partes, nota).
+  t.$("ccVolver").click();
+  revisar(t, "Estudiante 32");
+  t.$("cierreCurso").querySelector('[data-cc-parte="3"]').click();
+  finalCC(t, t.$("ccSugerida").textContent);
+  assert.deepEqual(decisionDe(t, "curso x\testudiante 32"), { modo: "procesado", partes: [T, T, T, F] });
+  t.cerrar();
+});
+
+test("Cierre A+B: los casos que requieren atención siguen señalados y bloquean el override", () => {
+  const t = pantalla(cursoCierre());
+  revisar(t, "Estudiante 03");
+  assert.equal(t.$("ccEstado").textContent, "Provisorio");
+  assert.match(t.$("cierreCurso").querySelector(".cc-decision").textContent, /Hay respuestas a revisar que podrían cambiar la sugerencia/);
+  t.$("ccVolver").click();
+  const filaB04 = [...t.$("cierreCurso").querySelectorAll(".cc-lista tbody tr")].find((r) => r.children[0].textContent.startsWith("Estudiante 04") && r.children[2].textContent === "✓");
+  filaB04.querySelector("[data-revisar]").click();
+  assert.equal(t.$("ccEstado").textContent, "Revisar pareja");
+  assert.ok([...t.$("cierreCurso").querySelectorAll("[data-cc-final]")].every((b) => b.disabled));
+  t.cerrar();
+});
+
+test("impresión del curso completo sin confirmar nada: la categoría efectiva (override o sugerida), sin decir de dónde sale", () => {
+  const t = pantalla(cursoCierre());
+  revisar(t, "Estudiante 01");
+  finalCC(t, "En proceso");
+  t.$("ccVolver").click();
+  const bs = bloques(t);
+  assert.equal(bs.length, 9);
+  const de = (n, curso = "Curso X") => bs.find((b) => b.querySelector(".final-nombre").textContent === n && b.querySelector(".final-cab").textContent.includes(curso));
+  assert.equal(de("Estudiante 01").querySelector(".final-cat b").textContent, "En proceso", "override");
+  assert.equal(de("Estudiante 05").querySelector(".final-cat b").textContent, "Suficiente", "sugerida, sin entrar al estudiante");
+  assert.equal(de("Estudiante 02").querySelector(".final-cat b").textContent, "Avanzado");
+  assert.match(de("Estudiante 05").textContent, /Resultado considerado: 20\/30/);
+  for (const b of bs) {
+    assert.match(b.querySelector(".final-cat").textContent, /^Categoría del período: /);
+    assert.equal(b.querySelector(".final-encuadre").textContent, "La categoría valora el proceso del período. Las Evaluaciones A y B son una de las evidencias consideradas.");
+    assert.equal(b.querySelector("h3").textContent, "Resultados en las Evaluaciones A y B");
+    assert.doesNotMatch(b.textContent, /sugerid|automátic|sin confirmar|≠|pendiente de decisión/i);
+  }
+  t.cerrar();
+});
+
+test("final ≠ sugerida: la evidencia queda intacta, sin frases de respaldo ni Parte 1 como explicación", () => {
+  const alto = { a: [fila("A", "Estudiante 41", [8, 8, 7, 6])], b: [fila("B", "Estudiante 41", [7, 8, 8, 6])] };
+  let t = pantalla(alto);
+  let [b] = bloques(t);
+  assert.match(b.querySelector(".final-orientacion").textContent, /Sin contenidos que haga falta reforzar: seguir así/, "con la sugerida, el respaldo sigue");
+  t.$("btnCerrarImpresion").click();
+  revisar(t, "Estudiante 41");
+  assert.equal(t.$("ccSugerida").textContent, "Avanzado");
+  finalCC(t, "En proceso");
+  [b] = bloques(t);
+  assert.equal(b.querySelector(".final-cat b").textContent, "En proceso");
+  assert.equal(b.querySelectorAll("tbody tr").length, 4, "los resultados siguen");
+  assert.match(b.querySelector(".final-contenidos").textContent, /Hardware y software 6\/6/);
+  assert.equal(b.querySelector(".final-orientacion").textContent, "—", "sin respaldo contradictorio");
+  t.cerrar();
+  // P1: sugerida En proceso por la Parte 1; si el docente elige Suficiente, P1 no aparece como explicación.
+  const p1 = { a: [fila("A", "Estudiante 42", [4, 8, 8, 6])], b: [fila("B", "Estudiante 42", [4, 8, 8, 6])] };
+  t = pantalla(p1);
+  [b] = bloques(t);
+  assert.match(b.textContent, /requisito de la Parte 1/, "con la sugerida, P1 es la causa y se dice");
+  t.$("btnCerrarImpresion").click();
+  revisar(t, "Estudiante 42");
+  finalCC(t, "Suficiente");
+  [b] = bloques(t);
+  assert.doesNotMatch(b.textContent, /requisito de la Parte 1|afianzar la Parte 1/);
+  assert.match(b.querySelector("tbody tr").textContent, /^P1 · Reconocer4\/8/, "el resultado de P1 sigue a la vista");
+  t.cerrar();
+});
+
+test("nota docente: opcional; se abre con una guía si se cambia la categoría; la guía no se guarda; va a la impresión y no al export", async () => {
+  const escrituras = [];
+  const t = pantalla({ ...cursoCierre(), escrituras });
+  revisar(t, "Estudiante 01");
+  assert.equal(t.$("ccNota").getAttribute("placeholder"), null);
+  finalCC(t, "En proceso");
+  assert.equal(t.$("ccNotaDetalle").open, true);
+  assert.equal(t.$("ccNota").getAttribute("placeholder"), "¿En qué otras evidencias del período se apoya la categoría? ¿Qué se valora del proceso y qué conviene hacer ahora?");
+  assert.equal(t.$("ccNota").value, "");
+  assert.deepEqual(decisionDe(t, "curso x\testudiante 01"), { modo: "manual", categoria: "En proceso" }, "sin nota guardada");
+  // Nota en un estudiante con la sugerida (opcional también ahí).
+  t.$("ccVolver").click();
+  revisar(t, "Estudiante 06");
+  t.$("ccNotaDetalle").open = true;
+  const nota = t.$("ccNota");
+  nota.value = "Nota sintética 5521: buen trabajo en clase.";
+  nota.dispatchEvent(new t.w.Event("input", { bubbles: true }));
+  assert.equal(t.$("ccEstado").textContent, "Lista");
+  assert.equal(decisionDe(t, "curso x\testudiante 06").categoria, undefined, "la nota no cambia la categoría");
+  t.$("ccVolver").click();
+  const bs = bloques(t);
+  const de = (n) => bs.find((b) => b.querySelector(".final-nombre").textContent === n);
+  assert.equal(de("Estudiante 06").querySelector(".final-texto").textContent, "Nota sintética 5521: buen trabajo en clase.");
+  assert.ok([...de("Estudiante 06").querySelectorAll("h3")].some((h) => h.textContent === "Nota docente"));
+  assert.equal(de("Estudiante 01").querySelector(".final-texto"), null, "vacía: no aparece");
+  const { texto, datos } = await exportar(t);
+  assert.ok(!texto.includes("5521") && !texto.includes("Nota sintética"));
+  assert.doesNotMatch(texto, /≠|sugerid/i);
+  assert.ok(datos.estudiantes.every((e) => !("sugerida" in e.cierre)));
+  t.cerrar();
+});
+
+test("Cierre A+B: Sólo A y Sólo B se pueden consolidar a mano desde cualquiera de los dos", () => {
+  const t = pantalla({ a: [fila("A", "Pérez, Juan", [4, 8, 8, 6])], b: [fila("B", "Juan Pérez", [5, 2, 3, 2])] });
+  assert.deepEqual(listaCC(t).map((x) => [x.nombre, x.solo]), [["Juan Pérez", "Sólo B"], ["Pérez, Juan", "Sólo A"]]);
+  revisar(t, "Juan Pérez");
+  const sel = t.$("ccCandidato");
+  assert.deepEqual([...sel.options].slice(1).map((o) => o.textContent), ["Pérez, Juan"]);
+  sel.value = sel.options[1].value;
+  t.$("ccVincular").click();
+  assert.equal(quien(t), "Pérez, Juan");
+  assert.equal(t.$("ccSugerida").textContent, "Avanzado");
+  t.$("ccVolver").click();
+  assert.deepEqual(listaCC(t).map((x) => [x.nombre, x.A, x.B, x.solo]), [["Pérez, Juan (B: Juan Pérez)", "✓", "✓", ""]]);
+  assert.deepEqual(JSON.parse(t.w.localStorage.getItem(CIERRE)).vinculos, [{ A: "curso x\tperez, juan", B: "curso x\tjuan perez" }]);
+  t.cerrar();
+});
+
+test("principio de Aula documentado: «La herramienta propone. El docente decide.»", () => {
+  for (const f of ["README.md", "AGENTS.md"]) {
+    const texto = readFileSync(join(root, f), "utf8");
+    assert.match(texto, /La herramienta propone\. El docente decide\./, f);
+    assert.match(texto, /no reemplazan el criterio pedagógico del docente\. La decisión final debe permanecer explícitamente bajo control humano\./, f);
+  }
+});
+
+test("herramientas: «#ver=<id>» abre esa evaluación guardada en Ver", () => {
+  const a = [fila("A", "Estudiante 01", [6, 6, 6, 4]), fila("A", "Estudiante 02", [7, 7, 7, 5])];
+  const t = abrir("A", { a, url: `http://localhost/herramientas/evaluacion-a/#ver=${a[1].id}` });
+  assert.equal(t.$("barraVer").hidden, false);
+  assert.match(t.$("verNombre").textContent, /^Estudiante 02/);
+  t.cerrar();
 });
 
 // ---------- 6. Nunca escribe A ni B ----------

@@ -289,6 +289,42 @@ temporal de la duplicación, no una regla de diseño.
 
 ## Cierre A+B
 
+**Pantalla «Cierre A+B»** (la entrada para cerrar un curso):
+`http://localhost:4321/herramientas/cierre-evaluaciones/` con `npm run dev`, o
+`index.html#cierre` abriendo el archivo. Las herramientas la enlazan con «Ir a
+Cierre A+B →». Es esta misma página en modo cierre: muestra sólo el cierre, con
+los mismos cálculos y decisiones descritos abajo.
+
+La herramienta propone y el docente decide: la evidencia **sugiere** una
+categoría con las reglas de abajo (incluida la Parte 1), y esa sugerencia es la
+**categoría efectiva** mientras el docente no elija otra. Aceptarla no requiere
+ningún paso ni guarda nada: el docente interviene sólo en las excepciones.
+
+- **Lista del curso** (filtro por curso): estudiante, A y B presentes (✓, —, o
+  «?» si hay un problema de pareja), la categoría efectiva y un estado: **Lista**
+  o lo que pide atención: **Provisorio** (respuestas a revisar que podrían
+  cambiar la sugerencia), **Revisar pareja**, **Sin evidencia** o **Sin
+  categoría** (ninguna parte elegida). Con un solo intento, «Sólo A» o «Sólo B».
+  Si el docente eligió una categoría distinta de la sugerida, una marca discreta
+  «≠ sugerida», sólo para el docente (no se imprime ni se exporta). Imprimir y
+  exportar quedan como acción secundaria: el curso se puede imprimir sin entrar
+  a ningún estudiante.
+- **Revisar** un estudiante: «Categoría sugerida por la evidencia», resultado
+  integrado, las partes que cuentan (cambiarlas se guarda y recalcula la
+  sugerencia), la alerta de la Parte 1 y las que impiden cambiar la categoría.
+  En **Categoría del período** aparece marcada la efectiva; elegir otra guarda
+  el override (como cierre manual) y **Volver a la sugerencia** lo quita (elegir
+  la sugerida hace lo mismo). Al cambiar la categoría, «Agregar nota docente para
+  la devolución…» se abre sola con una guía («¿En qué otras evidencias del
+  período se apoya la categoría? …») que no se guarda; la nota es siempre
+  opcional, se imprime («Nota docente») y no va al export. «← Anterior» y
+  «Siguiente →» recorren la lista. Plegados: detalle A/B por parte, contenidos y
+  orientación, enlaces a la devolución de cada intento en su herramienta
+  (`#ver=<id>` abre esa evaluación en Ver) e información técnica.
+- Un estudiante con «Sólo A» o «Sólo B» puede consolidarse ahí mismo con un
+  registro de la otra evaluación del mismo curso.
+
+
 Las herramientas de A y de B (abiertas en el mismo origen: las dos en
 `localhost`, o las dos como archivo) leen, en sólo lectura, los registros
 guardados de la otra para el cierre del bimestre. Cada una muestra el cierre
@@ -438,13 +474,18 @@ filtro por curso. «Imprimir» imprime sólo esas devoluciones, para hoja Oficio
 páginas (`break-inside: avoid`) y lleva, en este orden:
 
 1. estudiante (si un vínculo manual une nombres distintos, los dos), curso y
-   categoría de cierre (con «provisoria» si corresponde);
-2. resultado considerado (procesado);
-3. resultados por parte: A, B y el mejor, con porcentajes, y qué partes
-   cuentan (procesado);
+   «Categoría del período»: la efectiva (la elegida por el docente o, si no, la
+   de la evidencia, con «provisoria» si corresponde), sin decir de dónde sale. Debajo, el mismo encuadre para todos: «La categoría valora el
+   proceso del período. Las Evaluaciones A y B son una de las evidencias
+   consideradas.» (A+B describe una evidencia; la categoría valora el período);
+2. resultado considerado (si la categoría es la de la evidencia);
+3. «Resultados en las Evaluaciones A y B»: A, B y el mejor, con porcentajes, y
+   qué partes cuentan (si la categoría es la de la evidencia);
 4. por contenidos, A y B juntos, con las dificultades marcadas;
-5. para seguir trabajando (la misma orientación del panel);
-6. la devolución escrita por el docente (manual);
+5. para seguir trabajando: la orientación por contenidos respaldada por A+B. Si
+   la categoría final difiere de la sugerida, no se agregan frases generales de
+   respaldo ni la Parte 1 como explicación: eso lo dice la nota;
+6. la nota docente, si se escribió;
 7. la **clave de corrección** de A y de B, una línea por evaluación separada
    por partes (`A | P1 1B 2A … 8C | P2 9D … | P3 17B 18B/D … | P4 … 30A`), para que
    el estudiante se autocorrija con su hoja. Sale de la clave de cada

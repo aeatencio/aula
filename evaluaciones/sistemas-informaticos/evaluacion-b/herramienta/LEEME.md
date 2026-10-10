@@ -67,6 +67,12 @@ quedan señalados.
 
 ## Cierre A+B
 
+Para cerrar un curso, la pantalla «Cierre A+B»
+(`/herramientas/cierre-evaluaciones/` con `npm run dev`, o «Ir a Cierre A+B →»)
+lista a cada estudiante con su categoría (la sugerida por la evidencia, salvo que
+el docente elija otra) y su estado, y permite intervenir sólo en las excepciones; ver el [LEEME de la A](../../evaluacion-a/herramienta/LEEME.md#cierre-ab).
+
+
 En **Ver**, el panel «Cierre A+B» muestra por parte el resultado en A y en B, la
 mejor evidencia y qué partes cuentan para el cierre (o el modo manual, con
 categoría y devolución del docente), la evidencia por contenidos de A y B

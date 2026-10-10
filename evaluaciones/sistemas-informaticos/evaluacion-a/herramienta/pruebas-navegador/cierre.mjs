@@ -371,6 +371,82 @@ verificar(NOMBRES.every((n) => !sinAcentos(ex1.texto + ex2.texto).includes(sinAc
 verificar(d2.estudiantes.every((e) => /^Curso [XY] · \d{2}$/.test(e.id)), `ids anónimos → ${d2.estudiantes.map((e) => e.id).join(", ")}`);
 verificar((await almacenes()) === antesExport, "A, B y decisiones idénticos antes y después de exportar");
 
+// Pantalla «Cierre A+B»: lista austera, revisión, P1, Confirmar → siguiente, Manual.
+await cdp("Emulation.setDeviceMetricsOverride", { width: 1280, height: 1000, deviceScaleFactor: 1, mobile: false });
+const urlCierre = /^https?:/.test(urlA) ? urlA.replace(/evaluacion-a\/.*$/, "cierre-evaluaciones/") : `${urlA.split("#")[0]}#cierre`;
+const A6 = almacen([fila("A", "Estudiante 21", [6, 6, 6, 4]), fila("A", "Estudiante 22", [7, 7, 7, 5]), fila("A", "Estudiante 23", [5, 8, 8, 5]),
+  fila("A", "Estudiante 24", [6, 5, 5, 4])]);
+const B6 = almacen([fila("B", "Estudiante 21", [6, 6, 6, 4]), fila("B", "Estudiante 22", [7, 7, 7, 5]), fila("B", "Estudiante 23", [3, 7, 7, 5]),
+  fila("B", "Estudiante 25", [6, 6, 4, 4])]);
+await evaluar(`localStorage.clear(); localStorage.setItem("aula-evaluacion-a-v1", ${JSON.stringify(A6)}); localStorage.setItem("aula-evaluacion-b-v1", ${JSON.stringify(B6)}); localStorage.setItem("aula-evaluacion-cierre-v1", ${JSON.stringify(JSON.stringify({ estudiantes: { "curso x\testudiante 22": { modo: "procesado", partes: [true, true, true, true] } } }))})`);
+await ir(urlCierre);
+const lista6 = () => evaluar(`[...document.querySelectorAll(".cc-lista tbody tr")].map((tr) => [...tr.children].slice(0, 5).map((td) => td.textContent).join(" | "))`);
+let l6 = await lista6();
+verificar(await evaluar("document.title") === "Cierre A+B · Sistemas Informáticos" && await evaluar('document.querySelector("main.pagina").hidden'), `pantalla Cierre A+B en ${urlCierre}`);
+verificar(l6.join(" / ") === "Estudiante 21 | ✓ | ✓ | Suficiente | Lista / Estudiante 22 | ✓ | ✓ | Avanzado | Lista / " +
+  "Estudiante 23 | ✓ | ✓ | En proceso | Lista / Estudiante 24 | ✓ | — | Suficiente | ListaSólo A / Estudiante 25 | — | ✓ | Suficiente | ListaSólo B",
+  `curso recién abierto: la sugerida ya es la categoría → ${l6.join(" / ")}`);
+await captura("cierre-ab-lista.png");
+// Imprimir el curso entero sin entrar a ningún estudiante.
+const papelDe = () => evaluar(`(() => { const bs = [...document.querySelectorAll("#impresionBloques article.final")];
+  return { cats: bs.map((b) => b.querySelector(".final-nombre").textContent + ":" + b.querySelector(".final-cat b").textContent).join(" "),
+    limpio: bs.every((b) => /^Categoría del período: /.test(b.querySelector(".final-cat").textContent) && !/sugerid|automátic|sin confirmar|≠/i.test(b.textContent)),
+    encuadre: bs.every((b) => b.querySelector(".final-encuadre")?.textContent === "La categoría valora el proceso del período. Las Evaluaciones A y B son una de las evidencias consideradas."),
+    nota: bs.find((b) => b.querySelector(".final-nombre").textContent === "Estudiante 23")?.querySelector(".final-texto")?.textContent ?? null }; })()`);
+await clic("#ccImprimir");
+let papel = await papelDe();
+verificar(papel.cats === "Estudiante 21:Suficiente Estudiante 22:Avanzado Estudiante 23:En proceso Estudiante 24:Suficiente Estudiante 25:Suficiente" && papel.limpio && papel.encuadre,
+  `impresión sin confirmar nada → ${papel.cats}`);
+verificar(await evaluar('localStorage.getItem("aula-evaluacion-cierre-v1")') === JSON.stringify({ estudiantes: { "curso x\testudiante 22": { modo: "procesado", partes: [true, true, true, true] } } }),
+  "abrir, recorrer e imprimir no guardan ninguna decisión");
+await clic("#btnCerrarImpresion");
+// Excepciones: el docente cambia la categoría donde corresponde.
+await clic('.cc-lista tbody tr:nth-child(3) [data-revisar]');
+const rev = () => evaluar(`({ quien: document.getElementById("ccQuien")?.textContent, sug: document.getElementById("ccSugerida")?.textContent,
+  res: document.getElementById("ccResultado")?.textContent, p1: document.getElementById("ccP1")?.textContent,
+  efectiva: document.querySelector('[data-cc-final][aria-pressed="true"]')?.dataset.ccFinal ?? null,
+  volver: !!document.getElementById("ccVolverSugerencia"),
+  nota: { abierta: document.getElementById("ccNotaDetalle")?.open, guia: document.getElementById("ccNota")?.placeholder ?? "", texto: document.getElementById("ccNota")?.value },
+  plegado: [...document.querySelectorAll(".cc-pliegues > details")].every((d) => !d.open && !d.querySelector("table, .cierre-contenidos, p")?.checkVisibility()) })`);
+let r6 = await rev();
+verificar(r6.quien === "Estudiante 23" && r6.sug === "En proceso" && r6.efectiva === "En proceso" && /Resultado integrado: 26\/30/.test(r6.res) &&
+  /8\/16 \(A 5\/8 \+ B 3\/8\) · no alcanza el mínimo de 9\/16/.test(r6.p1 ?? "") && r6.plegado && !r6.volver, "sugerida En proceso por P1 (26/30), marcada como efectiva, sin confirmar nada");
+await captura("cierre-ab-revision.png");
+await clic('[data-cc-final="Suficiente"]');
+r6 = await rev();
+verificar(r6.efectiva === "Suficiente" && r6.volver && r6.nota.abierta && /^¿En qué otras evidencias del período/.test(r6.nota.guia) && r6.nota.texto === "",
+  "override EP→S: guardado, con «Volver a la sugerencia» y la nota abierta con guía y vacía");
+await clic("#ccNota");
+await cdp("Input.insertText", { text: "Nota sintética 8812 para la devolución." });
+await espera(100);
+await captura("cierre-ab-decision.png");
+await clic("#ccSiguiente");
+await clic('[data-cc-final="Avanzado"]');
+r6 = await rev();
+verificar(r6.quien === "Estudiante 24" && r6.efectiva === "Avanzado", "override S→A");
+await clic("#ccVolver");
+await clic('.cc-lista tbody tr:nth-child(1) [data-revisar]');
+await clic('[data-cc-final="En proceso"]');
+await clic("#ccVolverSugerencia");
+r6 = await rev();
+verificar(r6.quien === "Estudiante 21" && r6.efectiva === "Suficiente" && !r6.volver, "«Volver a la sugerencia» quita el override");
+await clic("#ccVolver");
+l6 = await lista6();
+const marcas = await evaluar(`[...document.querySelectorAll(".cc-lista tbody tr")].map((tr) => tr.querySelector(".cc-difiere") ? "≠" : "=").join("")`);
+verificar(l6.map((x) => x.split(" | ")[3]).join(",") === "Suficiente,Avanzado,Suficiente,Avanzado,Suficiente" && marcas === "==≠≠=", `categorías y marcas «≠ sugerida» → ${marcas}`);
+const dec6 = JSON.parse(await evaluar('localStorage.getItem("aula-evaluacion-cierre-v1")')).estudiantes;
+verificar(JSON.stringify(Object.keys(dec6).sort()) === JSON.stringify(["curso x\testudiante 22", "curso x\testudiante 23", "curso x\testudiante 24"]) &&
+  dec6["curso x\testudiante 23"].categoria === "Suficiente" && dec6["curso x\testudiante 23"].devolucion === "Nota sintética 8812 para la devolución." &&
+  dec6["curso x\testudiante 24"].categoria === "Avanzado", `sólo se guardan los overrides y la nota → ${Object.keys(dec6).length} registros`);
+verificar(await evaluar('localStorage.getItem("aula-evaluacion-a-v1")') === A6 && await evaluar('localStorage.getItem("aula-evaluacion-b-v1")') === B6, "A y B intactos");
+await clic("#ccImprimir");
+papel = await papelDe();
+verificar(papel.cats === "Estudiante 21:Suficiente Estudiante 22:Avanzado Estudiante 23:Suficiente Estudiante 24:Avanzado Estudiante 25:Suficiente" && papel.limpio &&
+  papel.nota === "Nota sintética 8812 para la devolución.", `impresión con overrides y nota → ${papel.cats}`);
+const ex6 = await bajar("");
+verificar(!ex6.texto.includes("8812") && !/≠|sugerid/i.test(ex6.texto), "ni la nota ni la marca en el export");
+await captura("cierre-ab-lista-final.png");
+
 await evaluar("localStorage.clear()");
 console.log(fallas.length ? `\n${fallas.length} fallas` : "\nsin fallas");
 ws.close();

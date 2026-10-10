@@ -405,6 +405,47 @@
     padding: 8px; font-size: 12px; overflow-x: auto; max-height: 14em; tab-size: 6;
   }
   #avisoAlmacen { display: none; color: var(--error); font-weight: 600; }
+  /* Pantalla «Cierre A+B»: lista austera del curso y revisión de a un estudiante. */
+  .ir-cierre { margin: 4px 0 0; font-size: 14px; font-weight: 600; }
+  .cierre-curso { max-width: 1100px; margin: 0 auto; }
+  .cierre-curso[hidden] { display: none; }
+  .cc-cab { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; margin-bottom: 8px; }
+  .cc-cab h1 { margin: 0; }
+  .cc-cab nav { display: flex; gap: 12px; font-size: 14px; }
+  .cc-filtros { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin: 6px 0 10px; font-size: 14px; }
+  .cc-filtros select { font: inherit; }
+  .cc-lista td, .cc-lista th { padding: 6px 10px; font-size: 15px; }
+  .cc-lista td.ab { text-align: center; width: 3em; }
+  .cc-lista .propuesta { color: var(--suave); font-style: italic; }
+  .cc-estado { font-size: 13px; padding: 1px 8px; border-radius: 10px; background: #eef1f4; white-space: nowrap; }
+  .cc-estado.listo { background: #e3f3e8; color: #1d5e33; }
+  .cc-estado.decision { background: #fff3d6; color: #6b4a00; }
+  .cc-estado.provisorio { background: #fde9d4; color: #7a3d00; }
+  .cc-estado.pareja, .cc-estado.sin-evidencia { background: #fbe1e2; color: #8a1d22; }
+  .cc-difiere { font-size: 12px; color: var(--suave); margin-left: 6px; white-space: nowrap; border-bottom: 1px dotted var(--suave); }
+  .cc-solo { font-size: 12px; color: var(--suave); margin-left: 6px; white-space: nowrap; }
+  .cc-secundarias { margin-top: 14px; font-size: 13px; color: var(--suave); display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+  .cc-nav { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-bottom: 10px; }
+  .cc-nav .cc-quien { font-size: 18px; font-weight: 700; }
+  .cc-nav .cc-pos { color: var(--suave); font-size: 13px; }
+  .cc-decision { border: 2px solid var(--tinta); border-radius: 8px; padding: 12px 14px; background: #fff; display: grid; gap: 8px; }
+  .cc-cat { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
+  .cc-cat .rot { color: var(--suave); font-size: 14px; }
+  .cc-cat b { font-size: 26px; }
+  .cc-partes { display: flex; flex-wrap: wrap; gap: 6px; }
+  .cc-parte { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--linea); border-radius: 6px; padding: 4px 10px; font-size: 14px; }
+  .cc-parte.no-cuenta { color: var(--suave); border-style: dashed; }
+  .cc-alerta { margin: 0; padding: 6px 10px; border-left: 4px solid var(--error); background: #fdf1f1; font-size: 14px; }
+  .cc-alerta.aviso { border-left-color: var(--dudosa); background: #fff8ec; }
+  .cc-acciones { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .cc-acciones button.principal { font-size: 15px; padding: 6px 14px; }
+  .cc-manual-cats button[aria-pressed="true"] { background: var(--tinta); color: #fff; border-color: var(--tinta); }
+  .cc-pliegues { margin-top: 12px; display: grid; gap: 6px; }
+  .cc-pliegues > details { border: 1px solid var(--linea); border-radius: 6px; padding: 6px 10px; background: #fff; }
+  .cc-pliegues > details > summary { cursor: pointer; font-size: 14px; font-weight: 600; }
+  .cc-decision textarea { width: 100%; min-height: 4em; font: inherit; font-size: 14px; margin-top: 4px; }
+  .cc-decision details > summary { cursor: pointer; font-size: 14px; color: var(--suave); }
+  #ccMensaje { min-height: 1.3em; font-size: 14px; color: #1d5e33; margin: 4px 0; }
   /* Devoluciones de cierre para imprimir (Oficio). En pantalla, una vista
      previa con el ancho útil de la hoja; al imprimir, sólo los bloques. */
   .impresion { max-width: 1800px; margin: 14px auto 0; }
@@ -427,6 +468,7 @@
   .final .pct { color: #555; font-size: 9pt; }
   .final .sin { color: #555; }
   .final .revisar { color: #7a4600; }
+  .final-encuadre { font-size: 9.5pt; color: #333; font-style: italic; }
   .final-texto { white-space: pre-wrap; border-left: 2px solid #8a939e; padding-left: 2.5mm; }
   .clave-compacta { margin-top: 2.5mm; padding-top: 1.5mm; border-top: 1px dashed #8a939e; color: #222; }
   .clave-tit { display: block; font-size: 8.5pt; color: #444; margin-bottom: .5mm; }
@@ -440,7 +482,8 @@
   @media print {
     @page { size: 216mm 356mm; margin: 12mm; }
     body:has(.impresion:not([hidden])) { background: #fff; padding: 0; }
-    body:has(.impresion:not([hidden])) .pagina { display: none; }
+    body:has(.impresion:not([hidden])) .pagina,
+    body:has(.impresion:not([hidden])) .cierre-curso { display: none; }
     .impresion { border: 0; padding: 0; margin: 0; max-width: none; background: #fff; }
     .impresion-barra { display: none; }
     .hoja { max-width: none; }
@@ -451,6 +494,7 @@
 <main class="pagina">
 <h1 id="titulo">Corrección y análisis</h1>
 <p class="bajada" id="bajada"></p>
+<p class="ir-cierre"><a id="irCierre" href="#cierre">Ir a Cierre A+B →</a></p>
 <p class="nota">Herramienta local: no envía datos a ningún servidor. Lo cargado queda sólo en este navegador; al terminar, exportalo, guardalo fuera del repositorio y vaciá la sesión. Los nombres y respuestas reales son privados: nunca se versionan.</p>
 <p id="avisoAlmacen">Este navegador no permite guardado local: si cerrás o recargás la pestaña se pierde lo cargado. Exportá con frecuencia.</p>
 
@@ -545,6 +589,8 @@
   <pre id="vista"></pre>
 </section>
 </main>
+
+<section id="cierreCurso" class="cierre-curso" hidden aria-labelledby="t-cierre-curso"></section>
 
 <section id="impresion" class="impresion" hidden aria-labelledby="t-impresion">
   <div class="impresion-barra">
@@ -1092,7 +1138,17 @@
     const vinculadas = new Set(d.vinculos.map((v) => v[LETRA]));
     const iguales = vinculo ? [] : filas.filter((x) => claveEstudiante(x) === clave && !vinculadas.has(clave));
     const repetidas = otras.filter((x) => claveEstudiante(x) === clave).length;
-    return armarCierre(null, { clave, repetidas, otra: o, vinculo, pares: iguales, cerca: [], candidatos: [], estado: "solo-otra" }, d);
+    // Para vincular a mano desde este registro: filas propias del mismo curso,
+    // únicas, sin vínculo y sin pareja automática del otro lado.
+    const vinculadasOtra = new Set(d.vinculos.map((v) => v[OTRA.letra]));
+    const candidatos = vinculo || repetidas !== 1 || iguales.length ? [] : filas.filter((x) => {
+      const k = claveEstudiante(x);
+      return normalizar(x.curso) === normalizar(o.curso) && filas.filter((y) => claveEstudiante(y) === k).length === 1 && !vinculadas.has(k) &&
+        !otras.some((z) => claveEstudiante(z) === k && !vinculadasOtra.has(k));
+    });
+    // El mismo estudiante en otro curso de este lado: no es seguro (como «dudoso» visto desde aquí).
+    const cerca = vinculo || iguales.length ? [] : filas.filter((x) => !vinculadas.has(claveEstudiante(x)) && normalizar(x.estudiante) === normalizar(o.estudiante));
+    return armarCierre(null, { clave, repetidas, otra: o, vinculo, pares: iguales, cerca, candidatos, estado: cerca.length ? "dudoso" : "solo-otra" }, d);
   }
   function armarCierre(f, e, d) {
     const { otra, pares, cerca, repetidas, candidatos, vinculo } = e;
@@ -1131,7 +1187,7 @@
           (!p1.cumple && p1.alcanzable ? " (también en la Parte 1, que podría alcanzar su mínimo)" : ""));
       }
       if (emparejamiento === "ambiguo") motivos.push(`no se usa la ${NOMBRE(OTRA.letra)}: el emparejamiento es ambiguo`);
-      if (emparejamiento === "dudoso") motivos.push(`no se usa la ${NOMBRE(OTRA.letra)}: el emparejamiento no es seguro`);
+      if (emparejamiento === "dudoso") motivos.push(`no se usa la ${NOMBRE(f ? OTRA.letra : LETRA)}: el emparejamiento no es seguro`);
       if (emparejamiento === "ilegible") motivos.push(`no se pudieron leer los datos de la ${NOMBRE(OTRA.letra)}`);
       if (emparejamiento === "roto") motivos.push(`el vínculo manual con la ${NOMBRE(OTRA.letra)} no encuentra un registro único`);
       if (repetidas > 1) motivos.push(`hay ${repetidas} registros de la ${NOMBRE(f ? LETRA : OTRA.letra)} con este curso y estudiante`);
@@ -1142,6 +1198,8 @@
       clave, claveRegistro: e.clave, otra, pares, cerca, repetidas, candidatos, vinculo, emparejamiento, partes,
       contenidos: contenidosDe(f, otra), disponibles, modo, guardada, seleccion, sinEvidencia,
       aciertos, total, techo, categoria: cat, categoriaTecho: catTecho, p1, porP1, motivos,
+      // La sugerencia de la evidencia, con las mismas reglas, también en manual.
+      sugerida: categoria(aciertos, total, elegidas.length, p1.cumple),
       manual: { categoria: decision?.categoria ?? null, devolucion: decision?.devolucion ?? "" },
     };
   }
@@ -1895,11 +1953,14 @@
       `${cat ? "" : `<span class="nota" id="cierreSinCategoria">Sin categoría de cierre todavía: la orientación se ajusta al elegirla o calcularla.</span>`}` +
       `${lineasOrientacion(c, cat).join("")}</div>`;
   }
-  function lineasOrientacion(c, cat) {
+  // «respaldo»: frase general cuando no hay contenidos marcados. Se omite si la
+  // categoría la decidió el docente distinta de la sugerida: A+B describe una
+  // evidencia; la categoría valora el período, y eso lo explica la nota.
+  function lineasOrientacion(c, cat, respaldo = true) {
     const o = orientacion(c.contenidos, cat);
     const lineas = o.grupos.map((g) => `<span class="orienta">${g.verbo}: ` +
       g.unidades.map((u) => `<span class="foco" data-ejes="${u.ids.join(" ")}" data-verbo="${g.verbo}">${u.nombre}</span>`).join("; ") + ".</span>");
-    if (!lineas.length && cat) {
+    if (!lineas.length && cat && respaldo) {
       lineas.push(`<span class="orienta">${cat === "Avanzado" ? "Sin contenidos que haga falta reforzar: seguir así."
         : cat === "Suficiente" ? "Sin contenidos con dificultad marcada: seguir consolidando lo aprendido."
         : "No aparece un contenido con dificultad marcada: conviene revisar las preguntas que estuvieron mal."}</span>`);
@@ -1924,7 +1985,7 @@
       const [l1, l2] = INTENTOS;
       const principal = reg[l1] ?? reg[l2];
       const otroNombre = reg[l1] && reg[l2] && normalizar(reg[l1].estudiante) !== normalizar(reg[l2].estudiante) ? `${l2}: ${reg[l2].estudiante}` : "";
-      return { c, curso: principal.curso, estudiante: principal.estudiante, otroNombre };
+      return { c, f, reg, ref: f ? `p${f.id}` : `o${c.otra.id}`, curso: principal.curso, estudiante: principal.estudiante, otroNombre };
     }).sort((x, y) => normalizar(x.curso).localeCompare(normalizar(y.curso), "es") || normalizar(x.estudiante).localeCompare(normalizar(y.estudiante), "es"));
   }
   // Clave de corrección de A y de B, para que cada estudiante se autocorrija
@@ -1947,28 +2008,32 @@
   function bloqueFinal(x) {
     const c = x.c;
     const manual = c.modo === "manual";
-    const cat = manual ? c.manual.categoria : c.categoria;
+    // En el papel, la categoría efectiva (la del docente si la eligió; si no,
+    // la de la evidencia), sin decir de dónde sale.
+    const final = efectivaDe(c);
+    const procesado = !!(final && !overrideDe(c));
     const elegidas = PARTES.filter((p, k) => c.seleccion[k]).map((p) => p.n);
-    const resultado = !manual && cat
+    const resultado = procesado
       ? `<p>Resultado considerado: <b>${c.aciertos}/${c.total} · ${decimal(c.aciertos, c.total)} %</b> <span class="sin">(parte${elegidas.length > 1 ? "s" : ""} ${listaPartes(elegidas)})</span>` +
         `${c.porP1 ? ` · En proceso por el requisito de la Parte 1 · Reconocer (${c.p1.minimo ? `${c.p1.aciertos}/${c.p1.total}; mínimo ${c.p1.minimo}/${c.p1.total}` : "sin intento válido"})` : ""}</p>` : "";
     const filasP = c.partes.map((p, k) => {
       const m = p.mejor;
       return `<tr><th scope="row">P${p.p.n} · ${p.p.nombre}</th>${INTENTOS.map((l) => `<td>${textoIntento(c, l, p)}</td>`).join("")}` +
         `<td>${m ? `<b>${m.aciertos}/${m.total}</b>${pctSpan(m.aciertos, m.total)} · ${m.de.join(" = ")}` : `<span class="sin">sin evidencia</span>`}</td>` +
-        (manual ? "" : `<td>${c.seleccion[k] ? "✓" : ""}</td>`) + `</tr>`;
+        (procesado ? `<td>${c.seleccion[k] ? "✓" : ""}</td>` : "") + `</tr>`;
     }).join("");
     const contenidos = c.contenidos.map((e) => `${e.corto} ${e.n ? `${e.aciertos}/${e.n}` : "—"}${e.nivel ? ` (${LECTURA[e.nivel]})` : ""}`).join(" · ");
-    const texto = manual && c.manual.devolucion.trim() ? `<h3>Devolución</h3><div class="final-texto">${esc(c.manual.devolucion.trim())}</div>` : "";
+    const texto = c.manual.devolucion.trim() ? `<h3>Nota docente</h3><div class="final-texto">${esc(c.manual.devolucion.trim())}</div>` : "";
     return `<article class="final" data-modo="${c.modo}" data-clave="${esc(c.clave)}">` +
       `<div class="final-cab"><span class="final-nombre">${esc(x.estudiante)}</span>` +
       `${x.otroNombre ? `<span class="nota">(${esc(x.otroNombre)})</span>` : ""}<span>${esc(x.curso)}</span>` +
-      `<span class="final-cat">Cierre: <b>${cat ?? "sin categoría"}</b>${!manual && c.motivos.length ? " (provisoria)" : ""}</span></div>` +
+      `<span class="final-cat">Categoría del período: <b>${final ?? "sin evidencia suficiente"}</b>${procesado && c.motivos.length ? " (provisoria)" : ""}</span></div>` +
+      `<p class="final-encuadre">La categoría valora el proceso del período. Las Evaluaciones A y B son una de las evidencias consideradas.</p>` +
       resultado +
-      `<h3>Resultados por parte</h3><table><thead><tr><th>Parte</th>${INTENTOS.map((l) => `<th>Evaluación ${l}</th>`).join("")}<th>Mejor resultado</th>` +
-      `${manual ? "" : "<th>Cuenta</th>"}</tr></thead><tbody>${filasP}</tbody></table>` +
+      `<h3>Resultados en las Evaluaciones A y B</h3><table><thead><tr><th>Parte</th>${INTENTOS.map((l) => `<th>Evaluación ${l}</th>`).join("")}<th>Mejor resultado</th>` +
+      `${procesado ? "<th>Cuenta</th>" : ""}</tr></thead><tbody>${filasP}</tbody></table>` +
       `<h3>Por contenidos (A y B juntos)</h3><p class="final-contenidos">${contenidos}</p>` +
-      `<h3>Para seguir trabajando</h3><div class="final-orientacion">${lineasOrientacion(c, cat).map((l) => `<p>${l}</p>`).join("") || `<p class="sin">—</p>`}</div>` +
+      `<h3>Para seguir trabajando</h3><div class="final-orientacion">${lineasOrientacion(c, final, !modificada(c)).map((l) => `<p>${l}</p>`).join("") || `<p class="sin">—</p>`}</div>` +
       texto + claveCompacta() + `</article>`;
   }
   function renderImpresion() {
@@ -2099,6 +2164,245 @@
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
     mensaje(`Descargado ${nombre}: ${datos.estudiantes.length} estudiante${datos.estudiantes.length === 1 ? "" : "s"}, sin nombres.`, "ok");
   }
+  // ---------- pantalla «Cierre A+B» (modo cierre) ----------
+  // Una entrada neutral para decidir la categoría de cierre de cada estudiante
+  // del curso. Es otra vista del mismo cierre (cierresDelCurso, armarCierre,
+  // guardarDecision): no calcula nada nuevo ni guarda nada distinto.
+  const MODO_CIERRE = /\/cierre-evaluaciones\/?$/.test(location.pathname) || location.hash === "#cierre";
+  const enServidor = /^https?:$/.test(location.protocol);
+  const urlHerramienta = (l, hash = "") => (enServidor ? `/herramientas/evaluacion-${l.toLowerCase()}/` : `../../evaluacion-${l.toLowerCase()}/herramienta/index.html`) + hash;
+  const URL_CIERRE = enServidor ? "/herramientas/cierre-evaluaciones/" : "index.html#cierre";
+  let vistaCierre = { curso: "", ref: null };
+  // Categoría efectiva: la que eligió el docente si la cambió (override,
+  // guardado como cierre manual); si no, la sugerida por la evidencia. Aceptar
+  // la sugerencia no guarda nada.
+  const overrideDe = (c) => (c.modo === "manual" ? c.manual.categoria : null);
+  const efectivaDe = (c) => overrideDe(c) ?? c.sugerida;
+  const modificada = (c) => !!(overrideDe(c) && overrideDe(c) !== c.sugerida);
+  // Estado de un estudiante: «Lista» salvo lo que de verdad pide atención.
+  function estadoCierre(c) {
+    const pareja = ["ambiguo", "dudoso", "roto", "ilegible"].includes(c.emparejamiento) || c.repetidas > 1 ||
+      (c.emparejamiento === "solo-otra" && (c.pares.length > 1 || c.vinculo));
+    if (pareja) return "Revisar pareja";
+    if (!c.disponibles.some(Boolean)) return "Sin evidencia";
+    if (overrideDe(c)) return "Lista";
+    if (!c.sugerida) return "Sin categoría";
+    if (c.categoriaTecho !== c.sugerida) return "Provisorio";
+    return "Lista";
+  }
+  const CLASE_ESTADO = { Lista: "listo", "Sin categoría": "decision", Provisorio: "provisorio", "Revisar pareja": "pareja", "Sin evidencia": "sin-evidencia" };
+  const presente = (x, l) => !!x.reg[l];
+  const soloUno = (x) => (estadoCierre(x.c) === "Revisar pareja" ? "" : INTENTOS.filter((l) => presente(x, l)).length === 1 ? `Sólo ${INTENTOS.find((l) => presente(x, l))}` : "");
+  function listaCierre() {
+    const todos = cierresDelCurso();
+    return vistaCierre.curso ? todos.filter((x) => normalizar(x.curso) === vistaCierre.curso) : todos;
+  }
+  function renderCierreCurso() {
+    const el = $("cierreCurso");
+    const todos = cierresDelCurso();
+    const cursos = [...new Map(todos.map((x) => [normalizar(x.curso), x.curso])).entries()];
+    if (vistaCierre.curso && !cursos.some(([k]) => k === vistaCierre.curso)) vistaCierre.curso = "";
+    const lista = vistaCierre.curso ? todos.filter((x) => normalizar(x.curso) === vistaCierre.curso) : todos;
+    const actual = vistaCierre.ref ? lista.find((x) => x.ref === vistaCierre.ref) : null;
+    if (!actual) vistaCierre.ref = null;
+    const cab = `<div class="cc-cab"><h1 id="t-cierre-curso">Cierre A+B · Sistemas Informáticos</h1><nav>` +
+      INTENTOS.map((l) => `<a href="${urlHerramienta(l)}">Evaluación ${l}</a>`).join("") + `</nav></div><p id="ccMensaje" role="status"></p>`;
+    el.innerHTML = cab + (actual ? revisionCierre(actual, lista) : listaCierreHtml(lista, cursos));
+    if (actual && $("ccNota")) $("ccNota").value = actual.c.manual.devolucion;
+  }
+  function listaCierreHtml(lista, cursos) {
+    const cuenta = (e) => lista.filter((x) => estadoCierre(x.c) === e).length;
+    const filasL = lista.map((x) => {
+      const e = estadoCierre(x.c);
+      const cat = efectivaDe(x.c);
+      return `<tr data-ref="${x.ref}"><td>${esc(x.estudiante)}${x.otroNombre ? ` <span class="nota">(${esc(x.otroNombre)})</span>` : ""}</td>` +
+        INTENTOS.map((l) => `<td class="ab" data-intento="${l}">${presente(x, l) ? "✓" : e === "Revisar pareja" ? "?" : "—"}</td>`).join("") +
+        `<td class="cat">${cat ?? "—"}</td>` +
+        `<td><span class="cc-estado ${CLASE_ESTADO[e]}">${e}</span>${soloUno(x) ? `<span class="cc-solo">${soloUno(x)}</span>` : ""}` +
+        `${modificada(x.c) ? `<span class="cc-difiere" title="Categoría elegida por el docente: no coincide con la sugerida por A+B">≠ sugerida</span>` : ""}</td>` +
+        `<td><button type="button" data-revisar="${x.ref}">Revisar</button></td></tr>`;
+    }).join("");
+    const atencion = lista.length - cuenta("Lista");
+    return `<div class="cc-filtros"><label>Curso <select id="ccCurso"><option value="">todos</option>` +
+      cursos.map(([k, v]) => `<option value="${esc(k)}"${k === vistaCierre.curso ? " selected" : ""}>${esc(v || "(sin curso)")}</option>`).join("") + `</select></label>` +
+      `<span id="ccResumen">Listas ${cuenta("Lista")} de ${lista.length} · Requieren atención ${atencion} · Modificadas por el docente ${lista.filter((x) => modificada(x.c)).length}</span></div>` +
+      (lista.length ? `<table class="cc-lista"><thead><tr><th>Estudiante</th>${INTENTOS.map((l) => `<th>${l}</th>`).join("")}<th>Categoría</th><th>Estado</th><th></th></tr></thead>` +
+        `<tbody>${filasL}</tbody></table>` : `<p class="nota">No hay evaluaciones guardadas de A ni de B en este navegador.</p>`) +
+      `<div class="cc-secundarias">Acciones secundarias: <button type="button" id="ccImprimir">Imprimir devoluciones o exportar datos anonimizados…</button></div>`;
+  }
+  function revisionCierre(x, lista) {
+    const c = x.c;
+    const e = estadoCierre(c);
+    const override = overrideDe(c);
+    const efectiva = efectivaDe(c);
+    const difiere = modificada(c);
+    const i = lista.indexOf(x);
+    const nav = `<div class="cc-nav"><button type="button" id="ccVolver">← Lista</button>` +
+      `<span class="cc-quien" id="ccQuien">${esc(x.estudiante)}</span><span>${esc(x.curso)}</span>${x.otroNombre ? `<span class="nota">(${esc(x.otroNombre)})</span>` : ""}` +
+      `<button type="button" id="ccAnterior"${i <= 0 ? " disabled" : ""}>← Anterior</button><button type="button" id="ccSiguiente"${i >= lista.length - 1 ? " disabled" : ""}>Siguiente →</button>` +
+      `<span class="cc-pos">${i + 1} de ${lista.length}</span><span class="cc-estado ${CLASE_ESTADO[e]}" id="ccEstado">${e}</span>${soloUno(x) ? `<span class="cc-solo">${soloUno(x)}</span>` : ""}</div>`;
+    // Primer nivel: sólo lo necesario para la categoría del período.
+    const hayEvidencia = c.disponibles.some(Boolean);
+    const elegidas = PARTES.filter((pp, k) => c.seleccion[k]).map((pp) => pp.n);
+    let decision = `<div class="cc-cat"><span class="rot">Categoría sugerida por la evidencia:</span><b id="ccSugerida">${c.sugerida ?? "—"}</b></div>`;
+    if (hayEvidencia) {
+      decision += elegidas.length
+        ? `<p id="ccResultado">Resultado integrado: <b>${c.aciertos}/${c.total} · ${decimal(c.aciertos, c.total)} %</b> <span class="nota">(parte${elegidas.length > 1 ? "s" : ""} ${listaPartes(elegidas)})</span></p>`
+        : `<p class="cc-alerta aviso">Ninguna parte elegida: marcá las que cuentan para la sugerencia.</p>`;
+      decision += `<div class="cc-partes" role="group" aria-label="Partes que cuentan (mejor resultado entre A y B)">` + c.partes.map((pp, k) => {
+        const m = pp.mejor;
+        return `<label class="cc-parte${c.seleccion[k] ? "" : " no-cuenta"}"><input type="checkbox" data-cc-parte="${k}"${c.seleccion[k] ? " checked" : ""}${m ? "" : " disabled"}> ` +
+          `P${pp.p.n} ${pp.p.nombre} <b>${m ? `${m.aciertos}/${m.total}` : "—"}</b>${m ? ` <span class="nota">${m.de.join(" = ")}</span>` : ""}</label>`;
+      }).join("") + `</div>`;
+    }
+    const alertas = [];
+    if (e === "Revisar pareja") {
+      alertas.push(`<p class="cc-alerta">${c.emparejamiento === "ambiguo" || (c.emparejamiento === "solo-otra" && c.pares.length > 1)
+        ? "Hay más de un registro con este curso y estudiante en la otra evaluación: no se puede saber cuál usar. Dejá uno solo en su herramienta."
+        : c.emparejamiento === "dudoso" ? `En la otra evaluación aparece el mismo estudiante con otro curso: no se empareja. Unificá el curso o vinculá a mano.`
+        : c.emparejamiento === "roto" || c.vinculo ? `El vínculo manual ya no encuentra un registro único. <button type="button" id="ccDesvincular">Desvincular</button>`
+        : c.repetidas > 1 ? "Hay más de un registro de este estudiante en la misma evaluación: dejá uno solo." : "No se pudieron leer los datos de la otra evaluación."}</p>`);
+    }
+    if (!hayEvidencia) alertas.push(`<p class="cc-alerta">No hay ninguna parte válida en A ni en B: revisá la carga.</p>`);
+    if (hayEvidencia && !c.p1.cumple) {
+      alertas.push(`<p class="cc-alerta${c.porP1 ? "" : " aviso"}" id="ccP1">Parte 1 · Reconocer: ${c.p1.minimo ? `${c.p1.aciertos}/${c.p1.total}` +
+        `${c.p1.validos.length > 1 ? ` (${c.p1.validos.map((r) => `${r.l} ${r.aciertos}/${r.total}`).join(" + ")})` : ` (sólo ${c.p1.validos[0].l})`} · no alcanza el mínimo de ${c.p1.minimo}/${c.p1.total}`
+        : "sin intento válido · no se cumple el mínimo"}: la sugerencia no puede ser Suficiente ni Avanzado.${c.p1.alcanzable ? " Hay respuestas a revisar que podrían alcanzarlo." : ""}</p>`);
+    }
+    if (c.sugerida && c.categoriaTecho !== c.sugerida) {
+      alertas.push(`<p class="cc-alerta aviso">Hay respuestas a revisar que podrían cambiar la sugerencia (a ${c.categoriaTecho}): resolvelas en la hoja y corregí la carga en la herramienta de A o B.</p>`);
+    }
+    if (c.candidatos.length && ["sin", "dudoso", "solo-otra"].includes(c.emparejamiento)) {
+      const otraL = x.f ? OTRA.letra : LETRA;
+      alertas.push(`<p class="cc-alerta aviso">¿Es la misma persona que un registro de la Evaluación ${otraL}? <label>Consolidar manualmente con: <select id="ccCandidato"><option value="">— elegir —</option>` +
+        c.candidatos.map((o) => `<option value="${esc(claveEstudiante(o))}">${esc(o.estudiante)}</option>`).join("") + `</select></label> <button type="button" id="ccVincular">Vincular</button></p>`);
+    }
+    const bloqueado = e === "Revisar pareja" || !hayEvidencia;
+    // La categoría del período: la efectiva marcada; elegir otra guarda el
+    // override; «Volver a la sugerencia» lo quita.
+    const acciones = `<div class="cc-acciones cc-manual-cats" role="group" aria-label="Categoría del período">Categoría del período: ` +
+      CATEGORIAS.map((k) => `<button type="button" data-cc-final="${k}" aria-pressed="${efectiva === k}"${bloqueado ? " disabled" : ""}>${k}` +
+        `${k === c.sugerida ? ` <span class="nota">sugerida</span>` : ""}</button>`).join("") + `</div>` +
+      (override ? `<div class="cc-acciones"><span class="nota" id="ccOverride">Elegida por el docente${difiere ? `; la sugerida es ${c.sugerida ?? "—"}` : ""}.</span>` +
+        `<button type="button" id="ccVolverSugerencia">Volver a la sugerencia</button></div>` : "") +
+      `<details id="ccNotaDetalle"${c.manual.devolucion || difiere ? " open" : ""}><summary>Agregar nota docente para la devolución…</summary>` +
+      `<textarea id="ccNota" rows="3" aria-label="Nota docente para la devolución (opcional)"` +
+      `${difiere ? ' placeholder="¿En qué otras evidencias del período se apoya la categoría? ¿Qué se valora del proceso y qué conviene hacer ahora?"' : ""}></textarea></details>`;
+    // Segundo nivel, plegado.
+    const detalle = `<table><thead><tr><th>Parte</th>${INTENTOS.map((l) => `<th>${l}</th>`).join("")}<th>Mejor</th></tr></thead><tbody>` +
+      c.partes.map((pp) => `<tr><th scope="row">P${pp.p.n} · ${pp.p.nombre}</th>${INTENTOS.map((l) => `<td>${textoIntento(c, l, pp)}</td>`).join("")}` +
+        `<td>${pp.mejor ? `${pp.mejor.aciertos}/${pp.mejor.total}${pctSpan(pp.mejor.aciertos, pp.mejor.total)} · ${pp.mejor.de.join(" = ")}` : "sin evidencia"}</td></tr>`).join("") + `</tbody></table>`;
+    const tecnica = `<p>Emparejamiento: ${EMPAREJAMIENTO[c.emparejamiento] ?? c.emparejamiento}${c.vinculo && c.emparejamiento === "manual" ? ` · <button type="button" id="ccDesvincular">Desvincular</button>` : ""}</p>` +
+      (c.motivos.length ? `<p>Motivos de provisoria: ${c.motivos.join("; ")}.</p>` : "") +
+      `<p>Categoría del período: ${override ? `elegida por el docente (${override})` : "la sugerida por la evidencia (no se guarda ninguna decisión)"}.</p>`;
+    const pliegues = `<div class="cc-pliegues">` +
+      `<details><summary>Detalle por parte: A, B y mejor resultado</summary>${detalle}</details>` +
+      `<details><summary>Contenidos y orientación</summary>${textoContenidos(c)}<div class="cierre-orientacion"><h4 class="cierre-sec">Para seguir trabajando</h4>` +
+        `${lineasOrientacion(c, efectiva, !difiere).join("") || `<span class="nota">—</span>`}</div></details>` +
+      `<details><summary>Devoluciones de cada intento</summary><p>` + INTENTOS.map((l) => (x.reg[l]
+        ? `<a href="${urlHerramienta(l, `#ver=${x.reg[l].id}`)}" target="_blank" rel="noopener">Ver en la herramienta de la Evaluación ${l} ↗</a>`
+        : `<span class="nota">Sin Evaluación ${l}.</span>`)).join(" · ") + `</p></details>` +
+      `<details><summary>Información técnica</summary>${tecnica}</details></div>`;
+    return nav + `<div class="cc-decision">${decision}${alertas.join("")}${acciones}</div>` + pliegues;
+  }
+  const itemCierre = () => listaCierre().find((x) => x.ref === vistaCierre.ref) ?? null;
+  function avisoCierre(texto) { const m = $("ccMensaje"); if (m) m.textContent = texto; }
+  // Elegir la sugerida (o «Volver a la sugerencia») quita el override y no deja
+  // ninguna decisión guardada si no queda otro dato humano (partes o nota).
+  function volverASugerencia(x) {
+    const d = leerDecisiones();
+    const r = { ...d.estudiantes[x.c.clave] };
+    delete r.categoria;
+    r.modo = "procesado";
+    if (r.partes === undefined && !r.devolucion) delete d.estudiantes[x.c.clave];
+    else d.estudiantes[x.c.clave] = r;
+    escribirDecisiones(d);
+  }
+  function elegirCategoria(cat) {
+    const x = itemCierre();
+    if (!x || estadoCierre(x.c) === "Revisar pareja" || !x.c.disponibles.some(Boolean)) return;
+    if (cat === x.c.sugerida) volverASugerencia(x);
+    else guardarDecision(x.c.clave, { modo: "manual", categoria: cat });
+    renderCierreCurso();
+    avisoCierre(cat === x.c.sugerida ? `«${x.estudiante}»: se usa la categoría sugerida (${cat}).` : `«${x.estudiante}»: categoría del período ${cat}, elegida por el docente.`);
+    document.querySelector(`[data-cc-final="${cat}"]`)?.focus();
+  }
+  function vincularCierre() {
+    const x = itemCierre();
+    const k = $("ccCandidato")?.value;
+    if (!x || !k) return avisoCierre("Elegí un registro para vincular.");
+    const o = x.c.candidatos.find((y) => claveEstudiante(y) === k);
+    if (!o) return avisoCierre("Ese registro ya no está disponible para vincular.");
+    const d = leerDecisiones();
+    const v = x.f ? { [LETRA]: x.c.claveRegistro, [OTRA.letra]: k } : { [LETRA]: k, [OTRA.letra]: x.c.claveRegistro };
+    d.vinculos.push({ A: v.A, B: v.B });
+    if (d.estudiantes[v.B] && !d.estudiantes[v.A]) { d.estudiantes[v.A] = d.estudiantes[v.B]; delete d.estudiantes[v.B]; }
+    escribirDecisiones(d);
+    // El par queda como una sola fila (la del registro propio).
+    vistaCierre.ref = x.f ? x.ref : `p${o.id}`;
+    renderCierreCurso();
+    avisoCierre(`Vinculado manualmente con «${o.estudiante}».`);
+  }
+  function desvincularCierre() {
+    const x = itemCierre();
+    if (!x) return;
+    const d = leerDecisiones();
+    d.vinculos = d.vinculos.filter((v) => (x.f ? v[LETRA] !== x.c.claveRegistro : v[OTRA.letra] !== x.c.claveRegistro));
+    escribirDecisiones(d);
+    renderCierreCurso();
+    avisoCierre("Vínculo manual borrado.");
+  }
+  function moverCierre(paso) {
+    const lista = listaCierre();
+    const i = lista.findIndex((x) => x.ref === vistaCierre.ref) + paso;
+    if (i < 0 || i >= lista.length) return;
+    vistaCierre.ref = lista[i].ref;
+    renderCierreCurso();
+    $(paso < 0 ? "ccAnterior" : "ccSiguiente")?.focus();
+  }
+  function iniciarCierreCurso() {
+    document.title = "Cierre A+B · Sistemas Informáticos";
+    document.querySelector("main.pagina").hidden = true;
+    $("cierreCurso").hidden = false;
+    const el = $("cierreCurso");
+    el.addEventListener("click", (e) => {
+      const t = e.target;
+      const boton = t.closest?.("button");
+      if (t.dataset.revisar) { vistaCierre.ref = t.dataset.revisar; renderCierreCurso(); document.querySelector('[data-cc-final][aria-pressed="true"]')?.focus(); }
+      else if (t.id === "ccVolver") { vistaCierre.ref = null; renderCierreCurso(); }
+      else if (boton?.dataset.ccFinal) elegirCategoria(boton.dataset.ccFinal);
+      else if (t.id === "ccVolverSugerencia") { const x = itemCierre(); if (x) elegirCategoria(x.c.sugerida); }
+      else if (t.id === "ccAnterior") moverCierre(-1);
+      else if (t.id === "ccSiguiente") moverCierre(1);
+      else if (t.id === "ccVincular") vincularCierre();
+      else if (t.id === "ccDesvincular") desvincularCierre();
+      else if (t.id === "ccImprimir") {
+        abrirImpresion();
+        if (vistaCierre.curso) { $("impresionCurso").value = vistaCierre.curso; renderImpresion(); }
+      }
+    });
+    el.addEventListener("change", (e) => {
+      const t = e.target;
+      if (t.id === "ccCurso") { vistaCierre.curso = t.value; renderCierreCurso(); $("ccCurso").focus(); }
+      else if (t.dataset.ccParte != null) {
+        // Las partes que cuentan son una decisión docente: se guardan y la sugerencia se recalcula.
+        const x = itemCierre();
+        if (!x) return;
+        const sel = [...x.c.seleccion];
+        sel[Number(t.dataset.ccParte)] = t.checked;
+        guardarDecision(x.c.clave, { partes: sel });
+        renderCierreCurso();
+        document.querySelector(`[data-cc-parte="${t.dataset.ccParte}"]`)?.focus();
+      }
+    });
+    // La nota: sólo texto de la devolución, sin efecto en la categoría.
+    el.addEventListener("input", (e) => {
+      const x = itemCierre();
+      if (e.target.id === "ccNota" && x) guardarDecision(x.c.clave, { devolucion: e.target.value });
+    });
+    renderCierreCurso();
+  }
+
   function abrirImpresion() {
     $("impresion").hidden = false;
     renderImpresion();
@@ -2521,7 +2825,10 @@
   });
   // Otra pestaña cambió el otro intento o las decisiones: redibujar sin escribir nada.
   window.addEventListener("storage", (e) => {
-    if (e.key === OTRA.claveLocal || e.key === CLAVE_CIERRE || e.key === null) { renderCierre(); renderFilas(); }
+    if (e.key === OTRA.claveLocal || e.key === CLAVE_CIERRE || e.key === CLAVE_LOCAL || e.key === null) {
+      if (MODO_CIERRE) return renderCierreCurso();
+      renderCierre(); renderFilas();
+    }
   });
   $("btnCopiar").addEventListener("click", copiar);
   $("btnDescargar").addEventListener("click", descargar);
@@ -2555,8 +2862,18 @@
       e.returnValue = "";
     }
   });
-  render();
-  (s.estudiante ? $("zona") : $("estudiante")).focus();
+  // Enlace a la pantalla «Cierre A+B»; en archivo local, «#cierre» recarga en ese modo.
+  $("irCierre").href = URL_CIERRE;
+  window.addEventListener("hashchange", () => { if (location.hash === "#cierre" || MODO_CIERRE) location.reload(); });
+  if (MODO_CIERRE) {
+    iniciarCierreCurso();
+  } else {
+    render();
+    (s.estudiante ? $("zona") : $("estudiante")).focus();
+    // «#ver=<id>»: abrir directamente esa evaluación guardada en Ver.
+    const verId = location.hash.match(/^#ver=(\d+)$/);
+    if (verId && filas.some((f) => f.id === Number(verId[1]))) ver(Number(verId[1]));
+  }
 })();
 </script>
 </body>
