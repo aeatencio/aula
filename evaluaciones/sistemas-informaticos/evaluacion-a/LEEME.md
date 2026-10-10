@@ -2,8 +2,6 @@
 
 Instrumento individual, escrito, a libro cerrado y de opción múltiple sobre Sistemas Informáticos. La fuente del examen y los PDF quedan congelados. La [Evaluación B](../evaluacion-b/) es una versión paralela, comparable en estructura, ejes y exigencia.
 
-Uso registrado: se tomó el 29/09/2026 como evaluación de cierre del 3.er bimestre en 3.º año de la escuela Gabriela Mistral.
-
 Tiene 30 ítems en cuatro partes —Reconocer (1–8), Relacionar (9–16), Interpretar (17–24) y Usar lo que sabés (25–30)—, una por cara. Los resultados se registran por parte (sobre 8, 8, 8 y 6).
 
 ## Archivos
@@ -23,7 +21,7 @@ Elegir el PDF que corresponda al papel oficio disponible (216 × 356 o 216 × 34
 
 ## Corrección y análisis
 
-[`herramienta/index.html`](herramienta/) se abre en `http://localhost:4321/herramientas/evaluacion-a/` con `npm run dev` (sólo en desarrollo; no se publica) o directamente en Chrome o Edge, sin servidor ni conexión. Permite cargar con el teclado lo que cada estudiante marcó, ítem por ítem, conservando la respuesta cruda; muestra la corrección y los resultados por parte, un resultado global y ejes sólo con las partes que se contabilicen, propone una devolución breve (para escribir a mano) y otra extendida, y exporta e importa un TSV. El uso detallado está en su [LEEME](herramienta/LEEME.md).
+[`herramienta/index.html`](herramienta/) se abre en `http://localhost:4321/herramientas/evaluacion-a/` con `npm run dev` (sólo en desarrollo; no se publica) o directamente en Chrome o Edge, sin servidor ni conexión. Permite cargar con el teclado lo que cada estudiante marcó, ítem por ítem, conservando la respuesta cruda; muestra la corrección y los resultados por parte, un resultado global y ejes sólo con las partes que se contabilicen, propone una devolución breve (para escribir a mano) y otra extendida, y exporta e importa un TSV. En «Ver» integra el cierre A+B con la [Evaluación B](../evaluacion-b/): mejor resultado por parte, partes que el docente elige y categoría de cierre, o cierre manual. El uso detallado está en su [LEEME](herramienta/LEEME.md).
 
 Los nombres y respuestas reales son privados y nunca se versionan. La herramienta no tiene backend ni transmite datos: lo cargado queda en el `localStorage` de ese navegador hasta vaciar la sesión (por separado en `file://` y en `localhost`; se pasa de uno a otro exportando e importando el TSV), y el TSV exportado debe tratarse como privado y guardarse fuera del repositorio.
 

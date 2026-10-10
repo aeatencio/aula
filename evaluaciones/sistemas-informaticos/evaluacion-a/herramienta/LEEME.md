@@ -47,6 +47,11 @@ a otro: «Descargar .tsv» en uno e «Importar TSV…» en el otro (ver
   confirmación.
 - Al terminar: exportar, guardar el archivo fuera del repositorio y vaciar la
   sesión.
+- Las decisiones de cierre A+B (ver [Cierre A+B](#cierre-ab)) están en otra
+  clave, `aula-evaluacion-cierre-v1`, que «Vaciar sesión» no toca porque es de
+  las dos herramientas. Contienen el curso y el estudiante normalizados y, en
+  modo manual, la categoría y la devolución escritas: también son privadas. Se
+  borran con «Borrar decisiones de cierre».
 
 ## Cargar una evaluación
 
@@ -282,6 +287,332 @@ copia de este archivo con su propio bloque CONFIG. Mientras sean copias,
 idénticas: un cambio de comportamiento se hace en las dos. Es un control
 temporal de la duplicación, no una regla de diseño.
 
+## Cierre A+B
+
+**Pantalla «Cierre A+B»** (la entrada para cerrar un curso):
+`http://localhost:4321/herramientas/cierre-evaluaciones/` con `npm run dev`, o
+`index.html#cierre` abriendo el archivo. Las herramientas la enlazan con «Ir a
+Cierre A+B →». Es esta misma página en modo cierre: muestra sólo el cierre, con
+los mismos cálculos y decisiones descritos abajo.
+
+La herramienta propone y el docente decide: la evidencia **sugiere** una
+categoría con las reglas de abajo (incluida la Parte 1), y esa sugerencia es la
+**categoría efectiva** mientras el docente no elija otra. Aceptarla no requiere
+ningún paso ni guarda nada: el docente interviene sólo en las excepciones.
+
+- **Lista del curso** (filtro por curso): N.º de lista (orden alfabético dentro
+  de cada curso, 01, 02…; una pareja A+B es un solo número; se deriva, no se
+  guarda, y también se imprime junto al nombre para ordenar y repartir),
+  estudiante (si los nombres de A y B difieren o el vínculo es manual, se ven los
+  dos), A y B presentes (✓, —, o
+  «?» si hay un problema de pareja), la categoría efectiva y un estado: **Lista**
+  o lo que pide atención: **Provisorio** (respuestas a revisar que podrían
+  cambiar la sugerencia), **Revisar pareja**, **Sin evidencia** o **Sin
+  categoría** (ninguna parte elegida). El estado describe la evidencia: cambiar
+  la categoría no lo oculta (por ejemplo, «Provisorio ≠ sugerida»). Una
+  corrección hecha en la herramienta de A o de B, en otra pestaña del mismo
+  navegador, se ve al instante. Con un solo intento, «Sólo A» o «Sólo B».
+  Si el docente eligió una categoría distinta de la sugerida, una marca discreta
+  «≠ sugerida», sólo para el docente (no se imprime ni se exporta). Imprimir y
+  exportar quedan como acción secundaria: el curso se puede imprimir sin entrar
+  a ningún estudiante.
+- **Revisar** un estudiante: «Categoría sugerida por la evidencia», resultado
+  integrado, las partes que cuentan (cambiarlas se guarda y recalcula la
+  sugerencia), la alerta de la Parte 1 y las que impiden cambiar la categoría.
+  En **Categoría del período** aparece marcada la efectiva; elegir otra guarda
+  el override (como cierre manual) y **Volver a la sugerencia** lo quita (elegir
+  la sugerida hace lo mismo). Al cambiar la categoría, «Agregar nota docente para
+  la devolución…» se abre sola con una guía («¿En qué otras evidencias del
+  período se apoya la categoría? …») que no se guarda; la nota es siempre
+  opcional, se imprime («Nota de tu docente») y no va al export. «← Anterior» y
+  «Siguiente →» recorren la lista. Plegados: detalle A/B por parte, contenidos y
+  orientación, enlaces a la devolución de cada intento en su herramienta
+  (`#ver=<id>` abre esa evaluación en Ver) e información técnica.
+- Un estudiante con «Sólo A» o «Sólo B» puede consolidarse ahí mismo con un
+  registro de la otra evaluación del mismo curso.
+
+
+Las herramientas de A y de B (abiertas en el mismo origen: las dos en
+`localhost`, o las dos como archivo) leen, en sólo lectura, los registros
+guardados de la otra para el cierre del bimestre. Cada una muestra el cierre
+de sus propias filas; un estudiante que hizo los dos intentos tiene el mismo
+cierre en las dos.
+
+**Dónde:** en **Ver**, debajo de la grilla, el panel «Cierre A+B»; en la tabla
+de evaluaciones guardadas, una línea «Cierre: …» debajo de cada estudiante.
+«← Anterior» y «Siguiente →» recorren las filas guardadas sin salir de Ver.
+
+**Emparejamiento**, igual desde A y desde B:
+
+1. Un **vínculo manual** del docente manda: es estable aunque los nombres no
+   coincidan («vinculado manualmente con …», con «Desvincular»). Si después uno
+   de los dos registros se renombra o se repite, el vínculo queda «roto»: se
+   avisa en rojo, no se usa ni se adivina, y se puede desvincular.
+2. Si no hay vínculo, la coincidencia **automática** por curso y estudiante, sin
+   espacios de más, mayúsculas ni tildes, sin contar los registros que ya tienen
+   vínculo manual. Si en la otra evaluación hay más de un registro igual, no se
+   usa ninguno («ambiguo»); si sólo coincide el estudiante con otro curso, se
+   informa y no se empareja.
+3. Si no hay ninguno de los dos: «No se encontró Evaluación A correspondiente»
+   y cuenta sólo el intento propio.
+
+Sin pareja, el panel ofrece **consolidar manualmente**: «Consolidar manualmente
+con: [registro] [Vincular]». El selector lista sólo registros de la otra
+evaluación del mismo curso que todavía están disponibles (sin vínculo, sin
+pareja automática y únicos en su intento), con el nombre tal como está
+guardado. Cada registro puede estar en un solo vínculo. No hay similitud de
+nombres ni sugerencias: decide el docente. Dos registros indistinguibles
+(mismo curso y nombre normalizado) dentro de un mismo intento siguen
+«ambiguos» y no se ofrecen. En modo procesado, ambiguo, no seguro y vínculo
+roto dejan la categoría provisoria.
+
+**Evidencia (siempre calculada):** por parte, el mejor resultado válido entre
+A y B. Una parte es válida en un intento si se contabiliza y está completa.
+Si las dos son válidas, la de más aciertos; si empatan, `A = B`; si ninguna,
+«sin evidencia». Las respuestas a revisar no suman; si su resolución pudiera
+subir el mejor resultado, la parte dice «puede subir: a revisar».
+
+**Modo de cierre (por estudiante):**
+
+- **Procesado A+B** (por defecto). La columna «Cuenta para cierre» decide qué
+  partes con evidencia cuentan; si una parte cuenta, cuenta con su mejor
+  resultado. Mientras el docente no decida, se proponen todas las partes con
+  evidencia («propuesta»); cambiar una casilla o «Confirmar esta selección»
+  guarda la decisión. Debajo: resultado considerado (aciertos ÷ total de las
+  partes elegidas, con un decimal) y categoría, recalculados al instante.
+- **Manual.** A y B siguen a la vista como evidencia, pero no se calcula
+  ninguna categoría: el docente la elige (En proceso, Suficiente, Avanzado) y
+  escribe la devolución en texto libre. Se guardan mientras se escribe. Volver a
+  Procesado recupera la selección de partes; lo manual queda guardado sin usarse.
+
+**Categoría en modo procesado**, con la fracción exacta (sin redondear):
+
+| Partes elegidas | En proceso | Suficiente | Avanzado |
+|---|---|---|---|
+| las cuatro (sobre 30) | menos del 55 % (0–16), o P1 sin cumplir | 55 % o más (17–23) y P1 cumplida | 80 % o más (24–30) y P1 cumplida |
+| una, dos o tres | menos del 55 %, o P1 sin cumplir | 55 % o más y P1 cumplida | nunca |
+
+El 55 % reproduce la tolerancia de 5,5 → 6 (17/30, 9/16 y 14/24 superan el
+porcentaje; 16/30 y 13/24, no). Sin partes elegidas: «falta la decisión
+docente».
+
+**Requisito de la Parte 1 · Reconocer:** para salir de En proceso (Suficiente
+o Avanzado) también hay que cumplirlo, aunque el porcentaje alcance. Se usan
+los intentos válidos reales de P1, no el mejor resultado, y no depende de que
+P1 esté elegida para el resultado considerado:
+
+- con P1 válida en A y en B, la suma de aciertos debe llegar a **9/16**
+  (5 + 4, 6 + 3 u 8 + 1 cumplen; 4 + 4 no);
+- con un solo intento válido de P1, **6/8**;
+- sin intentos válidos de P1, no se cumple.
+
+El panel lo muestra en una línea («Parte 1 · Reconocer: 8/16 (A 4/8 + B 4/8) ·
+no alcanza el mínimo de 9/16»; con un intento, «5/8 (sólo B) · no alcanza el
+mínimo de 6/8»), y la categoría dice «por el requisito de la Parte 1» cuando es
+lo que la deja En proceso. En la tabla, la línea de la fila agrega «P1 no
+alcanza». No se guarda nada: se deriva de A y de B.
+
+La categoría se marca **provisoria**, y el panel dice por qué, si respuestas a
+revisar podrían cambiarla (por el porcentaje o porque P1 podría alcanzar su
+mínimo: «puede alcanzarlo: a revisar») o si el emparejamiento es ambiguo o no
+seguro. Si lo pendiente no puede cambiar la categoría, se muestra pero no la
+vuelve provisoria. En modo Manual no se aplica nada de esto.
+
+**Devolución: capa objetiva y orientación** (igual en Procesado y en Manual,
+todo derivado; nada de esto se guarda). El panel se lee en este orden:
+
+1. **Síntesis del cierre:** resultado considerado, requisito de P1 y categoría
+   (procesado), o la categoría elegida (manual).
+2. **Evidencia por partes:** una lectura rápida («Reconocer 75 % · Relacionar
+   87,5 % · …», con la mejor evidencia) y la tabla con A, B y la mejor
+   evidencia, cada una con aciertos/total, porcentaje y procedencia (A, B o
+   A = B). Una parte no contabilizada o incompleta no se presenta como evidencia
+   (sin porcentaje); las respuestas a revisar se indican aparte.
+3. **Evidencia por contenidos** (plegable; el resumen dice qué contenidos tienen
+   dificultad): por eje común, A y B **acumulados** (no el mejor), cada uno con
+   los ítems que su evaluación asigna a ese eje (el 28 de la B cuenta en RAM y
+   en SO) y de todas sus partes válidas, aunque el docente no las haya elegido
+   para la categoría. Aciertos sobre respuestas firmes y porcentaje; las
+   respuestas a revisar, aparte y nunca como error. No es una nota ni cambia la
+   categoría.
+4. **Para seguir trabajando:** orientación por unidades de estudio (las mismas
+   agrupaciones y el mismo orden que la devolución por intento). Es una
+   lectura para el docente: intensidades y orientación no van al papel del
+   estudiante, que sólo lista las preguntas incorrectas por tema.
+
+**Intensidad por contenido** (con n = aciertos + errores firmes de A+B): sin
+señal si hay menos de 2 errores o los errores son menos de un tercio de n;
+**dificultad fuerte** si los errores son mayoría y n ≥ 3; si no, **merece
+atención**. Con 5 ítems o menos coincide con la regla de la devolución por
+intento; con más evidencia (A+B), pocos errores entre muchos aciertos no marcan.
+Con n < 3 se avisa «poca evidencia». Si las respuestas a revisar, resueltas a
+favor, bajarían la intensidad, se marca «(a confirmar)» y la orientación usa la
+menor; si la borrarían, el contenido se nombra aparte: «A confirmar cuando se
+resuelvan las respuestas a revisar».
+
+**De intensidad a orientación**, según la categoría de cierre (la procesada, o
+la manual, que manda en Manual):
+
+| Categoría | dificultad fuerte | merece atención |
+|---|---|---|
+| En proceso | Volver a estudiar | Repasar |
+| Suficiente | Repasar | Consolidar |
+| Avanzado | Reforzar | (no se menciona) |
+| sin categoría todavía | Aspectos a revisar | Aspectos a revisar |
+
+Sin categoría (procesado sin partes elegidas, o manual antes de elegirla) la
+evidencia se muestra igual y la orientación es neutral, sin verbos de cierre;
+al aparecer la categoría se recalcula. Sin contenidos marcados, una frase
+acorde a la categoría (sin categoría, ninguna). Si la categoría
+procesada es En proceso por el requisito de la Parte 1, la orientación lo
+recuerda.
+
+**La devolución de un solo intento** (global, ejes y devolución breve y
+extendida de esa evaluación) sigue igual en la carga y al editar. En Ver queda
+debajo del panel, plegada en «Resultados y devolución de este intento · sólo la
+Evaluación A · no es la devolución de cierre»: es una consulta sobre ese intento;
+la lectura vigente para el cierre es el panel «Cierre A+B».
+
+**Devoluciones de cierre para imprimir.** «Cierre del curso: imprimir o
+exportar…» (en la tabla de evaluaciones guardadas) abre una vista previa con
+una devolución por estudiante del curso completo: las filas de esta
+herramienta y los registros de la otra evaluación que no tienen pareja aquí
+(desde A y desde B sale lo mismo), ordenados por curso y estudiante, con un
+filtro por curso. «Imprimir» imprime sólo esas devoluciones, para hoja Oficio
+(216 × 356 mm, márgenes de 12 mm), al 100 %. Cada bloque no se corta entre
+páginas (`break-inside: avoid`) y lleva, en este orden:
+
+1. estudiante (si un vínculo manual une nombres distintos, los dos), curso y
+   «Calificación del Tercer Bimestre» (así se llama en el papel, como en el
+   boletín): la categoría efectiva (la elegida por el docente o, si no, la
+   de la evidencia, con «provisoria» si corresponde), sin decir de dónde sale.
+   Debajo, el mismo encuadre para todos, coincida o no la calificación con
+   la sugerida: «Las Evaluaciones A y B son una evidencia importante, pero la
+   calificación del tercer bimestre considera también tus otros trabajos, las
+   actividades de aprendizaje en el aula y la valoración conceptual del
+   período.» (A+B es una evidencia; la calificación la decide el docente
+   mirando el período);
+2. «Tus resultados en las Evaluaciones A y B»: una fila por parte con A, B y
+   **Para A+B** («6 de 8»; en A o B, «no se consideró» o «incompleta» si esa
+   parte no es evidencia y «(1 en revisión)» si quedan respuestas a revisar;
+   si de una evaluación no hay ningún registro, una sola celda «Sin
+   resultado» en su columna, sin decir por qué). Para A+B es exactamente la
+   evidencia que usa la sugerencia: la mejor evidencia de cada parte que
+   cuenta («no se consideró» si el docente la dejó afuera, «—» si no hay
+   evidencia válida). La fila **Total** lleva puntaje y porcentaje («25 de 30
+   (83,3 %)»; coma decimal, a lo sumo un decimal, sin «,0»): para A y para B,
+   la suma de sus partes válidas con su propio denominador (14 de 24 si una
+   parte no es válida, nunca sobre 30 inventado); para A+B, el resultado
+   considerado. Por parte, sólo el puntaje (con 6 u 8 preguntas se lee
+   directo y la tabla no se recarga). Debajo, la regla y su resultado:
+   «Para valorar las Evaluaciones A y B, en cada parte se conserva tu mejor
+   resultado entre las dos. Así obtuviste 18 de 30 (60 %).» Con una sola
+   evaluación: «Como de la Evaluación B no hay resultado, para valorar las
+   Evaluaciones A y B se toma tu resultado en la A. Así obtuviste …»; si no
+   cuentan las cuatro partes, «… en las partes que se consideraron»; si lo
+   que está en revisión puede cambiar ese total, «Así obtuviste, por ahora,
+   …». Sin partes que cuenten, no hay total ni frase. Si hay respuestas
+   pendientes de revisión, una línea lo dice («Algunas respuestas todavía se
+   están revisando: estos resultados pueden cambiar.»). Si en alguna parte B
+   supera a A: «De la Evaluación A a la B mejoraste en …»;
+3. «Para revisar — preguntas que tuviste mal en cada evaluación, por tema»:
+   **todas** las respuestas incorrectas firmes de las partes válidas de A y
+   de B (no las que están en revisión), agrupadas por unidad de estudio en el
+   orden de siempre («Sistema operativo — A 8, 15 · B 8, 29»; el 28 de la B
+   está en dos temas y aparece en los dos), y una sola orientación fija:
+   «Cómo seguir: buscá esas preguntas en tus evaluaciones, compará tus
+   respuestas con la clave y volvé a los materiales de clase de esos temas.»
+   Sin incorrectas: «No tuviste respuestas incorrectas en las partes
+   consideradas.» El papel muestra y organiza la evidencia; no la interpreta.
+   No lleva intensidades, verbos de orientación («volver a estudiar»,
+   «repasar», «consolidar», «reforzar»), «te fue mejor en», temas «a
+   confirmar», la explicación del requisito de la Parte 1, procedencias ni la
+   categoría sugerida: todo eso queda en la pantalla docente y en los
+   exports. Salvo la calificación, el papel es el mismo coincida o no la
+   decisión docente con la sugerida;
+4. «Nota de tu docente», si se escribió;
+5. la **clave**, presentada como herramienta para corregirse («Para corregir
+   tus evaluaciones, compará tus respuestas con esta clave: una línea para la
+   Evaluación A y otra para la B; cada número es una pregunta y la letra que lo
+   sigue, su respuesta correcta.»), una línea para A y otra para B, separadas
+   por partes (`A | P1 1B 2A … 8C | P2 9D … | P3 17B 18B/D … | P4 … 30A` y
+   `B | P1 1B 2C … 8B | P2 9D … | P3 … | P4 … 30D`). Sale de la clave de cada herramienta (que las
+   pruebas comparan con cada `clave-docente.md`); con varias respuestas
+   aceptadas se muestran las simples unidas por «/» y una aclaración debajo
+   («A18: se acepta B, D o B+D.»). Sólo esta sección usa una letra algo menor
+   (9 pt) para que cada evaluación entre en un renglón.
+
+No se publica nada: no hay página, ruta ni QR; la clave sólo está en el papel.
+
+**Datos anonimizados para análisis.** En la misma vista, «Exportar datos
+anonimizados para análisis (.json)» descarga, del curso elegido o de todos,
+`cierre-anonimizado-<curso | todos-los-cursos>-<fecha>.json`: una proyección
+derivada para analizar cursos, la escuela, fortalezas, dificultades y cambios
+entre A y B fuera de la herramienta. Se genera sólo al pedirlo, no se guarda y
+no escribe nada. Contiene metadatos (formato, versión, fecha, cursos y
+cantidades por categoría), definiciones de cada campo, la estructura de partes
+y contenidos (con los ítems de cada evaluación) y, por estudiante:
+
+- un id efímero `<curso> · 01`, asignado al azar dentro del curso en cada
+  export (no sigue el orden de los nombres ni es estable entre exports);
+- el curso, los intentos presentes y válidos y el tipo de emparejamiento;
+- el cierre: modo, categoría (la manual en Manual), si es provisoria y por qué
+  (`respuestas_a_revisar`, `emparejamiento_*`, `registro_duplicado`), partes
+  consideradas, resultado considerado y si queda En proceso por P1;
+- el requisito de P1 (aciertos, total, mínimo, si podría cumplirse al revisar);
+- por parte, A y B por separado (estado; puntaje sólo si es válida) y la mejor;
+- por contenido, A y B por separado y acumulados (aciertos, errores, firme,
+  porcentaje, a revisar) y la intensidad.
+
+No incluye nombres (ni normalizados), claves de emparejamiento, ids de registro,
+vínculos manuales, respuestas por ítem, devoluciones ni textos del docente, ni
+claves de almacenamiento. Aun así, el archivo es sensible: un curso chico y una
+categoría pueden bastar para reconocer a alguien; guardarlo fuera del
+repositorio.
+
+**Cierre completo (privado).** En la misma vista, separado del anonimizado y
+con su advertencia, «Exportar cierre completo (privado) (.zip)» descarga, del
+curso elegido o de todos, `cierre-completo-<curso | todos-los-cursos>-<fecha>.zip`:
+un snapshot del cierre para archivar (por ejemplo, en Drive como archivo
+privado). Contiene datos personales: nombres, respuestas y decisiones docentes.
+Se genera en el navegador (un ZIP sin compresión armado por la propia página, sin
+dependencias), no se envía a ningún lado, no se guarda en el navegador y no se
+puede reimportar: es un archivo documental. Adentro:
+
+- `LEEME.txt`: fecha, cursos, cantidad de estudiantes, aviso de privacidad y
+  qué es cada archivo;
+- `cierre-completo.json` (formato, versión, generado): las claves aplicadas
+  (con la excepción de A18), las reglas vigentes, las **fuentes** de A y B tal
+  como están guardadas (respuestas crudas incluidas), los vínculos manuales y,
+  por estudiante, el emparejamiento, la **corrección** (por intento, parte por
+  parte e ítem por ítem; integrada por parte, contenidos), la **sugerencia** de
+  la herramienta (categoría, resultado considerado, P1, provisoria y motivos),
+  la **decisión docente** (categoría elegida si la cambió, final, partes
+  elegidas, nota y el registro guardado; si no hizo nada, no se inventa una
+  decisión) y la **devolución entregada** (lo que se imprime, leído del papel:
+  calificación, encuadre, pendiente, resultados con Para A+B, la frase de
+  A+B («conjunto»), mejoras, temas —cada línea de «Para revisar» y «Cómo
+  seguir»—, nota y presentación de la clave);
+- `resumen.tsv`: una fila por estudiante para abrir en una planilla;
+- `evaluacion-a.tsv` y `evaluacion-b.tsv`: los registros del alcance con la misma
+  serialización que el TSV de cada herramienta;
+- `devoluciones.html`: las devoluciones tal como se imprimen, con los estilos
+  incluidos y sin JavaScript; se abre en cualquier navegador.
+
+No incluye otras claves del navegador ni datos del dispositivo.
+
+**Qué se guarda:** sólo las decisiones que no se pueden derivar, en
+`aula-evaluacion-cierre-v1`:
+`{ estudiantes: { "<curso>\t<estudiante>": { modo, partes, categoria, devolucion } }, vinculos: [{ A: "<curso>\t<estudiante>", B: "<curso>\t<estudiante>" }] }`
+con curso y estudiante normalizados (cada campo, sólo si se decidió; `vinculos`,
+sólo si hay alguno). La decisión de un estudiante con A emparejada (automática
+o manual) va con la clave de su registro de A, para que sea la misma desde las
+dos herramientas; al vincular, si sólo había una decisión con la clave de B,
+pasa a la de A. Desvincular borra sólo ese vínculo. Nunca respuestas ni resultados. Las claves
+`aula-evaluacion-a-v1` y `aula-evaluacion-b-v1` no se escriben desde el cierre.
+Si otra pestaña cambia la otra evaluación o las decisiones, el panel se
+actualiza solo.
+
 ## Valores de cada ítem
 
 | Valor | Significa |
@@ -394,13 +725,44 @@ importación (ida y vuelta exacta con partes
 importación parcial, `\r\n` y BOM) y coincidencia de la clave y los ejes con
 sus documentos.
 
+`tests/herramienta-cierre.test.mjs` prueba el cierre A+B en las dos
+herramientas con datos sintéticos (`Estudiante 01`, `Curso X`): mejor evidencia
+(A gana, B gana, mezcla, empate, parte sólo en A o sólo en B, estudiante sólo
+con B), selección docente y recálculo, umbrales (16, 17, 23 y 24 sobre 30; 9/16,
+13/24, 14/24; nunca Avanzado con menos de cuatro partes), requisito de la
+Parte 1 (9/16 sumando A y B, 6/8 con un intento, sin intentos, fuera de la
+selección, con respuestas a revisar), emparejamiento
+(mayúsculas, tildes, espacios, ambiguo, otro curso, duplicados), a revisar,
+modo manual (categoría y devolución, ida y vuelta con procesado), capa objetiva
+(partes con porcentajes, contenidos acumulados, el 28 en dos ejes, sólo
+evidencia firme, intensidad, orientación según la categoría, igual en Manual y
+Procesado, nada derivado guardado), vínculo
+manual (vincular, desde A y desde B, recarga, desvincular, sin reutilizar un
+registro, precedencia, vínculo roto, indistinguibles), persistencia,
+borrado, export anonimizado (estructura, casos, privacidad estricta buscando
+nombres y textos sintéticos, ids al azar, curso o todos, igual desde A y B, sin
+escribir nada), devoluciones para imprimir (curso completo, orden, secciones, clave de A
+y B igual a cada `clave-docente.md`, A18, en Procesado y Manual), que no haya
+rutas nuevas ni nada de esto en `dist/`, y que nada escriba en los
+almacenamientos de A ni de B.
+
 `pruebas-navegador/` repite el flujo y el layout en Chrome real (WSL con Chrome
 y Node.js de Windows, como `fuente/generar-pdf.mjs`):
 
 ```
 ./pruebas-navegador/correr.sh flujo.mjs
 ./pruebas-navegador/correr.sh layout.mjs despues 1650,1100,820,700,600,480
+./pruebas-navegador/correr.sh cierre.mjs
 ```
+
+`cierre.mjs` abre las herramientas de B y de A en el mismo origen (con
+`URL_HERRAMIENTA`, en `localhost`), con clics y teclas nativos: mejor evidencia,
+selección de partes, recarga, recorrido con Siguiente, modo manual, capa
+objetiva y orientación en los dos modos, devoluciones para imprimir (cada línea
+de clave en un renglón, bloques de menos de media página, PDF en Oficio), export
+anonimizado de un curso y de todos con descarga real,
+vincular,
+recargar y desvincular, y que A y B queden intactos.
 
 `flujo.mjs` usa teclas y clics nativos (incluidas la descarga del `.tsv`, Ver
 / Editar y la importación de un `.tsv` con partes `1011` y de uno inválido). Con `URL_HERRAMIENTA=http://localhost:4321/herramientas/evaluacion-a/`
