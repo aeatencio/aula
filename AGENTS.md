@@ -4,6 +4,7 @@
 
 - La prioridad principal de Aula es pedagógica. Evaluar las decisiones sobre contenido, estructura, navegación y presentación primero por cuánto ayudan a enseñar y aprender. Esta prioridad ordena las decisiones de producto; no relaja las reglas de privacidad, licencia y publicación de las secciones siguientes.
 - Organizar el sitio no consiste sólo en permitir encontrar materiales: debe ayudar a orientarse, comprender, relacionar ideas, recuperar lo trabajado y continuar aprendiendo. Cada material puede cumplir algunas de estas funciones según su propósito.
+- **La herramienta propone. El docente decide.** Las herramientas de Aula pueden calcular, organizar evidencia, sugerir categorías, devoluciones o próximos pasos, pero no reemplazan el criterio pedagógico del docente. La decisión final debe permanecer explícitamente bajo control humano.
 - Conservar una representación textual suficiente de los pizarrones visuales y cuidar la impresión de materiales imprimibles.
 - Los estudiantes son una referencia central del producto y otros docentes son también una audiencia real. Cuando corresponda, dar suficiente contexto para que otro docente comprenda para qué sirve un material y cómo podría aprovecharlo o adaptarlo, sin asumir que estas audiencias requieren productos o arquitecturas separadas.
 

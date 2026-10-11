@@ -153,7 +153,7 @@ test("flujo completo sólo con teclado y exportación de varias evaluaciones", a
   assert.match($("edicion").textContent, /fila 1/);
   t.escribir("30B{Enter}");
   assert.equal(t.filas().length, 3);
-  assert.equal(t.filas()[0].querySelector("td:nth-child(3)").textContent, "Prueba Uno");
+  assert.equal(t.filas()[0].querySelector("td:nth-child(3) .nombre").textContent, "Prueba Uno");
   assert.deepEqual(t.resultados(0), ["8/8 · 100 %resp. 8/8", "8/8 · 100 %resp. 8/8", "8/8 · 100 %resp. 8/8", "5/6 · 83 %resp. 6/6"]);
   t.filas()[0].querySelector('button[data-accion="editar"]').click();
   t.escribir("30-{Enter}");

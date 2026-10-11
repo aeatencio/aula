@@ -8,6 +8,10 @@ Aula reúne materiales utilizados en clase para proyectarlos, consultarlos y rec
 
 Los pizarrones fueron su punto de partida y siguen siendo el material predominante, especialmente útiles cuando un estudiante faltó o no pudo copiar uno. No son el límite del producto: Aula puede incorporar otros recursos cuando una necesidad real de enseñanza lo requiera. El corpus actual refleja principalmente la práctica docente en Tecnologías de la Información y Ciencias de la Computación, sin convertir ese origen en una restricción permanente.
 
+## La herramienta propone. El docente decide.
+
+Las herramientas de Aula pueden calcular, organizar evidencia, sugerir categorías, devoluciones o próximos pasos, pero no reemplazan el criterio pedagógico del docente. La decisión final debe permanecer explícitamente bajo control humano.
+
 ## Publicación y privacidad
 
 Este repositorio contiene material público. El material didáctico legítimamente publicable puede incorporarse directamente; quedan fuera los datos personales de estudiantes, los secretos, la documentación privada y cualquier otro contenido sensible. Los materiales externos deben respetar su autoría, procedencia y condiciones de licencia.

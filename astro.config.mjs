@@ -12,6 +12,11 @@ const HERRAMIENTAS = new Map(
     return [[ruta, html], [`${ruta}index.html`, html]];
   }),
 );
+// Cierre A+B: la misma página de herramienta en modo cierre (lee A y B del
+// mismo origen); una URL neutral, sin «evaluación A» ni «B».
+const CIERRE = "/herramientas/cierre-evaluaciones/";
+HERRAMIENTAS.set(CIERRE, HERRAMIENTAS.get("/herramientas/evaluacion-a/"));
+HERRAMIENTAS.set(`${CIERRE}index.html`, HERRAMIENTAS.get("/herramientas/evaluacion-a/"));
 
 const herramientasLocales = {
   name: "aula-herramientas-locales",

@@ -80,7 +80,7 @@ Son las únicas excepciones de esta clave. El instrumento no se modifica; lo que
 
 ### Ítem 12 · sólo D
 
-Se acepta sólo **D** («La huella que lee el sensor»). La opción **A** («La orden de desbloquear la pantalla») resultó especialmente plausible: tras la toma del 29/09 varios estudiantes la eligieron. Confunde lo que la persona quiere lograr con la información que ingresa al celular en ese momento, así que no se acepta.
+Se acepta sólo **D** («La huella que lee el sensor»). La opción **A** («La orden de desbloquear la pantalla») resultó especialmente plausible en el uso del instrumento. Confunde lo que la persona quiere lograr con la información que ingresa al celular en ese momento, así que no se acepta.
 
 ### Ítem 18 · B, D o B+D
 
