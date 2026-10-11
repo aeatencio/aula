@@ -308,8 +308,9 @@ ningún paso ni guarda nada: el docente interviene sólo en las excepciones.
   «?» si hay un problema de pareja), la categoría efectiva y un estado: **Lista**
   o lo que pide atención: **Provisorio** (respuestas a revisar que podrían
   cambiar la sugerencia), **Revisar pareja**, **Sin evidencia** o **Sin
-  categoría** (ninguna parte elegida). El estado describe la evidencia: cambiar
-  la categoría no lo oculta (por ejemplo, «Provisorio ≠ sugerida»). Una
+  categoría** (ninguna parte elegida, o cierre manual sin categoría elegida:
+  no se usa la sugerida, y el papel dice «sin definir»). El estado describe la
+  evidencia: cambiar la categoría no lo oculta (por ejemplo, «Provisorio ≠ sugerida»). Una
   corrección hecha en la herramienta de A o de B, en otra pestaña del mismo
   navegador, se ve al instante. Con un solo intento, «Sólo A» o «Sólo B».
   Si el docente eligió una categoría distinta de la sugerida, una marca discreta
@@ -324,7 +325,8 @@ ningún paso ni guarda nada: el docente interviene sólo en las excepciones.
   la sugerida hace lo mismo). Al cambiar la categoría, «Agregar nota docente para
   la devolución…» se abre sola con una guía («¿En qué otras evidencias del
   período se apoya la categoría? …») que no se guarda; la nota es siempre
-  opcional, se imprime («Nota de tu docente») y no va al export. «← Anterior» y
+  opcional, se imprime («Nota de tu docente»), no va al export anonimizado y sí
+  forma parte del export privado completo. «← Anterior» y
   «Siguiente →» recorren la lista. Plegados: detalle A/B por parte, contenidos y
   orientación, enlaces a la devolución de cada intento en su herramienta
   (`#ver=<id>` abre esa evaluación en Ver) e información técnica.
@@ -587,9 +589,9 @@ puede reimportar: es un archivo documental. Adentro:
   por estudiante, el emparejamiento, la **corrección** (por intento, parte por
   parte e ítem por ítem; integrada por parte, contenidos), la **sugerencia** de
   la herramienta (categoría, resultado considerado, P1, provisoria y motivos),
-  la **decisión docente** (categoría elegida si la cambió, final, partes
-  elegidas, nota y el registro guardado; si no hizo nada, no se inventa una
-  decisión) y la **devolución entregada** (lo que se imprime, leído del papel:
+  la **decisión docente** (categoría elegida si la cambió, final —null en un
+  cierre manual sin categoría elegida—, partes elegidas, nota y el registro
+  guardado; si no hizo nada, no se inventa una decisión) y la **devolución entregada** (lo que se imprime, leído del papel:
   calificación, encuadre, pendiente, resultados con Para A+B, la frase de
   A+B («conjunto»), mejoras, temas —cada línea de «Para revisar» y «Cómo
   seguir»—, nota y presentación de la clave);

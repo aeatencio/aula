@@ -1646,6 +1646,58 @@ test("trabajo por excepción: un cambio de categoría no oculta el estado de la 
   t.cerrar();
 });
 
+test("Manual sin categoría en Cierre A+B: no hereda la sugerida (lista, revisión, papel y exports); manual con categoría y procesado, como siempre", async () => {
+  // Los tres con la misma evidencia (20/30, P1 12/16): sugerida Suficiente, sin nada a revisar.
+  const nombres = ["Estudiante 61", "Estudiante 62", "Estudiante 63"];
+  const a = nombres.map((n) => fila("A", n, [6, 6, 6, 4]));
+  const b = nombres.map((n) => fila("B", n, [6, 6, 6, 4]));
+  const cierre = JSON.stringify({ estudiantes: {
+    "curso x\testudiante 61": { modo: "manual", categoria: null },
+    "curso x\testudiante 63": { modo: "manual", categoria: "En proceso" },
+  } });
+  const t = pantalla({ a, b, cierre });
+  const est = (n) => listaCC(t).find((x) => x.nombre.startsWith(n));
+  // Lista: 61 sin categoría efectiva y pidiendo atención; 62 procesado con la sugerida; 63 con la elegida.
+  assert.deepEqual([est("Estudiante 61").cat, est("Estudiante 61").estado], ["—", "Sin categoría"]);
+  assert.deepEqual([est("Estudiante 62").cat, est("Estudiante 62").estado], ["Suficiente", "Lista"]);
+  assert.deepEqual([est("Estudiante 63").cat, est("Estudiante 63").estado], ["En proceso", "Lista"]);
+  assert.equal(marca(t, "Estudiante 61"), "");
+  assert.match(t.$("ccResumen").textContent, /^Listas 2 de 3 · Requieren atención 1 · Modificadas por el docente 1$/);
+  // Revisión: la sugerida a la vista, pero ninguna categoría del período marcada.
+  revisar(t, "Estudiante 61");
+  assert.equal(t.$("ccEstado").textContent, "Sin categoría");
+  assert.equal(t.$("ccSugerida").textContent, "Suficiente");
+  assert.equal(pulsada(t), null, "la sugerida no queda marcada como efectiva");
+  assert.equal(t.$("ccOverride"), null);
+  assert.match(t.$("cierreCurso").querySelector(".cc-pliegues").textContent, /Categoría del período: sin elegir \(cierre manual sin categoría\)\./);
+  t.$("ccVolver").click();
+  // Papel: «sin definir», nunca la sugerida.
+  const bs = bloques(t);
+  const cat = (n) => bs.find((x) => x.querySelector(".final-nombre").textContent === n).querySelector(".final-cat").textContent;
+  assert.equal(cat("Estudiante 61"), "Calificación del Tercer Bimestre: sin definir");
+  assert.equal(cat("Estudiante 62"), "Calificación del Tercer Bimestre: Suficiente");
+  assert.equal(cat("Estudiante 63"), "Calificación del Tercer Bimestre: En proceso");
+  // Export anonimizado: sin categoría para el manual sin elegir.
+  const { datos } = await exportar(t);
+  const anonimos = datos.estudiantes.map((e) => JSON.stringify([e.cierre.modo, e.cierre.categoria])).sort();
+  assert.deepEqual(anonimos, ['["manual","En proceso"]', '["manual",null]', '["procesado","Suficiente"]']);
+  assert.deepEqual(datos.alcance.por_curso[0].categorias, { "En proceso": 1, Suficiente: 1, Avanzado: 0, sin_categoria: 1 });
+  // Export privado: la sugerencia queda como sugerencia; la decisión final, sin inventar.
+  const { json, archivos } = await exportarCompleto(t);
+  const e61 = json.estudiantes.find((e) => e.estudiante === "Estudiante 61");
+  assert.equal(e61.sugerencia.categoria, "Suficiente");
+  assert.deepEqual(e61.decision_docente, { categoria_elegida: null, categoria_final: null, coincide_con_sugerida: false, partes_elegidas: null, nota: null,
+    registro_guardado: { modo: "manual", categoria: null } });
+  assert.equal(e61.emparejamiento.estado, "Sin categoría");
+  assert.equal(e61.devolucion_entregada.categoria_del_periodo, "Calificación del Tercer Bimestre: sin definir");
+  assert.equal(json.estudiantes.find((e) => e.estudiante === "Estudiante 63").decision_docente.categoria_final, "En proceso");
+  assert.equal(json.estudiantes.find((e) => e.estudiante === "Estudiante 62").decision_docente.categoria_final, "Suficiente");
+  const [cab, ...filasTsv] = archivos["resumen.tsv"].trim().split("\n").map((l) => l.split("\t"));
+  const r61 = Object.fromEntries(cab.map((k, i) => [k, filasTsv.find((r) => r[2] === "Estudiante 61")[i]]));
+  assert.deepEqual([r61.categoria_sugerida, r61.categoria_final, r61.modificada_por_docente, r61.estado], ["Suficiente", "", "no", "Sin categoría"]);
+  t.cerrar();
+});
+
 test("Cierre A+B: una corrección hecha en la herramienta de A o de B (otra pestaña) se ve al instante", () => {
   const t = pantalla({
     a: [fila("A", "Estudiante 71", [5, 5, 5, 4]), fila("A", "Estudiante 72", [7, 6, 5, 5])],

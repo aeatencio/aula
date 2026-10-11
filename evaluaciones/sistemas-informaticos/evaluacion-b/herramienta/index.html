@@ -2281,9 +2281,10 @@
   let vistaCierre = { curso: "", ref: null };
   // Categoría efectiva: la que eligió el docente si la cambió (override,
   // guardado como cierre manual); si no, la sugerida por la evidencia. Aceptar
-  // la sugerencia no guarda nada.
+  // la sugerencia no guarda nada. Un cierre manual sin categoría elegida no
+  // tiene efectiva: el docente todavía no la eligió, y no se usa la sugerida.
   const overrideDe = (c) => (c.modo === "manual" ? c.manual.categoria : null);
-  const efectivaDe = (c) => overrideDe(c) ?? c.sugerida;
+  const efectivaDe = (c) => (c.modo === "manual" ? overrideDe(c) : c.sugerida);
   const modificada = (c) => !!(overrideDe(c) && overrideDe(c) !== c.sugerida);
   // Estado de un estudiante: «Lista» salvo lo que de verdad pide atención. La
   // evidencia (pareja, falta de evidencia, respuestas a revisar que podrían
@@ -2296,7 +2297,7 @@
     if (!c.disponibles.some(Boolean)) return "Sin evidencia";
     if (c.sugerida && c.categoriaTecho !== c.sugerida) return "Provisorio";
     if (overrideDe(c)) return "Lista";
-    if (!c.sugerida) return "Sin categoría";
+    if (!efectivaDe(c)) return "Sin categoría";
     return "Lista";
   }
   const CLASE_ESTADO = { Lista: "listo", "Sin categoría": "decision", Provisorio: "provisorio", "Revisar pareja": "pareja", "Sin evidencia": "sin-evidencia" };
@@ -2405,7 +2406,7 @@
         `<td>${pp.mejor ? `${pp.mejor.aciertos}/${pp.mejor.total}${pctSpan(pp.mejor.aciertos, pp.mejor.total)} · ${pp.mejor.de.join(" = ")}` : "sin evidencia"}</td></tr>`).join("") + `</tbody>${filaTotal(c)}</table>`;
     const tecnica = `<p>Emparejamiento: ${EMPAREJAMIENTO[c.emparejamiento] ?? c.emparejamiento}${c.vinculo && c.emparejamiento === "manual" ? ` · <button type="button" id="ccDesvincular">Desvincular</button>` : ""}</p>` +
       (c.motivos.length ? `<p>Motivos de provisoria: ${c.motivos.join("; ")}.</p>` : "") +
-      `<p>Categoría del período: ${override ? `elegida por el docente (${override})` : "la sugerida por la evidencia (no se guarda ninguna decisión)"}.</p>`;
+      `<p>Categoría del período: ${override ? `elegida por el docente (${override})` : c.modo === "manual" ? "sin elegir (cierre manual sin categoría)" : "la sugerida por la evidencia (no se guarda ninguna decisión)"}.</p>`;
     const pliegues = `<div class="cc-pliegues">` +
       `<details><summary>Detalle por parte: A, B y mejor resultado</summary>${detalle}</details>` +
       `<details><summary>Contenidos y orientación</summary>${textoContenidos(c)}<div class="cierre-orientacion"><h4 class="cierre-sec">Para seguir trabajando</h4>` +
@@ -2655,7 +2656,7 @@
       }])),
       reglas: { suficiente_desde: 0.55, avanzado_desde: 0.8, avanzado_requiere_cuatro_partes: true, requisito_p1: { dos_intentos: "9/16", un_intento: "6/8" },
         parte_valida: "contabilizada y completa", mejor_evidencia: "por parte, el mayor puntaje válido entre A y B",
-        categoria_final: "la elegida por el docente si la cambió; si no, la sugerida por la evidencia" },
+        categoria_final: "la elegida por el docente si la cambió; si no, la sugerida por la evidencia; null en un cierre manual sin categoría elegida" },
       fuentes,
       vinculos_manuales: d.vinculos.filter((v) => claves.has(`A${v.A}`) || claves.has(`B${v.B}`)),
       estudiantes,
