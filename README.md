@@ -16,6 +16,8 @@ Las herramientas de Aula pueden calcular, organizar evidencia, sugerir categorí
 
 Este repositorio contiene material público. El material didáctico legítimamente publicable puede incorporarse directamente; quedan fuera los datos personales de estudiantes, los secretos, la documentación privada y cualquier otro contenido sensible. Los materiales externos deben respetar su autoría, procedencia y condiciones de licencia.
 
+Los materiales finales se recuperan por defecto: lo destinado a estudiantes, incluidos sus PDF para imprimir, queda versionado y se puede volver a consultar e imprimir desde Aula. Claves, soluciones o información que anticipe una respuesta pueden quedar fuera de la navegación de estudiantes cuando eso protege el aprendizaje; esa exclusión es una decisión deliberada, no un efecto de la implementación.
+
 Las evaluaciones se conservan y versionan en `evaluaciones/`; sólo aparecen en el sitio Aula si se decide integrarlas explícitamente.
 
 ## Contenido
@@ -51,6 +53,7 @@ Un tema reúne varios materiales que se usan juntos.
 
 - [Un sistema, distintas miradas](/un-sistema-distintas-miradas/) · Sistemas Informáticos. Lectura, actividad imprimible y guía docente alrededor del pizarrón *Tres miradas sobre una misma situación*, que reutiliza *Entrada, procesamiento y salida*, *El estado de un sistema* e *Instrucciones, datos, operaciones y resultados*.
 - [El sistema operativo](/sistema-operativo/) · Sistemas Informáticos. Ficha de síntesis, guía gradual, práctica escrita e interactiva, pizarrones relacionados y recursos docentes.
+- [Lo que queríamos y lo que pasó](/lo-que-queriamos-y-lo-que-paso/) · Pensamiento Computacional. Hoja para resolver en papel, práctica en pantalla para predecir, ejecutar y ajustar un programa, y guía docente con clave, alrededor del pizarrón *La máquina obedece exactamente*.
 - [Hilos, agentes y arneses](/hilos-agentes-y-arneses/) · Pensamiento Computacional. Lectura breve que combina los pizarrones *Hilos y agentes* y *Agentes y arneses*.
 
 La relación entre los materiales de un tema se declara en `src/data/`, junto a los recorridos. No hay un sistema general de formatos ni un índice de tipos: cada tema describe su propio conjunto.
@@ -58,9 +61,10 @@ La relación entre los materiales de un tema se declara en `src/data/`, junto a 
 ### Recorridos por escuela
 
 - **Gabriela Mistral · 3.º año · 3.er bimestre 2026**
+- **Gabriela Mistral · 3.º año · 4.º bimestre 2026**
 - **Sistemas Informáticos · CFP 7 · 2026**
 
-Cada material tiene una única página. Un mismo material puede formar parte de más de un recorrido; los recorridos lo referencian sin duplicar el contenido.
+Cada material tiene una única página. La escuela, el curso y el período son contexto de uso, no identidad del material: los materiales pertenecen al corpus general de Aula, y los recorridos registran dónde y en qué orden se usaron. Un mismo material puede formar parte de más de un recorrido; los recorridos lo referencian sin duplicar el contenido.
 
 ## Implementación
 

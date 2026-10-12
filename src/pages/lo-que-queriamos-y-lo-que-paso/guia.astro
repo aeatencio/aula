@@ -1,0 +1,545 @@
+---
+import {
+  ideaFinal,
+  instrucciones,
+  letras,
+  preguntas,
+  traza,
+} from "../../data/actividad-lo-que-queriamos";
+import { serieLoQueQueriamos } from "../../data/serie-lo-que-queriamos";
+import MaterialLayout from "../../layouts/MaterialLayout.astro";
+
+const pdfGuia =
+  "/materiales/lo-que-queriamos-y-lo-que-paso/lo-que-queriamos-y-lo-que-paso-guia-oficio-216x356.pdf";
+
+/** El total con el ajuste de la pregunta 3: primero el descuento, después el envío. */
+const ajustado = [
+  { n: 1, total: "$10.000" },
+  { n: 3, total: "$9.000" },
+  { n: 2, total: "$11.000" },
+  { n: 4, total: "$11.000" },
+];
+---
+
+<MaterialLayout
+  title="Guía para la clase"
+  description="Guía docente de «Lo que queríamos y lo que pasó»: idea central, qué recuperar, un recorrido posible que puede compartir el encuentro con otra tarea, qué escribir en el pizarrón y clave para corregir en común."
+  tipo="Guía docente"
+  bajada="Para conducir la clase y corregir en común"
+  serie={serieLoQueQueriamos}
+  tituloPizarrones="Para recuperar"
+  imprimirPie={false}
+>
+  <p class="guia-pdf">
+    Para imprimir:{" "}
+    <a href={pdfGuia} type="application/pdf">la guía en PDF</a>{" "}
+    (oficio 216 × 356 mm; la segunda hoja tiene la clave). Para recoger las
+    respuestas:{" "}
+    <a href="/lo-que-queriamos-y-lo-que-paso/respuestas/">papelitos recortables</a>{" "}
+    (14 por hoja oficio).
+  </p>
+
+  <section class="bloque" aria-labelledby="idea">
+    <h2 id="idea">Idea que tiene que quedar</h2>
+    <p class="idea">{ideaFinal}</p>
+    <p>
+      Es una apertura. Trabaja intención, instrucción, secuencia, ejecución,
+      orden y ajuste. Condiciones, repeticiones y procedimientos quedan para
+      después: si aparecen en la conversación, se anotan y se dejan para más
+      adelante.
+    </p>
+  </section>
+
+  <section class="bloque" aria-labelledby="recuperar">
+    <h2 id="recuperar">Qué se recupera</h2>
+    <ul class="lista">
+      <li>
+        <a href="/pizarrones/la-maquina-obedece-exactamente/">
+          La máquina obedece exactamente
+        </a>
+        {" — "}la pieza central: la pregunta y la cadena intención →
+        instrucciones → ejecución → ajuste.
+      </li>
+      <li>
+        <a href="/pizarrones/instrucciones-datos-operaciones-y-resultados/">
+          Instrucciones, datos, operaciones y resultados
+        </a>
+        {" — "}un programa organiza instrucciones, y un resultado puede usarse
+        como dato para continuar. El total de la tienda funciona así.
+      </li>
+      <li>
+        <a href="/practicar-sistemas-informaticos/">
+          Qué llega, qué hace, qué conserva y qué comunica
+        </a>
+        {" — "}el toque por error en el microondas: el sistema actúa con la
+        información que recibe, no con lo que la persona quería.
+      </li>
+    </ul>
+  </section>
+
+  <section class="bloque" aria-labelledby="recorrido">
+    <h2 id="recorrido">Un recorrido posible</h2>
+    <p class="apoyo">
+      Unos 45 minutos. Puede compartir el encuentro con otra tarea, por ejemplo
+      la devolución de una evaluación. Los tiempos son orientativos; el orden
+      importa más que la duración.
+    </p>
+
+    <ol class="momentos">
+      <li>
+        <p class="momento-nombre">Desde la devolución, si la hay</p>
+        <p>
+          Al devolver una evaluación de Sistemas Informáticos, buscar respuestas
+          que confundieron lo que la persona quería lograr con la información
+          que le llegó al sistema. Cerrar la devolución con esa confusión: «El
+          sistema no recibe lo que queremos: recibe una entrada, por ejemplo la
+          señal de una tecla. Lo que hace con ella lo indican las instrucciones
+          de su programa. Hoy empezamos a mirar esas instrucciones».
+        </p>
+      </li>
+
+      <li>
+        <p class="momento-nombre">
+          Recuperar oralmente
+          <span class="momento-tiempo">unos 5 minutos</span>
+        </p>
+        <p>
+          «Si alguien toca +30&nbsp;s queriendo detener el microondas, ¿qué hace
+          el microondas? ¿Por qué?». Después: «Un programa organiza
+          instrucciones. ¿Quién las ejecuta?». Escuchar sin definir.
+        </p>
+      </li>
+
+      <li>
+        <p class="momento-nombre">
+          Pizarrón
+          <span class="momento-tiempo">unos 5 minutos</span>
+        </p>
+        <p>
+          Proyectar <em>La máquina obedece exactamente</em> o copiar sólo la
+          pregunta, la cadena de cuatro pasos y la frase final. No adelantar el
+          caso de la tienda: es lo que trabaja la hoja.
+        </p>
+      </li>
+
+      <li>
+        <p class="momento-nombre">
+          Hoja individual
+          <span class="momento-tiempo">unos 20 minutos</span>
+        </p>
+        <p>
+          Entregarla después del pizarrón. Lectura silenciosa, sin celular ni
+          computadora. Mientras trabajan, no confirmar respuestas: repreguntar.
+          «¿Cuánto vale el total justo antes de la instrucción 3?» «Eso, ¿lo
+          dicen las instrucciones o lo que quería la dueña?»
+        </p>
+      </li>
+
+      <li>
+        <p class="momento-nombre">
+          Corrección en común
+          <span class="momento-tiempo">unos 12 minutos</span>
+        </p>
+        <p>
+          Una pregunta por vez. Antes de dar la respuesta, preguntar cuántos
+          eligieron cada letra y pedir que alguien defienda una opción
+          incorrecta y otra persona la correcta. Seguir el total en el pizarrón
+          con las tablas de «En el pizarrón, para corregir». Cada estudiante
+          marca y corrige su propia hoja. Sin nota.
+        </p>
+      </li>
+
+      <li>
+        <p class="momento-nombre">
+          Cerrar
+          <span class="momento-tiempo">unos 2 minutos</span>
+        </p>
+        <p>Leer o dejar escrita la idea del principio de esta guía.</p>
+      </li>
+    </ol>
+  </section>
+
+  <section class="bloque" aria-labelledby="corte">
+    <h2 id="corte">Si se corta antes</h2>
+    <ul class="lista">
+      <li>
+        Con el microondas y el pizarrón la idea ya queda planteada. La hoja
+        puede abrir el encuentro siguiente.
+      </li>
+      <li>
+        Si la hoja se resolvió pero no se corrigió, la corrección abre el
+        encuentro siguiente. La tabla del total sirve de puente para seguir con
+        secuencia y orden.
+      </li>
+      <li>
+        Si hay poco tiempo para la hoja, priorizar las preguntas 1 y 4: con
+        ellas se sostiene la idea central. La 4 distingue entrada de
+        instrucciones: conviene no saltearla en la corrección.
+      </li>
+    </ul>
+  </section>
+
+  <section class="bloque correccion" aria-labelledby="pizarron">
+    <h2 id="pizarron">En el pizarrón, para corregir</h2>
+    <p>
+      Seguir el valor del total instrucción por instrucción. La primera tabla
+      responde la pregunta 1; la segunda, la 3.
+    </p>
+    <div class="trazas">
+      <table class="traza">
+        <caption>Como está</caption>
+        <thead>
+          <tr><th scope="col">Instrucción</th><th scope="col">Total</th></tr>
+        </thead>
+        <tbody>
+          {instrucciones.map((instruccion, i) => (
+            <tr><td>{i + 1}. {instruccion}</td><td>{traza[i]}</td></tr>
+          ))}
+        </tbody>
+      </table>
+      <table class="traza">
+        <caption>Con las instrucciones 2 y 3 intercambiadas</caption>
+        <thead>
+          <tr><th scope="col">Instrucción</th><th scope="col">Total</th></tr>
+        </thead>
+        <tbody>
+          {ajustado.map((fila) => (
+            <tr><td>{fila.n}. {instrucciones[fila.n - 1]}</td><td>{fila.total}</td></tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="bloque clave" aria-labelledby="clave">
+    <h2 id="clave">
+      Clave
+      <span class="clave-de">Lo que queríamos y lo que pasó</span>
+    </h2>
+    <p class="apoyo">
+      Para corregir en común y autocorregir; no es para poner nota. Cada
+      opción incorrecta muestra una confusión distinta: conviene escuchar por
+      qué la eligieron.
+    </p>
+    <ol class="clave-lista">
+      {preguntas.map((pregunta) => (
+        <li class="clave-item">
+          <p class="clave-respuesta">
+            <span class="clave-letra">{pregunta.respuesta}</span>
+            {pregunta.opciones[pregunta.respuesta]}
+          </p>
+          <p class="clave-porque">{pregunta.porque}</p>
+          <ul class="clave-otras">
+            {letras
+              .filter((letra) => letra !== pregunta.respuesta)
+              .map((letra) => (
+                <li>
+                  <strong>{letra}</strong> · {pregunta.siEligieron[letra]}
+                </li>
+              ))}
+          </ul>
+        </li>
+      ))}
+    </ol>
+  </section>
+</MaterialLayout>
+
+<style>
+  .bloque + .bloque {
+    margin-top: 2.25rem;
+  }
+
+  .guia-pdf {
+    margin: 0 0 2rem;
+    color: var(--muted);
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  .guia-pdf a {
+    color: var(--ink);
+    font-weight: 700;
+    text-decoration: none;
+    border-bottom: 2px solid var(--accent);
+  }
+
+  .bloque h2 {
+    margin: 0 0 0.85rem;
+    font-size: clamp(1.2rem, 0.35vw + 1.1rem, 1.45rem);
+    line-height: 1.25;
+  }
+
+  .bloque p {
+    margin: 0 0 0.75rem;
+  }
+
+  .idea {
+    padding: 0.85rem 0 0.9rem 1rem;
+    border-left: 4px solid var(--emphasis);
+    font-weight: 700;
+  }
+
+  .apoyo {
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  .lista {
+    margin: 0;
+    padding-left: 1.3rem;
+  }
+
+  .lista li + li {
+    margin-top: 0.5rem;
+  }
+
+  .bloque a {
+    color: var(--ink);
+    font-weight: 700;
+    text-decoration: none;
+    border-bottom: 2px solid var(--accent);
+  }
+
+  .bloque a:hover {
+    color: var(--accent);
+  }
+
+  .momentos {
+    margin: 0;
+    padding-left: 1.9rem;
+  }
+
+  .momentos > li + li {
+    margin-top: 1rem;
+  }
+
+  .momentos > li::marker {
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .momentos p {
+    margin: 0;
+  }
+
+  .momento-nombre {
+    font-weight: 700;
+  }
+
+  .momento-tiempo {
+    margin-left: 0.5rem;
+    color: var(--muted);
+    font-size: 0.9em;
+    font-weight: 600;
+  }
+
+  .trazas {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem 1.5rem;
+  }
+
+  .traza {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95em;
+  }
+
+  .traza caption {
+    margin-bottom: 0.35rem;
+    font-weight: 700;
+    text-align: left;
+  }
+
+  .traza th,
+  .traza td {
+    padding: 0.3rem 0.5rem;
+    border: 1px solid var(--line);
+    text-align: left;
+  }
+
+  .traza td:last-child,
+  .traza th:last-child {
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  .clave h2 {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.2rem 0.7rem;
+  }
+
+  .clave-de {
+    color: var(--muted);
+    font-size: 0.75em;
+    font-weight: 600;
+  }
+
+  .clave-lista {
+    margin: 0;
+    padding-left: 1.9rem;
+  }
+
+  .clave-lista > li::marker {
+    font-weight: 700;
+  }
+
+  .clave-item + .clave-item {
+    margin-top: 1.1rem;
+  }
+
+  .clave-item p {
+    margin: 0;
+  }
+
+  .clave-respuesta {
+    font-weight: 700;
+  }
+
+  .clave-letra {
+    display: inline-block;
+    min-width: 1.6em;
+    margin-right: 0.4rem;
+    border: 2px solid var(--line);
+    text-align: center;
+  }
+
+  .clave-porque {
+    margin-top: 0.2rem !important;
+  }
+
+  .clave-otras {
+    margin: 0.35rem 0 0;
+    padding: 0;
+    color: var(--muted);
+    font-size: 0.95em;
+    list-style: none;
+  }
+
+  @media (max-width: 44rem) {
+    .trazas {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* Mismo papel que la hoja del estudiante: oficio (216 × 356 mm). */
+  @page {
+    size: 216mm 356mm;
+    margin: 13mm 15mm;
+  }
+
+  @media print {
+    .guia-pdf {
+      display: none;
+    }
+
+    :global(body),
+    :global(.material) {
+      color: #000;
+      font-size: 11pt;
+      line-height: 1.35;
+    }
+
+    :global(.material > .apertura) {
+      margin-bottom: 4mm;
+      padding-bottom: 2mm;
+    }
+
+    :global(.material > .apertura .page-title) {
+      font-size: 16pt;
+      margin: 0;
+    }
+
+    :global(.material > .apertura .ubicacion),
+    :global(.material > .apertura .ubicacion a),
+    :global(.material > .apertura .bajada) {
+      color: #000 !important;
+      border-bottom: 0 !important;
+    }
+
+    :global(.material > .apertura .bajada) {
+      font-size: 11pt;
+      margin-top: 1mm;
+    }
+
+    .bloque + .bloque {
+      margin-top: 4mm;
+    }
+
+    .bloque h2 {
+      margin-bottom: 1.5mm;
+      font-size: 12pt;
+    }
+
+    .bloque p {
+      margin-bottom: 1.5mm;
+    }
+
+    .idea {
+      padding: 1mm 0 1mm 3mm;
+      border-left-width: 2pt;
+    }
+
+    .apoyo,
+    .momento-tiempo,
+    .clave-de,
+    .clave-otras {
+      color: #000;
+    }
+
+    .bloque a {
+      border-bottom: 0;
+    }
+
+    .lista li + li {
+      margin-top: 0.8mm;
+    }
+
+    .momentos > li + li {
+      margin-top: 1.8mm;
+    }
+
+    .momentos > li::marker {
+      color: #000;
+    }
+
+    .traza {
+      font-size: 9.5pt;
+    }
+
+    .traza th,
+    .traza td {
+      padding: 0.6mm 1.5mm;
+      border-width: 0.75pt;
+      border-color: #000;
+    }
+
+    .bloque {
+      break-inside: avoid;
+    }
+
+    /* Segunda hoja: todo lo necesario para corregir, separado del guion. */
+    .correccion {
+      break-before: page;
+    }
+
+    .clave {
+      break-inside: auto;
+    }
+
+    .clave-item {
+      break-inside: avoid;
+    }
+
+    .clave-item + .clave-item {
+      margin-top: 3.5mm;
+    }
+
+    .clave-letra {
+      border-width: 1pt;
+      border-color: #000;
+    }
+  }
+</style>

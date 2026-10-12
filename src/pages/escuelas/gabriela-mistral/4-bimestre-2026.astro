@@ -1,0 +1,76 @@
+---
+import {
+  hrefConRecorrido,
+  requireRecorrido,
+} from "../../../data/recorridos";
+import Layout from "../../../layouts/Layout.astro";
+
+const recorrido = requireRecorrido("gm-2026-4b");
+---
+
+<Layout
+  title={`${recorrido.nombre} · Aula`}
+  description="Materiales del recorrido de 3.º año de Gabriela Mistral durante el cuarto bimestre de 2026: Pensamiento Computacional y Programación."
+  current="escuelas"
+>
+  <p class="ubicacion-recorrido">Escuelas · Gabriela Mistral</p>
+  <h1 class="page-title">{recorrido.nombre}</h1>
+  <p class="lede">
+    Pensamiento Computacional y Programación. El pizarrón plantea la idea; la
+    hoja la trabaja en papel, en clase; la práctica en pantalla permite
+    predecir, ejecutar y ajustar el programa, para ampliar o recuperar.
+  </p>
+
+  <ol class="lista-pizarrones">
+    {recorrido.materiales.map((material) => (
+      <li>
+        <a href={hrefConRecorrido(material.href, recorrido.id)}>
+          {material.title}
+        </a>
+        {material.tipo && (
+          <span class="tipo-material">{material.tipo}</span>
+        )}
+      </li>
+    ))}
+  </ol>
+</Layout>
+
+<style>
+  .ubicacion-recorrido {
+    margin: 0 0 0.45rem;
+    color: var(--muted);
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  .lista-pizarrones {
+    list-style: decimal;
+    padding-left: 1.7rem;
+  }
+
+  .lede a {
+    color: var(--ink);
+    font-weight: 700;
+    text-decoration: none;
+    border-bottom: 2px solid var(--accent);
+  }
+
+  .lede a:hover {
+    color: var(--accent);
+  }
+
+  .lista-pizarrones li::marker {
+    color: var(--muted);
+    font-weight: 700;
+  }
+
+  .tipo-material {
+    margin-left: 0.45rem;
+    color: var(--muted);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+</style>

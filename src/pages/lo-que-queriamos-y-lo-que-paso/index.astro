@@ -1,0 +1,674 @@
+---
+import {
+  instrucciones,
+  letras,
+  preguntas,
+} from "../../data/actividad-lo-que-queriamos";
+import { serieLoQueQueriamos } from "../../data/serie-lo-que-queriamos";
+import MaterialLayout from "../../layouts/MaterialLayout.astro";
+
+const title = "Lo que queríamos y lo que pasó";
+const pdfHoja =
+  "/materiales/lo-que-queriamos-y-lo-que-paso/lo-que-queriamos-y-lo-que-paso-oficio-216x356.pdf";
+
+/** Opciones cortas en una fila o en dos columnas; las largas, una por renglón. */
+function disposicion(opciones: Record<string, string>): string {
+  const largo = Math.max(...Object.values(opciones).map((texto) => texto.length));
+  if (largo <= 12) return "opciones opciones--fila";
+  if (largo <= 46) return "opciones opciones--columnas";
+  return "opciones";
+}
+---
+
+<MaterialLayout
+  title={title}
+  description="Actividad de Pensamiento Computacional para resolver en pantalla o en papel: leer un programa breve, predecir qué muestra, elegir cómo ajustarlo y distinguir lo que queríamos de lo que la máquina ejecuta."
+  tipo="Actividad"
+  bajada="Leer un programa breve, predecir qué hace y elegir cómo ajustarlo"
+  serie={serieLoQueQueriamos}
+  tituloPizarrones="Para recuperar"
+  imprimirPie={false}
+>
+  <header class="hoja-cabecera">
+    <p class="hoja-ubicacion">Pensamiento Computacional · Actividad</p>
+    <p class="hoja-titulo">{title}</p>
+  </header>
+
+  <p class="consigna-general">
+    Leé el texto y, en cada pregunta, marcá la opción que mejor responde. Podés
+    volver al texto cuando lo necesites.
+  </p>
+
+  <p class="hoja-pdf">
+    Para imprimirla o resolverla en papel:{" "}
+    <a href={pdfHoja} type="application/pdf">la hoja en PDF</a>{" "}
+    <span class="hoja-pdf-formato">(oficio 216 × 356 mm, sin respuestas)</span>
+  </p>
+
+  <section class="lectura" aria-label="Texto para leer">
+    <p>
+      Un programa organiza instrucciones. Al ejecutarse, el procesador las
+      realiza una por una, en el orden en que están escritas, y cada instrucción
+      trabaja con los datos que hay en ese momento.
+    </p>
+    <p>
+      La máquina no sabe lo que queremos: actúa según la entrada que recibe y
+      las instrucciones de su programa. Si alguien toca «+30&nbsp;s» en un
+      microondas cuando quería tocar «Detener», el microondas recibe la señal de
+      «+30&nbsp;s» y su programa suma 30&nbsp;segundos. Y si las instrucciones de un
+      programa no están en el orden adecuado, la máquina igual las ejecuta tal
+      como están escritas.
+    </p>
+
+    <div class="caso">
+      <p class="caso-texto">
+        Una tienda vende por internet. La dueña quiere que el descuento del 10&nbsp;%
+        se aplique sólo al precio del producto, no al envío. Para una campera de
+        $10.000 con $2.000 de envío, el programa ejecuta estas instrucciones:
+      </p>
+      <ol class="programa">
+        {instrucciones.map((instruccion) => <li>{instruccion}</li>)}
+      </ol>
+      <p class="caso-resultado">
+        La pantalla muestra <strong>$10.800</strong>. La dueña esperaba{" "}
+        <strong>$11.000</strong>.
+      </p>
+    </div>
+
+    <p>
+      La máquina tampoco avisa que algo salió distinto de lo que queríamos. Por
+      eso programar no termina al escribir las instrucciones: hay que
+      ejecutarlas, comparar lo que pasó con lo que queríamos y ajustar.
+    </p>
+  </section>
+
+  {/* tabindex="-1": un clic en cualquier parte de las preguntas deja el foco
+      dentro de la región, y las flechas no cambian de material. */}
+  <section
+    class="preguntas"
+    aria-labelledby="preguntas-titulo"
+    data-actividad-lo-que-queriamos
+    data-navegacion-recorrido-excluir
+    tabindex="-1"
+  >
+    <h2 id="preguntas-titulo" class="preguntas-titulo">Preguntas</h2>
+
+    <p class="como-usar" data-con-script hidden>
+      Elegí una opción en cada pregunta y pulsá Revisar. Podés cambiar cualquier
+      respuesta y volver a revisar. Sin puntaje; nada se guarda al recargar.
+    </p>
+    <noscript>
+      <p class="como-usar">
+        Para revisar en pantalla hace falta JavaScript. Igual podés leer y
+        responder, o imprimir la hoja.
+      </p>
+    </noscript>
+
+    {preguntas.map((pregunta, indice) => (
+      <fieldset
+        class="pregunta"
+        id={`pregunta-${pregunta.id}`}
+        data-pregunta={pregunta.id}
+        tabindex="-1"
+      >
+        <legend class="enunciado">
+          <span class="numero">{indice + 1}.</span>
+          <span>{pregunta.enunciado}</span>
+        </legend>
+        {pregunta.nota && <p class="nota">{pregunta.nota}</p>}
+        <div class={disposicion(pregunta.opciones)}>
+          {letras.map((letra) => (
+            <label class="opcion">
+              <input
+                type="radio"
+                name={`pregunta-${pregunta.id}`}
+                value={letra}
+                data-pregunta={pregunta.id}
+                autocomplete="off"
+              />
+              <span class="letra">{letra}</span>
+              <span class="opcion-texto">{pregunta.opciones[letra]}</span>
+            </label>
+          ))}
+        </div>
+        <p
+          class="devolucion"
+          id={`devolucion-${pregunta.id}`}
+          data-devolucion
+          hidden
+        />
+        <details class="porque" data-porque hidden>
+          <summary>Por qué</summary>
+          <p data-porque-texto />
+        </details>
+      </fieldset>
+    ))}
+
+    <div class="acciones" data-con-script hidden>
+      <button type="button" class="accion accion--revisar" data-revisar>
+        Revisar
+      </button>
+      <button type="button" class="accion" data-reiniciar>
+        Empezar de nuevo
+      </button>
+    </div>
+    <p class="estado" data-estado role="status" aria-live="polite"></p>
+    <p class="vigencia" data-vigencia hidden></p>
+  </section>
+
+  <p class="hoja-pie">
+    Para volver a mirar: pizarrón «La máquina obedece exactamente» ·
+    aula.andresatencio.com
+  </p>
+</MaterialLayout>
+
+<script>
+  import { iniciarActividadLoQueQueriamos } from "../../scripts/actividad-lo-que-queriamos";
+
+  iniciarActividadLoQueQueriamos();
+</script>
+
+<style>
+  /* Cabecera y pie de la hoja: sólo aparecen al imprimir. En pantalla los
+     reemplazan la apertura del material y la serie. */
+  .hoja-cabecera,
+  .hoja-pie {
+    display: none;
+  }
+
+  .consigna-general {
+    margin: 0 0 1.5rem;
+    font-weight: 600;
+  }
+
+  .hoja-pdf {
+    margin: -0.75rem 0 1.5rem;
+    padding: 0.6rem 0.9rem;
+    border-left: 4px solid var(--accent);
+    background: var(--board);
+    font-size: 1rem;
+  }
+
+  .hoja-pdf a {
+    color: var(--ink);
+    font-weight: 700;
+    text-decoration: none;
+    border-bottom: 2px solid var(--accent);
+  }
+
+  .hoja-pdf a:hover {
+    color: var(--accent);
+  }
+
+  .hoja-pdf-formato {
+    color: var(--muted);
+  }
+
+  .lectura p {
+    margin: 0 0 0.9rem;
+  }
+
+  .caso {
+    margin: 1.25rem 0;
+    padding: 1.05rem 1.15rem;
+    border: 2px solid var(--line);
+    background: var(--board);
+  }
+
+  .caso-texto,
+  .caso-resultado {
+    margin: 0;
+  }
+
+  .programa {
+    margin: 0.75rem 0;
+    padding: 0.6rem 0 0.6rem 2.6rem;
+    border-left: 4px solid var(--accent);
+    font-weight: 700;
+  }
+
+  .programa li + li {
+    margin-top: 0.2rem;
+  }
+
+  .preguntas:focus {
+    outline: none;
+  }
+
+  .preguntas-titulo {
+    margin: 2.25rem 0 1.1rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 2px solid var(--line);
+    font-size: clamp(1.2rem, 0.35vw + 1.1rem, 1.45rem);
+  }
+
+  .como-usar {
+    margin: 0 0 1.1rem;
+    color: var(--muted);
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  .como-usar[hidden] {
+    display: none;
+  }
+
+  /* Tarjeta de cada pregunta, como en la práctica del microondas. */
+  .pregunta {
+    min-width: 0;
+    margin: 0 0 1rem;
+    padding: 0.8rem 0.8rem 0.9rem;
+    border: 2px solid var(--hairline);
+    border-left-width: 6px;
+    background: var(--board);
+    scroll-margin-top: 1rem;
+  }
+
+  .pregunta:focus {
+    outline: none;
+  }
+
+  .pregunta:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .pregunta[data-resultado="encaja"] {
+    border-color: var(--accent);
+  }
+
+  .pregunta[data-resultado="revisar"] {
+    border-color: var(--emphasis);
+  }
+
+  .pregunta[data-resultado="cambiada"] {
+    border-style: dashed;
+    border-color: var(--muted);
+  }
+
+  /* float permite dar forma al legend dentro del fieldset. */
+  .enunciado {
+    display: flex;
+    gap: 0.5rem;
+    float: left;
+    width: 100%;
+    margin: 0 0 0.6rem;
+    padding: 0;
+    font-weight: 700;
+    line-height: 1.4;
+  }
+
+  .enunciado + * {
+    clear: both;
+  }
+
+  .numero {
+    flex: none;
+    color: var(--accent);
+  }
+
+  .nota {
+    margin: 0 0 0.6rem;
+    color: var(--muted);
+    font-size: 0.95em;
+    font-style: italic;
+  }
+
+  .opciones {
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  .opciones--fila {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .opciones--columnas {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .opcion {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-width: 0;
+    min-height: 2.85rem;
+    padding: 0.4rem 0.7rem;
+    border: 2px solid var(--hairline);
+    background: var(--paper);
+    font-size: 1rem;
+    line-height: 1.3;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+
+  .opcion:hover {
+    border-color: var(--accent);
+  }
+
+  /* El radio nativo queda accesible; la letra en círculo es su marca visible. */
+  .opcion input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .opcion:has(input:checked) {
+    border-color: var(--ink);
+    background: color-mix(in srgb, var(--accent) 10%, var(--board));
+    font-weight: 700;
+  }
+
+  .opcion:has(input:focus-visible) {
+    outline: 3px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .letra {
+    flex: none;
+    display: inline-grid;
+    place-items: center;
+    width: 1.6em;
+    height: 1.6em;
+    border: 1.5px solid var(--line);
+    border-radius: 50%;
+    font-size: 0.85em;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .opcion:has(input:checked) .letra {
+    background: var(--ink);
+    color: var(--board);
+  }
+
+  .opcion-texto {
+    min-width: 0;
+  }
+
+  .devolucion {
+    margin: 0.8rem 0 0;
+    font-size: 1rem;
+    line-height: 1.45;
+  }
+
+  .devolucion[hidden],
+  .porque[hidden],
+  .acciones[hidden],
+  .vigencia[hidden] {
+    display: none;
+  }
+
+  .pregunta[data-resultado="encaja"] .devolucion :global(strong) {
+    color: var(--accent);
+  }
+
+  .pregunta[data-resultado="revisar"] .devolucion :global(strong) {
+    color: var(--emphasis);
+  }
+
+  .pregunta[data-resultado="cambiada"] .devolucion {
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  .porque {
+    margin-top: 0.5rem;
+    font-size: 1rem;
+  }
+
+  .porque > summary {
+    display: flex;
+    align-items: center;
+    min-height: 2.75rem;
+    color: var(--accent);
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .porque > summary:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .porque p {
+    margin: 0.2rem 0 0;
+    line-height: 1.5;
+  }
+
+  .acciones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+    margin: 1.25rem 0 0.75rem;
+  }
+
+  .accion {
+    appearance: none;
+    min-height: 2.85rem;
+    padding: 0.55rem 1.15rem;
+    border: 2px solid var(--line);
+    background: var(--board);
+    color: var(--ink);
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+
+  .accion:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .accion--revisar {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--board);
+  }
+
+  .accion--revisar:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--board);
+  }
+
+  .estado {
+    min-height: 1.5em;
+    margin: 0 0 0.5rem;
+    font-weight: 700;
+    line-height: 1.45;
+  }
+
+  .vigencia {
+    margin: 0 0 0.75rem;
+    color: var(--muted);
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  @media (max-width: 36rem) {
+    .opciones--fila {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .opciones--columnas {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* Una sola hoja oficio (216 × 356 mm), en blanco y negro, sin controles,
+     devoluciones ni elecciones hechas en pantalla. */
+  @page {
+    size: 216mm 356mm;
+    margin: 13mm 15mm 12mm;
+  }
+
+  @media print {
+    :global(body),
+    :global(.material) {
+      color: #000;
+      font-size: 12pt;
+      line-height: 1.35;
+    }
+
+    :global(.material > .apertura) {
+      display: none;
+    }
+
+    .hoja-cabecera {
+      display: block;
+      margin: 0 0 3mm;
+      padding-bottom: 2mm;
+      border-bottom: 1.5pt solid #000;
+    }
+
+    .hoja-ubicacion {
+      margin: 0;
+      font-size: 8.5pt;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .hoja-titulo {
+      margin: 0.5mm 0 0;
+      font-size: 16pt;
+      font-weight: 700;
+      line-height: 1.15;
+    }
+
+    .consigna-general,
+    .lectura p,
+    .enunciado {
+      text-wrap: pretty;
+    }
+
+    .consigna-general {
+      margin: 0 0 2.5mm;
+      font-style: italic;
+      font-weight: 400;
+    }
+
+    .lectura p {
+      margin: 0 0 2.5mm;
+    }
+
+    /* El margen derecho evita que Chrome recorte el borde contra el área
+       imprimible. */
+    .caso {
+      margin: 3.5mm 1pt 3.5mm 0;
+      padding: 3mm 4mm;
+      border: 1pt solid #000;
+      background: none;
+      break-inside: avoid;
+    }
+
+    .programa {
+      margin: 1.5mm 0;
+      padding: 0 0 0 9mm;
+      border-left: 0;
+    }
+
+    .programa li + li {
+      margin-top: 0;
+    }
+
+    .preguntas-titulo {
+      margin: 6mm 0 3.5mm;
+      padding-bottom: 1mm;
+      border-bottom: 1pt solid #000;
+      font-size: 11pt;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .hoja-pdf,
+    .como-usar,
+    .devolucion,
+    .porque,
+    .acciones,
+    .estado,
+    .vigencia {
+      display: none !important;
+    }
+
+    .pregunta {
+      margin: 0;
+      padding: 0;
+      border: 0;
+      background: none;
+      break-inside: avoid;
+    }
+
+    .pregunta + .pregunta {
+      margin-top: 7mm;
+    }
+
+    .enunciado {
+      gap: 0;
+      margin-bottom: 0;
+    }
+
+    .numero {
+      flex: 0 0 6mm;
+      color: #000;
+    }
+
+    .nota {
+      margin: 0.5mm 0 0 6mm;
+      color: #000;
+    }
+
+    .opciones {
+      gap: 1.2mm;
+      margin: 0 0 0 7mm;
+      padding-top: 2mm;
+    }
+
+    .opciones--fila {
+      grid-template-columns: repeat(4, max-content);
+      gap: 1.2mm 14mm;
+    }
+
+    .opciones--columnas {
+      gap: 1.2mm 5mm;
+    }
+
+    .opcion,
+    .opcion:has(input:checked) {
+      min-height: 0;
+      padding: 0;
+      border: 0;
+      background: none;
+      font-size: inherit;
+      font-weight: 400;
+      line-height: inherit;
+      gap: 2.2mm;
+    }
+
+    .opcion input {
+      display: none;
+    }
+
+    .letra,
+    .opcion:has(input:checked) .letra {
+      border: 0.75pt solid #000;
+      background: none;
+      color: #000;
+    }
+
+    .hoja-pie {
+      display: block;
+      margin: 4mm 0 0;
+      padding-top: 1.5mm;
+      border-top: 0.5pt solid #000;
+      font-size: 8.5pt;
+    }
+  }
+</style>

@@ -81,6 +81,27 @@ export const recorridos: Recorrido[] = [
     ],
   },
   {
+    id: "gm-2026-4b",
+    nombre: "Gabriela Mistral · 3.º año · 4.º bimestre 2026",
+    href: "/escuelas/gabriela-mistral/4-bimestre-2026/",
+    materiales: [
+      {
+        href: "/pizarrones/la-maquina-obedece-exactamente/",
+        title: "La máquina obedece exactamente",
+      },
+      {
+        href: "/lo-que-queriamos-y-lo-que-paso/",
+        title: "Lo que queríamos y lo que pasó",
+        tipo: "Actividad",
+      },
+      {
+        href: "/lo-que-queriamos-y-lo-que-paso/probar/",
+        title: "Probar y ajustar el programa",
+        tipo: "Práctica",
+      },
+    ],
+  },
+  {
     id: "cfp7-si-2026",
     nombre: "Sistemas Informáticos · CFP 7 · 2026",
     href: "/escuelas/cfp-7/sistemas-informaticos-2026/",
