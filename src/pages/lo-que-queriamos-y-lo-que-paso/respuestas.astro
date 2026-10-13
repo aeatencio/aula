@@ -1,0 +1,177 @@
+---
+import { preguntas } from "../../data/actividad-lo-que-queriamos";
+import { serieLoQueQueriamos } from "../../data/serie-lo-que-queriamos";
+import MaterialLayout from "../../layouts/MaterialLayout.astro";
+
+const material = "Lo que queríamos y lo que pasó";
+const pdf =
+  "/materiales/lo-que-queriamos-y-lo-que-paso/lo-que-queriamos-y-lo-que-paso-respuestas-oficio-216x356.pdf";
+
+/** 2 columnas × 7 filas en una hoja oficio. */
+const PAPELITOS = 14;
+---
+
+<MaterialLayout
+  title="Papelitos de respuestas"
+  description="Papelitos recortables para entregar las respuestas de «Lo que queríamos y lo que pasó»: nombre, curso, fecha y una letra por pregunta. Catorce por hoja oficio."
+  tipo="Para imprimir"
+  bajada="Para entregar las respuestas de la hoja en un papel chico"
+  serie={serieLoQueQueriamos}
+  tituloPizarrones="Para recuperar"
+  imprimirPie={false}
+>
+  <p class="aviso">
+    Catorce papelitos por hoja oficio (216 × 356 mm), para recortar por las
+    líneas punteadas. Cada estudiante anota nombre, curso y fecha y marca una
+    letra por pregunta en su casillero. No tienen respuestas.{" "}
+    <a href={pdf} type="application/pdf">Papelitos en PDF</a>
+  </p>
+
+  <div class="hoja" aria-label={`${PAPELITOS} papelitos recortables`}>
+    {Array.from({ length: PAPELITOS }, () => (
+      <section class="papelito">
+        <p class="titulo">{material}</p>
+        <p class="campo">
+          <span>Nombre y apellido</span>
+          <span class="linea"></span>
+        </p>
+        <p class="campo campo--doble">
+          <span>Curso</span>
+          <span class="linea"></span>
+          <span>Fecha</span>
+          <span class="linea"></span>
+        </p>
+        <ol class="respuestas">
+          {preguntas.map((_, indice) => (
+            <li>
+              <span class="numero">{indice + 1}</span>
+              <span class="casilla"></span>
+            </li>
+          ))}
+        </ol>
+      </section>
+    ))}
+  </div>
+</MaterialLayout>
+
+<style>
+  .aviso {
+    margin: 0 0 1.5rem;
+    color: var(--muted);
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  .aviso a {
+    color: var(--ink);
+    font-weight: 700;
+    text-decoration: none;
+    border-bottom: 2px solid var(--accent);
+  }
+
+  /* La hoja usa medidas físicas para que pantalla e impresión coincidan. */
+  .hoja {
+    display: grid;
+    grid-template-columns: repeat(2, 100mm);
+    grid-auto-rows: 48mm;
+    width: 200mm;
+    max-width: 100%;
+    overflow-x: auto;
+    border-top: 0.75pt dashed #000;
+    border-left: 0.75pt dashed #000;
+    background: #fff;
+    color: #000;
+  }
+
+  /* El aire sobrante se reparte arriba y abajo, no entre los bloques. */
+  .papelito {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2.2mm;
+    min-width: 0;
+    padding: 3mm 4.5mm;
+    border-right: 0.75pt dashed #000;
+    border-bottom: 0.75pt dashed #000;
+    font-size: 9.5pt;
+    line-height: 1.2;
+  }
+
+  .papelito p {
+    margin: 0;
+  }
+
+  .titulo {
+    margin-bottom: -0.6mm !important;
+    font-size: 7pt;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .campo {
+    display: flex;
+    align-items: flex-end;
+    gap: 2mm;
+    white-space: nowrap;
+  }
+
+  .linea {
+    flex: 1;
+    height: 6.5mm;
+    border-bottom: 0.75pt solid #000;
+  }
+
+  /* Una fila cerrada, alineada con los datos: cada número pegado a su
+     casillero y los pares cerca entre sí, para que se lean como un bloque. */
+  .respuestas {
+    display: flex;
+    gap: 4mm;
+    margin: 1.2mm 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .respuestas li {
+    display: flex;
+    align-items: center;
+    gap: 1.3mm;
+  }
+
+  .numero {
+    font-size: 11pt;
+    font-weight: 700;
+  }
+
+  .casilla {
+    width: 8.5mm;
+    height: 8mm;
+    border: 1pt solid #000;
+  }
+
+  /* Una hoja oficio: sólo los papelitos. */
+  @page {
+    size: 216mm 356mm;
+    margin: 8mm;
+  }
+
+  @media print {
+    :global(.material > .apertura),
+    .aviso {
+      display: none;
+    }
+
+    :global(.material) {
+      max-width: none;
+    }
+
+    .hoja {
+      max-width: none;
+      overflow: visible;
+    }
+
+    .papelito {
+      break-inside: avoid;
+    }
+  }
+</style>
