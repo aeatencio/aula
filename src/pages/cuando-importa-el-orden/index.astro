@@ -1,0 +1,694 @@
+---
+import TablaSeguimiento from "../../components/TablaSeguimiento.astro";
+import {
+  casoJuego,
+  casoKiosco,
+  formatear,
+  ideaInicial,
+  juego,
+  kiosco,
+  letras,
+  numeroOriginal,
+  numeroPrueba,
+  otraVenta,
+  preguntaAjuste,
+  preguntaMemoriaYPantalla,
+  preguntaPorQue,
+  verbos,
+  versiones,
+  type Memoria,
+  type Pregunta,
+  type Programa,
+  type Version,
+} from "../../data/actividad-cuando-importa-el-orden";
+import { serieCuandoImportaElOrden } from "../../data/serie-cuando-importa-el-orden";
+import MaterialLayout from "../../layouts/MaterialLayout.astro";
+
+const title = "Cuándo importa el orden";
+const pdfHoja =
+  "/materiales/cuando-importa-el-orden/cuando-importa-el-orden-oficio-216x356.pdf";
+
+/** Filas en blanco, con la instrucción escrita, en el orden de ejecución. */
+const enBlanco = (programa: Programa, orden: readonly number[]) =>
+  orden.map((numero) => ({
+    numero,
+    texto: programa.instrucciones[numero - 1]?.texto,
+  }));
+
+const [v1, v2, v3, v4] = versiones as [Version, Version, Version, Version];
+const orden = (version: Version) => version.orden.join(" · ");
+const memoria = (m: Memoria, casilleros: readonly string[]) =>
+  casilleros.map((casillero) => `${casillero} = ${formatear(m[casillero] ?? 0)}`).join(" y ");
+
+/** Opciones cortas en dos columnas; las largas, una por renglón. */
+function disposicion(pregunta: Pregunta): string {
+  const largo = Math.max(...Object.values(pregunta.opciones).map((texto) => texto.length));
+  return largo <= 45 ? "opciones opciones--columnas" : "opciones";
+}
+---
+
+<MaterialLayout
+  title={title}
+  description="Actividad de Pensamiento Computacional para resolver en papel: seguir programas breves con una tabla de seguimiento, comparar qué cambia al cambiar el orden de las instrucciones y elegir un ajuste que sirva para cualquier caso."
+  tipo="Actividad"
+  bajada="Seguir programas paso a paso y comparar qué cambia cuando cambia el orden"
+  serie={serieCuandoImportaElOrden}
+  tituloPizarrones="Para recuperar"
+  imprimirPie={false}
+>
+  <header class="hoja-cabecera">
+    <p class="hoja-ubicacion">Pensamiento Computacional · Actividad</p>
+    <p class="hoja-titulo">{title}</p>
+  </header>
+
+  <p class="consigna-general">
+    Resolvé de forma individual, en esta hoja. En las preguntas con opciones,
+    marcá la que mejor responde.
+  </p>
+
+  <p class="hoja-pdf">
+    Para imprimirla:{" "}
+    <a href={pdfHoja} type="application/pdf">la hoja en PDF</a>{" "}
+    <span class="hoja-pdf-formato">(oficio 216 × 356 mm, doble faz, sin respuestas)</span>.
+    También podés copiar las tablas en la carpeta.
+  </p>
+
+  <section class="lectura" aria-label="Texto para leer">
+    <p>
+      Mientras un programa se ejecuta, la memoria guarda los valores con los que
+      trabaja, cada uno en un casillero con nombre. {ideaInicial}
+    </p>
+    <p>
+      Para saber qué hace un programa, se lo sigue paso a paso con una{" "}
+      <strong>tabla de seguimiento</strong>: una fila por instrucción, en el
+      orden en que se ejecutan. En cada fila se anota cuánto vale cada
+      casillero <em>después</em> de esa instrucción, aunque no haya cambiado;
+      en «Pantalla», sólo lo que muestra «Mostrar».
+    </p>
+    <dl class="verbos">
+      {verbos.map(({ verbo, explicacion }) => (
+        <div>
+          <dt>{verbo}</dt>
+          <dd>{explicacion}</dd>
+        </div>
+      ))}
+    </dl>
+  </section>
+
+  <section class="parte" aria-labelledby="parte-a">
+    <h2 id="parte-a" class="parte-titulo">A · El final de un nivel</h2>
+    <div class="caso">
+      <p>{casoJuego}</p>
+      <p>Al terminar el nivel, la memoria tiene {memoria(juego.inicial, juego.casilleros)}.</p>
+      <ol class="programa">
+        {juego.instrucciones.map((instruccion) => <li>{instruccion.texto}</li>)}
+      </ol>
+    </div>
+
+    <div class="consigna">
+      <p class="enunciado">
+        <span class="numero">{numeroOriginal}.</span>
+        <span>Seguí el programa como está escrito. ¿Qué muestra la pantalla?</span>
+      </p>
+      <TablaSeguimiento
+        variante="hoja"
+        casilleros={juego.casilleros}
+        inicial={juego.inicial}
+        filas={enBlanco(juego, [1, 2, 3, 4])}
+      />
+    </div>
+  </section>
+
+  <section class="parte" aria-labelledby="parte-b">
+    <h2 id="parte-b" class="parte-titulo">B · Otros órdenes</h2>
+    <p class="presentacion">
+      Cada versión tiene las mismas cuatro instrucciones, en el orden que
+      indican los números.
+    </p>
+
+    {[v1, v2].map((version) => (
+      <div class="consigna">
+        <p class="enunciado">
+          <span class="numero">{version.numero}.</span>
+          <span>
+            <strong>{version.nombre}: {orden(version)}.</strong> Seguila con la
+            tabla. ¿Qué muestra la pantalla?
+          </span>
+        </p>
+        <TablaSeguimiento
+          variante="hoja"
+          casilleros={juego.casilleros}
+          inicial={juego.inicial}
+          filas={enBlanco(juego, version.orden)}
+        />
+      </div>
+    ))}
+
+    <fieldset class="pregunta">
+      <legend class="enunciado">
+        <span class="numero">{preguntaPorQue.numero}.</span>
+        <span>{preguntaPorQue.enunciado}</span>
+      </legend>
+      <ul class={disposicion(preguntaPorQue)}>
+        {letras.map((letra) => (
+          <li class="opcion">
+            <span class="letra">{letra}</span>
+            <span>{preguntaPorQue.opciones[letra]}</span>
+          </li>
+        ))}
+      </ul>
+    </fieldset>
+  </section>
+
+  {/* Dorso: lo que sigue de B y la parte C. */}
+  <section class="parte dorso" aria-labelledby="parte-b-sigue">
+    <h2 id="parte-b-sigue" class="parte-titulo">B · Otros órdenes (sigue)</h2>
+    <div class="recordatorio">
+      <p>
+        El programa del nivel. Al empezar,{" "}
+        {memoria(juego.inicial, juego.casilleros)}.
+      </p>
+      <ol class="programa programa--compacto">
+        {juego.instrucciones.map((instruccion) => <li>{instruccion.texto}</li>)}
+      </ol>
+    </div>
+
+    <div class="consigna">
+      <p class="enunciado">
+        <span class="numero">{v3.numero}.</span>
+        <span>
+          <strong>{v3.nombre}: {orden(v3)}.</strong> Antes de hacer la tabla,
+          predecí: ¿qué muestra la pantalla?
+        </span>
+      </p>
+      <p class="respuesta-corta">Predicción: la pantalla muestra <span class="linea"></span></p>
+      <TablaSeguimiento
+        variante="hoja"
+        titulo="Si la necesitás, seguila acá"
+        casilleros={juego.casilleros}
+        inicial={juego.inicial}
+        filas={enBlanco(juego, v3.orden)}
+      />
+    </div>
+
+    <div class="consigna">
+      <p class="enunciado">
+        <span class="numero">{v4.numero}.</span>
+        <span>
+          <strong>{v4.nombre}: {orden(v4)}.</strong> Seguila con la tabla. ¿Qué
+          muestra la pantalla?
+        </span>
+      </p>
+      <TablaSeguimiento
+        variante="hoja"
+        casilleros={juego.casilleros}
+        inicial={juego.inicial}
+        filas={enBlanco(juego, v4.orden)}
+      />
+    </div>
+
+    <fieldset class="pregunta">
+      <legend class="enunciado">
+        <span class="numero">{preguntaMemoriaYPantalla.numero}.</span>
+        <span>{preguntaMemoriaYPantalla.enunciado}</span>
+      </legend>
+      <ul class={disposicion(preguntaMemoriaYPantalla)}>
+        {letras.map((letra) => (
+          <li class="opcion">
+            <span class="letra">{letra}</span>
+            <span>{preguntaMemoriaYPantalla.opciones[letra]}</span>
+          </li>
+        ))}
+      </ul>
+    </fieldset>
+  </section>
+
+  <section class="parte" aria-labelledby="parte-c">
+    <h2 id="parte-c" class="parte-titulo">C · El kiosco</h2>
+    <div class="caso">
+      <p>{casoKiosco}</p>
+      <p>
+        Se acaban de vender 3 alfajores. La memoria tiene{" "}
+        {memoria(kiosco.inicial, kiosco.casilleros)}.
+      </p>
+      <ol class="programa">
+        {kiosco.instrucciones.map((instruccion) => <li>{instruccion.texto}</li>)}
+      </ol>
+      <p>
+        La pantalla muestra <strong>12</strong>, pero después de vender 3
+        tendrían que quedar <strong>9</strong>.
+      </p>
+    </div>
+
+    <fieldset class="pregunta">
+      <legend class="enunciado">
+        <span class="numero">{preguntaAjuste.numero}.</span>
+        <span>{preguntaAjuste.enunciado}</span>
+      </legend>
+      <ul class={disposicion(preguntaAjuste)}>
+        {letras.map((letra) => (
+          <li class="opcion">
+            <span class="letra">{letra}</span>
+            <span>{preguntaAjuste.opciones[letra]}</span>
+          </li>
+        ))}
+      </ul>
+    </fieldset>
+
+    <div class="consigna">
+      <p class="enunciado">
+        <span class="numero">{numeroPrueba}.</span>
+        <span>
+          Probá si el ajuste que elegiste sirve con otra venta. Ahora se venden
+          5: la memoria tiene {memoria(otraVenta, kiosco.casilleros)}. Escribí
+          las instrucciones del programa ajustado en el orden en que se
+          ejecutan, y seguilo con la tabla.
+        </span>
+      </p>
+      <TablaSeguimiento
+        variante="hoja"
+        casilleros={kiosco.casilleros}
+        inicial={otraVenta}
+        filas={kiosco.instrucciones.map(() => ({}))}
+      />
+      <p class="respuesta-corta respuesta-corta--fila">
+        <span>Tendrían que quedar <span class="linea linea--corta"></span></span>
+        <span>La pantalla mostró <span class="linea linea--corta"></span></span>
+        <span>¿Sirve para cualquier venta? Sí · No</span>
+      </p>
+    </div>
+  </section>
+
+  <p class="hoja-pie">
+    Para volver a mirar: pizarrón «Seguir un programa paso a paso» ·
+    aula.andresatencio.com
+  </p>
+</MaterialLayout>
+
+<style>
+  /* Cabecera y pie de la hoja: sólo aparecen al imprimir. */
+  .hoja-cabecera,
+  .hoja-pie {
+    display: none;
+  }
+
+  .consigna-general {
+    margin: 0 0 1.5rem;
+    font-weight: 600;
+  }
+
+  .hoja-pdf {
+    margin: -0.75rem 0 1.5rem;
+    padding: 0.6rem 0.9rem;
+    border-left: 4px solid var(--accent);
+    background: var(--board);
+    font-size: 1rem;
+  }
+
+  .hoja-pdf a {
+    color: var(--ink);
+    font-weight: 700;
+    text-decoration: none;
+    border-bottom: 2px solid var(--accent);
+  }
+
+  .hoja-pdf a:hover {
+    color: var(--accent);
+  }
+
+  .hoja-pdf-formato {
+    color: var(--muted);
+  }
+
+  .lectura p {
+    margin: 0 0 0.9rem;
+  }
+
+  .verbos {
+    display: grid;
+    gap: 0.3rem;
+    margin: 0 0 1.5rem;
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--hairline);
+    background: var(--board);
+  }
+
+  .verbos > div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 0.45rem;
+  }
+
+  .verbos dt {
+    font-weight: 700;
+  }
+
+  .verbos dt::after {
+    content: ":";
+  }
+
+  .verbos dd {
+    margin: 0;
+  }
+
+  .parte + .parte {
+    margin-top: 2.25rem;
+  }
+
+  .parte-titulo {
+    margin: 0 0 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--line);
+    font-size: clamp(1.15rem, 0.35vw + 1.05rem, 1.35rem);
+  }
+
+  .presentacion {
+    margin: 0 0 1rem;
+  }
+
+  .caso,
+  .recordatorio {
+    margin: 0 0 1.25rem;
+    padding: 0.9rem 1.1rem;
+    border: 2px solid var(--line);
+    background: var(--board);
+  }
+
+  .caso p,
+  .recordatorio p {
+    margin: 0 0 0.5rem;
+  }
+
+  .caso p:last-child {
+    margin-bottom: 0;
+  }
+
+  .programa {
+    margin: 0.5rem 0;
+    padding: 0.4rem 0 0.4rem 2.6rem;
+    border-left: 4px solid var(--accent);
+    font-weight: 700;
+  }
+
+  .recordatorio {
+    display: none;
+  }
+
+  .consigna,
+  .pregunta {
+    margin: 0 0 1.5rem;
+  }
+
+  .pregunta {
+    min-width: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .enunciado {
+    display: flex;
+    gap: 0.5rem;
+    margin: 0 0 0.6rem;
+    padding: 0;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+
+  .enunciado .numero {
+    flex: none;
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .opciones {
+    display: grid;
+    gap: 0.45rem;
+    margin: 0;
+    padding: 0 0 0 1.6rem;
+    list-style: none;
+  }
+
+  .opciones--columnas {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.45rem 1.5rem;
+  }
+
+  .opcion {
+    display: flex;
+    gap: 0.6rem;
+    line-height: 1.35;
+  }
+
+  .letra {
+    flex: none;
+    display: inline-grid;
+    place-items: center;
+    width: 1.6em;
+    height: 1.6em;
+    border: 1.5px solid var(--line);
+    border-radius: 50%;
+    font-size: 0.85em;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .respuesta-corta {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.5rem;
+    margin: 0 0 0.75rem;
+    padding-left: 1.6rem;
+    font-weight: 600;
+  }
+
+  .respuesta-corta--fila {
+    flex-wrap: wrap;
+    gap: 0.5rem 2rem;
+    margin-top: 0.75rem;
+  }
+
+  .respuesta-corta--fila > span {
+    display: inline-flex;
+    align-items: flex-end;
+    gap: 0.4rem;
+  }
+
+  .linea {
+    display: inline-block;
+    width: 8rem;
+    height: 1.4em;
+    border-bottom: 1.5px solid var(--line);
+  }
+
+  .linea--corta {
+    width: 4.5rem;
+  }
+
+  @media (max-width: 40rem) {
+    .opciones--columnas {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* Una hoja oficio (216 × 356 mm) doble faz, en blanco y negro. El frente
+     tiene el núcleo (A y el comienzo de B); el dorso, el resto de B y C. */
+  @page {
+    size: 216mm 356mm;
+    margin: 10mm 14mm 9mm;
+  }
+
+  @media print {
+    :global(body),
+    :global(.material) {
+      color: #000;
+      font-size: 11pt;
+      line-height: 1.3;
+    }
+
+    :global(.material > .apertura) {
+      display: none;
+    }
+
+    .hoja-cabecera {
+      display: block;
+      margin: 0 0 2.5mm;
+      padding-bottom: 1.5mm;
+      border-bottom: 1.5pt solid #000;
+    }
+
+    .hoja-ubicacion {
+      margin: 0;
+      font-size: 8.5pt;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .hoja-titulo {
+      margin: 0.5mm 0 0;
+      font-size: 16pt;
+      font-weight: 700;
+      line-height: 1.15;
+    }
+
+    .hoja-pdf {
+      display: none !important;
+    }
+
+    .consigna-general {
+      margin: 0 0 2mm;
+      font-style: italic;
+      font-weight: 400;
+    }
+
+    .lectura p {
+      margin: 0 0 1.8mm;
+      text-wrap: pretty;
+    }
+
+    .verbos {
+      grid-template-columns: 0.8fr 1.15fr 1.05fr;
+      gap: 0 5mm;
+      margin: 0 1pt 2.5mm 0;
+      padding: 1.2mm 3mm;
+      border: 0.75pt solid #000;
+      background: none;
+      font-size: 9.5pt;
+      line-height: 1.2;
+    }
+
+    .verbos > div {
+      display: block;
+    }
+
+    .verbos dd {
+      display: inline;
+    }
+
+    .verbos dt {
+      display: inline;
+    }
+
+    .verbos dt::after {
+      content: ": ";
+    }
+
+    .parte + .parte {
+      margin-top: 3.5mm;
+    }
+
+    .parte-titulo {
+      margin: 0 0 2mm;
+      padding-bottom: 0.8mm;
+      border-bottom: 1pt solid #000;
+      font-size: 11pt;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .presentacion {
+      margin: 0 0 2mm;
+    }
+
+    /* El margen derecho evita que Chrome recorte el borde contra el área
+       imprimible. */
+    .caso,
+    .recordatorio {
+      margin: 0 1pt 3mm 0;
+      padding: 2mm 3.5mm;
+      border: 1pt solid #000;
+      background: none;
+      break-inside: avoid;
+    }
+
+    .caso p,
+    .recordatorio p {
+      margin: 0 0 1mm;
+    }
+
+    .programa {
+      margin: 1mm 0;
+      padding: 0 0 0 8mm;
+      border-left: 0;
+    }
+
+    .recordatorio {
+      display: block;
+      font-size: 9.5pt;
+    }
+
+    .programa--compacto {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0 6mm;
+      margin-bottom: 0;
+    }
+
+    .dorso {
+      break-before: page;
+      margin-top: 0 !important;
+    }
+
+    .consigna,
+    .pregunta {
+      margin: 0 1pt 3mm 0;
+      break-inside: avoid;
+    }
+
+    .enunciado {
+      gap: 0;
+      margin: 0 0 1.5mm;
+      text-wrap: pretty;
+    }
+
+    .enunciado .numero {
+      flex: 0 0 6mm;
+      color: #000;
+    }
+
+    .opciones {
+      gap: 1mm;
+      padding-left: 7mm;
+    }
+
+    .opciones--columnas {
+      gap: 1mm 5mm;
+    }
+
+    .opcion {
+      gap: 2mm;
+      line-height: 1.25;
+    }
+
+    .letra {
+      border: 0.75pt solid #000;
+    }
+
+    .respuesta-corta {
+      margin: 0 0 1.5mm;
+      padding-left: 6mm;
+    }
+
+    .respuesta-corta--fila {
+      gap: 1mm 9mm;
+      margin-top: 2mm;
+    }
+
+    .linea {
+      width: 32mm;
+      border-bottom: 0.75pt solid #000;
+    }
+
+    .linea--corta {
+      width: 20mm;
+    }
+
+    .hoja-pie {
+      display: block;
+      margin: 2mm 0 0;
+      padding-top: 1mm;
+      border-top: 0.5pt solid #000;
+      font-size: 8.5pt;
+    }
+  }
+</style>

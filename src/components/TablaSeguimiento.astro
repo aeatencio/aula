@@ -1,0 +1,180 @@
+---
+/*
+  Tabla de seguimiento: una fila por instrucción ejecutada y una columna por
+  casillero de la memoria, más la pantalla. Sin `memoria` en una fila, la fila
+  queda en blanco para completar a mano.
+*/
+import { formatear, type Memoria } from "../data/actividad-cuando-importa-el-orden";
+
+type FilaTabla = {
+  numero?: number;
+  texto?: string;
+  memoria?: Memoria;
+  pantalla?: number;
+};
+
+interface Props {
+  casilleros: readonly string[];
+  inicial: Memoria;
+  filas: readonly FilaTabla[];
+  titulo?: string;
+  /** «hoja»: renglones altos para escribir a mano; «clave»: compacta. */
+  variante?: "pizarron" | "hoja" | "clave";
+}
+
+const {
+  casilleros,
+  inicial,
+  filas,
+  titulo,
+  variante = "pizarron",
+} = Astro.props;
+---
+
+<table class:list={["seguimiento", `seguimiento--${variante}`]}>
+  {titulo && <caption>{titulo}</caption>}
+  <thead>
+    <tr>
+      <th scope="col" class="col-instruccion">Instrucción</th>
+      {casilleros.map((casillero) => <th scope="col">{casillero}</th>)}
+      <th scope="col">Pantalla</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr class="fila-inicial">
+      <th scope="row">Al empezar</th>
+      {casilleros.map((casillero) => <td>{formatear(inicial[casillero] ?? 0)}</td>)}
+      <td class="vacia"></td>
+    </tr>
+    {filas.map((fila) => (
+      <tr>
+        <th scope="row">
+          {fila.numero !== undefined && <span class="numero">{fila.numero}.</span>}
+          {fila.texto && <span>{fila.texto}</span>}
+        </th>
+        {casilleros.map((casillero) => (
+          <td>{fila.memoria ? formatear(fila.memoria[casillero] ?? 0) : ""}</td>
+        ))}
+        <td>{fila.pantalla !== undefined ? formatear(fila.pantalla) : ""}</td>
+      </tr>
+    ))}
+  </tbody>
+</table>
+
+<style>
+  .seguimiento {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95em;
+  }
+
+  caption {
+    margin-bottom: 0.35rem;
+    font-weight: 700;
+    text-align: left;
+  }
+
+  th,
+  td {
+    padding: 0.35rem 0.55rem;
+    border: 1.5px solid var(--line);
+    text-align: left;
+    vertical-align: middle;
+  }
+
+  thead th {
+    font-size: 0.85em;
+    letter-spacing: 0.04em;
+  }
+
+  /* Las columnas de valores se ajustan a su contenido; la instrucción usa el
+     resto del ancho. */
+  thead th:not(:first-child),
+  td {
+    width: 1%;
+    white-space: nowrap;
+  }
+
+  td {
+    min-width: 3.5em;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+  }
+
+  tbody th {
+    font-weight: 600;
+  }
+
+  .numero {
+    margin-right: 0.35em;
+    font-weight: 700;
+  }
+
+  .fila-inicial th,
+  .fila-inicial td {
+    background: color-mix(in srgb, var(--line) 6%, transparent);
+  }
+
+  .fila-inicial th {
+    font-style: italic;
+  }
+
+  .seguimiento--hoja td,
+  .seguimiento--hoja tbody th {
+    height: 2.4rem;
+  }
+
+  @media (max-width: 30rem) {
+    .seguimiento {
+      font-size: 0.88em;
+    }
+
+    th,
+    td {
+      padding: 0.3rem 0.35rem;
+    }
+  }
+
+  @media print {
+    .seguimiento {
+      font-size: 10pt;
+      break-inside: avoid;
+    }
+
+    caption {
+      margin-bottom: 1mm;
+    }
+
+    th,
+    td {
+      padding: 0.6mm 2mm;
+      border: 0.75pt solid #000;
+      color: #000;
+    }
+
+    thead th:not(:first-child),
+    td {
+      width: 19mm;
+    }
+
+    .fila-inicial th,
+    .fila-inicial td {
+      background: none;
+    }
+
+    .seguimiento--hoja td,
+    .seguimiento--hoja tbody th {
+      height: 7mm;
+    }
+
+    .seguimiento--clave {
+      font-size: 9pt;
+    }
+
+    .seguimiento--clave thead th:not(:first-child),
+    .seguimiento--clave td {
+      width: 15mm;
+    }
+  }
+</style>

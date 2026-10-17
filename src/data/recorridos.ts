@@ -99,6 +99,15 @@ export const recorridos: Recorrido[] = [
         title: "Probar y ajustar el programa",
         tipo: "Práctica",
       },
+      {
+        href: "/pizarrones/seguir-un-programa-paso-a-paso/",
+        title: "Seguir un programa paso a paso",
+      },
+      {
+        href: "/cuando-importa-el-orden/",
+        title: "Cuándo importa el orden",
+        tipo: "Actividad",
+      },
     ],
   },
   {
