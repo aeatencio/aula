@@ -21,7 +21,7 @@ export const serieCuandoImportaElOrden = {
       href: "/pizarrones/seguir-un-programa-paso-a-paso/",
       title: "Seguir un programa paso a paso",
       tipo: "Pizarrón",
-      para: "para copiar antes de la hoja",
+      para: "para seguir la ejecución y comparar dos órdenes",
     },
     {
       href: "/cuando-importa-el-orden/",

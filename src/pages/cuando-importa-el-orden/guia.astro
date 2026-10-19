@@ -1,6 +1,7 @@
 ---
 import TablaSeguimiento from "../../components/TablaSeguimiento.astro";
 import {
+  casoPedido,
   conclusion,
   consignaFrase,
   formatear,
@@ -12,6 +13,7 @@ import {
   numeroPrueba,
   otraVenta,
   pantallaFinal,
+  pedido,
   preguntaInicial,
   preguntas,
   quedan,
@@ -67,7 +69,7 @@ const respuestasPapelito = [
     Para imprimir:{" "}
     <a href={pdfGuia} type="application/pdf">la guía en PDF</a>{" "}
     (oficio 216 × 356 mm; la segunda hoja tiene las tablas resueltas y la
-    clave). Para recoger las respuestas:{" "}
+    clave). Para juntar las respuestas:{" "}
     <a href="/cuando-importa-el-orden/respuestas/">papelitos recortables</a>{" "}
     (12 por hoja oficio).
   </p>
@@ -76,11 +78,10 @@ const respuestasPapelito = [
     <h2 id="idea">Idea que tiene que quedar</h2>
     <p class="idea">{ideaInicial}</p>
     <p>
-      El corazón de la clase es que la <strong>tabla de seguimiento</strong>{" "}
-      pase de ser algo que hace el docente al corregir a ser una herramienta de
-      cada estudiante. Condiciones y repeticiones no se adelantan. La relación
-      entre instrucciones se escribe recién al final de la corrección, a partir
-      de los casos:
+      El objetivo es que cada estudiante use la <strong>tabla de seguimiento</strong>{" "}
+      para comprobar una predicción y encontrar dónde se equivocó.
+      Se trabaja sólo con secuencia y orden. Después de comparar los casos,
+      discutir esta síntesis:
     </p>
     <p class="idea idea--final">{conclusion}</p>
   </section>
@@ -117,10 +118,18 @@ const respuestasPapelito = [
   <section class="bloque" aria-labelledby="recorrido">
     <h2 id="recorrido">Un recorrido posible</h2>
     <p class="apoyo">
-      Unos 60 minutos. Los tiempos son orientativos; el orden importa más que
-      la duración. La devolución de una evaluación anterior, si la hay, se
-      entrega mientras resuelven la hoja, sin comentarla en común.
+      Unos 60 minutos, con papel, carpeta y pizarrón. Los tiempos son orientativos.
+      La web permite retomar los ejemplos y ejecutarlos paso a paso;
+      no hace falta usarla durante la clase.
     </p>
+
+    <div class="pedido">
+      <h3 class="subtitulo">El pedido de empanadas, para el pizarrón</h3>
+      <p>{casoPedido} Al empezar: CANTIDAD = 2 y TOTAL = 0.</p>
+      <ol class="programa">
+        {pedido.instrucciones.map((instruccion) => <li>{instruccion.texto}</li>)}
+      </ol>
+    </div>
 
     <div class="variantes">
       <div class="variante">
@@ -133,24 +142,19 @@ const respuestasPapelito = [
             <p>
               «¿Cuánto valía el total justo antes de la instrucción 3?». Que dicten
               el total después de cada instrucción y armar la tabla en el
-              pizarrón. Es la única tabla que hace el docente: sirve para mostrar el
-              formato. Ponerle nombre: <em>tabla de seguimiento</em>.
+              pizarrón. Esta primera tabla sirve para mostrar el formato.
+              Ponerle nombre: <em>tabla de seguimiento</em>.
             </p>
           </li>
           <li>
             <p class="momento-nombre">
-              Pizarrón y cantina <span class="momento-tiempo">unos 8 minutos</span>
+              El pedido de empanadas <span class="momento-tiempo">unos 8 minutos</span>
             </p>
             <p>
-              Copiar la pregunta «{preguntaInicial}», la idea y los verbos.
-              Escribir el caso de la cantina, su programa y la tabla vacía: cada
-              estudiante la completa en la carpeta (3 minutos) y se compara con
-              el pizarrón. Luego, «¿y si intercambiamos la 1 y la 2?»: otra
-              tabla, también individual (2 minutos). No dar todavía ninguna
-              regla. Todo esto está en el pizarrón{" "}
-              <a href="/pizarrones/seguir-un-programa-paso-a-paso/">
-                Seguir un programa paso a paso
-              </a>.
+              Plantear «{preguntaInicial}». Escribir el pedido, el programa y
+              una tabla vacía. Pedir una predicción y completar la tabla en
+              la carpeta. Intercambiar la 1 y la 2 y volver a seguirlo.
+              Comparar las tablas antes de formular una regla.
             </p>
           </li>
           <li>
@@ -222,7 +226,7 @@ const respuestasPapelito = [
           </li>
           <li>
             <p class="momento-nombre">
-              Cantina <span class="momento-tiempo">unos 5 minutos</span>
+              El pedido de empanadas <span class="momento-tiempo">unos 5 minutos</span>
             </p>
             <p>Una sola tabla, completada por cada estudiante en la carpeta.</p>
           </li>
@@ -247,7 +251,7 @@ const respuestasPapelito = [
         </ol>
         <p>
           Lo que no se llegó a resolver del dorso puede hacerse en casa o abrir el
-          encuentro siguiente. No es requisito para empezar con condiciones.
+          encuentro siguiente. Retomar las dudas que aparezcan en las tablas.
         </p>
       </div>
     </div>
@@ -257,7 +261,7 @@ const respuestasPapelito = [
     <h2 id="corte">Si se corta antes</h2>
     <ul class="lista">
       <li>
-        Con la cantina resuelta por cada uno, la tabla ya queda presentada; la
+        Con el pedido resuelto por cada uno, la tabla ya queda presentada; la
         hoja puede abrir el encuentro siguiente.
       </li>
       <li>
@@ -265,9 +269,8 @@ const respuestasPapelito = [
         4 se puede discutir en la corrección.
       </li>
       <li>
-        Si la hoja se resolvió pero no se corrigió, recoger igual los
-        papelitos: la corrección abre el encuentro siguiente. Si falta tiempo,
-        se recorta antes de acelerar.
+        Si falta tiempo para corregir, juntar los papelitos y retomar
+        la corrección en el próximo encuentro.
       </li>
     </ul>
   </section>
@@ -279,7 +282,8 @@ const respuestasPapelito = [
     </h2>
     <ul class="lista">
       <li>
-        Dictar las tablas fila por fila. Cada estudiante compara con la suya y
+        Reconstruir las tablas entre todos: pedir que expliquen qué cambió y
+        qué quedó igual en cada fila. Cada estudiante compara con la suya y
         marca con otro color <strong>la primera fila donde no coincide</strong>;
         corrige desde ahí, sin borrar lo que había escrito. En el pizarrón,
         flechas concretas: «cuando se ejecuta la 1, MONEDAS ya vale 0»;
@@ -288,8 +292,9 @@ const respuestasPapelito = [
       <li>
         Antes de dar el resultado de cada versión y de cada pregunta con
         opciones, preguntar cuántos obtuvieron cada valor o eligieron cada
-        letra. En la 8, que alguien defienda la C y otra persona muestre su
-        tabla de la 9.
+        letra. En la 8, comparar A y C con las dos ventas. Que expliquen
+        por qué probar otro valor puede descartar un ajuste, pero acertar
+        dos veces no alcanza para asegurar que sirve siempre.
       </li>
       <li>
         Para ampliar: «¿hay otro orden del kiosco que también sirva?». Sí,
@@ -390,8 +395,8 @@ const respuestasPapelito = [
     </h2>
     <p class="apoyo">
       Para corregir en común y autocorregir; no es para poner nota. Cada
-      opción incorrecta muestra una confusión distinta: conviene escuchar por
-      qué la eligieron.
+      opción incorrecta puede señalar una confusión: escuchar por qué la
+      eligieron antes de sacar conclusiones.
     </p>
     <ul class="clave-lista">
       {preguntas.map((pregunta) => (
@@ -464,6 +469,12 @@ const respuestasPapelito = [
   .apoyo {
     color: var(--muted);
     font-weight: 600;
+  }
+
+  .pedido {
+    margin: 1rem 0;
+    padding-left: 1rem;
+    border-left: 3px solid var(--accent);
   }
 
   .lista {
@@ -699,8 +710,15 @@ const respuestasPapelito = [
     }
 
     .bloque h2 {
+      margin-top: 0;
       margin-bottom: 1.2mm;
       font-size: 11.5pt;
+    }
+
+    .pedido {
+      margin: 2mm 0;
+      padding-left: 3mm;
+      border-left-color: #000;
     }
 
     .subtitulo {

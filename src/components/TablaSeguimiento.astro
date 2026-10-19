@@ -46,16 +46,18 @@ const {
       {casilleros.map((casillero) => <td>{formatear(inicial[casillero] ?? 0)}</td>)}
       <td class="vacia"></td>
     </tr>
-    {filas.map((fila) => (
-      <tr>
+    {filas.map((fila, indice) => (
+      <tr data-instruccion={fila.numero}>
         <th scope="row">
           {fila.numero !== undefined && <span class="numero">{fila.numero}.</span>}
           {fila.texto && <span>{fila.texto}</span>}
         </th>
         {casilleros.map((casillero) => (
-          <td>{fila.memoria ? formatear(fila.memoria[casillero] ?? 0) : ""}</td>
+          <td data-cambio={fila.memoria && fila.memoria[casillero] !== (indice === 0 ? inicial : filas[indice - 1].memoria)?.[casillero] ? "" : undefined}>
+            <span class="valor">{fila.memoria ? formatear(fila.memoria[casillero] ?? 0) : ""}</span>
+          </td>
         ))}
-        <td>{fila.pantalla !== undefined ? formatear(fila.pantalla) : ""}</td>
+        <td><span class="valor">{fila.pantalla !== undefined ? formatear(fila.pantalla) : ""}</span></td>
       </tr>
     ))}
   </tbody>
@@ -118,6 +120,14 @@ const {
 
   .fila-inicial th {
     font-style: italic;
+  }
+
+  .seguimiento--pizarron td {
+    min-width: 2.6em;
+  }
+
+  .seguimiento--pizarron tbody th {
+    line-height: 1.35;
   }
 
   .seguimiento--hoja td,

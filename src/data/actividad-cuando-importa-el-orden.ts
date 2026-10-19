@@ -71,10 +71,10 @@ export function pantallaFinal(filas: readonly Fila[]): number | undefined {
 export const formatear = (n: number) => n.toLocaleString("es-AR");
 
 /* ------------------------------------------------------------------------ */
-/* Pizarrón: la cantina                                                     */
+/* Pizarrón: el pedido de empanadas                                          */
 /* ------------------------------------------------------------------------ */
 
-export const cantina: Programa = {
+export const pedido: Programa = {
   casilleros: ["CANTIDAD", "TOTAL"],
   inicial: { CANTIDAD: 2, TOTAL: 0 },
   instrucciones: [
@@ -93,11 +93,11 @@ export const cantina: Programa = {
   ],
 };
 
-export const casoCantina =
-  "En la cantina de la escuela, una persona había pedido 2 empanadas y agrega una más. Cada empanada cuesta $800. El programa tiene que cobrar las 3.";
+export const casoPedido =
+  "Pediste 2 empanadas y agregás una más. Cada una cuesta $800. El programa tiene que calcular cuánto pagar por el pedido completo.";
 
 /** En el pizarrón, después de seguirlo como está, se prueba este otro orden. */
-export const ordenCantinaCambiado: readonly number[] = [2, 1, 3];
+export const ordenPedidoCambiado: readonly number[] = [2, 1, 3];
 
 /* ------------------------------------------------------------------------ */
 /* Hoja: el juego                                                           */
@@ -127,7 +127,7 @@ export const juego: Programa = {
 };
 
 export const casoJuego =
-  "Al terminar un nivel de un juego, cada moneda juntada se cambia por 10 puntos y las monedas vuelven a 0. Después, como premio por terminar el nivel, se duplican todos los puntos. Al final, la pantalla muestra los puntos.";
+  "Al terminar un nivel, las monedas que juntaste se convierten en puntos: 10 por moneda. El contador de monedas vuelve a 0. Después se duplican los puntos y se muestra el total en la pantalla.";
 
 export type Version = {
   id: string;
@@ -135,17 +135,12 @@ export type Version = {
   numero: number;
   nombre: string;
   orden: readonly number[];
-  /**
-   * Primero se predice el resultado; la tabla queda disponible para quien la
-   * necesite y para la corrección.
-   */
-  primeroPredecir?: boolean;
 };
 
 export const versiones: readonly Version[] = [
   { id: "v1", numero: 2, nombre: "Versión 1", orden: [1, 3, 2, 4] },
   { id: "v2", numero: 3, nombre: "Versión 2", orden: [2, 1, 3, 4] },
-  { id: "v3", numero: 5, nombre: "Versión 3", orden: [3, 1, 2, 4], primeroPredecir: true },
+  { id: "v3", numero: 5, nombre: "Versión 3", orden: [3, 1, 2, 4] },
   { id: "v4", numero: 6, nombre: "Versión 4", orden: [1, 2, 4, 3] },
 ];
 
@@ -173,7 +168,7 @@ export const kiosco: Programa = {
 };
 
 export const casoKiosco =
-  "En el kiosco de la escuela, cuando se venden alfajores, el programa tiene que descontar la venta del stock y mostrar cuántos alfajores quedan.";
+  "Un kiosco usa un programa para llevar la cuenta de los alfajores. STOCK guarda cuántos hay y VENTA, cuántos se vendieron. El programa tiene que descontar la venta y mostrar cuántos quedan.";
 
 /** Lo que se quiere que muestre: los alfajores que quedan después de la venta. */
 export const quedan = (m: Memoria) => m.STOCK - m.VENTA;
@@ -230,12 +225,12 @@ export const preguntaPorQue: Pregunta = {
   id: "por-que",
   numero: 4,
   enunciado:
-    "¿Por qué la versión 1 muestra lo mismo que el programa original y la versión 2 no?",
+    "Compará el programa original con las versiones 1 y 2. ¿Qué explicación coincide con tus tablas?",
   opciones: {
-    A: "Porque en la versión 2 «Anotar 0 en MONEDAS» va primero, y anotar 0 borra todos los valores de la memoria.",
-    B: "Porque en la versión 1 la máquina se da cuenta de que esas dos pueden ir en cualquier orden.",
-    C: "Porque en la versión 2 la instrucción 1 se ejecuta cuando MONEDAS ya vale 0; en la versión 1, cuando se duplica, PUNTOS ya tiene las monedas.",
-    D: "Porque en la versión 2 la máquina hace mal la cuenta de MONEDAS × 10 y suma menos puntos.",
+    A: "En la versión 2, «Anotar 0 en MONEDAS» borra todos los valores de la memoria.",
+    B: "En la versión 1, la máquina decide cuándo poner MONEDAS en 0 para que el total no cambie.",
+    C: "En la versión 2 se suman puntos cuando MONEDAS ya vale 0. En la versión 1, cambiar de lugar «Anotar 0 en MONEDAS» no cambia los puntos que se duplican.",
+    D: "En la versión 2 la máquina calcula mal MONEDAS × 10 y suma menos puntos.",
   },
   respuesta: "C",
   porque:
@@ -339,9 +334,9 @@ export const preguntaInicial = "¿Cuándo cambiar el orden cambia el resultado?"
 export const ideaInicial =
   "Cada instrucción trabaja con los valores que hay en ese momento. Por eso cambiar el orden a veces cambia el resultado y a veces no.";
 
-/** Se escribe recién al final de la corrección, a partir de los casos. */
+/** Síntesis para la guía docente, para discutir a partir de los casos. */
 export const conclusion =
-  "Cambiar el orden puede cambiar el resultado cuando una instrucción usa un valor que otra cambia. Mostrar muestra el valor que hay en ese momento.";
+  "Cambiar el orden puede cambiar el resultado cuando una instrucción usa un valor que otra cambia. «Mostrar» usa el valor que hay en ese momento; los cambios posteriores en la memoria no actualizan la pantalla.";
 
 export const verbos: readonly { verbo: string; explicacion: string }[] = [
   { verbo: "Anotar", explicacion: "reemplaza lo que había en el casillero." },
@@ -354,4 +349,4 @@ export const verbos: readonly { verbo: string; explicacion: string }[] = [
 
 /** Sin punto final: se cita entre comillas. */
 export const consignaFrase =
-  "Cambiar el orden de dos instrucciones a veces cambia el resultado y a veces no. Explicalo con un ejemplo de hoy";
+  "Cambiar el orden de dos instrucciones a veces cambia el resultado y a veces no. Mostrá un ejemplo de cada caso y explicá por qué pasa";

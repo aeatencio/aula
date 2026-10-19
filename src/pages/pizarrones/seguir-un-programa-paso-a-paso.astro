@@ -1,220 +1,159 @@
 ---
 import TablaSeguimiento from "../../components/TablaSeguimiento.astro";
 import {
-  cantina,
-  casoCantina,
-  conclusion,
-  ideaInicial,
-  ordenCantinaCambiado,
+  pedido,
+  casoPedido,
+  ordenPedidoCambiado,
   preguntaInicial,
   seguir,
   verbos,
 } from "../../data/actividad-cuando-importa-el-orden";
 import PizarronLayout from "../../layouts/PizarronLayout.astro";
 
-const comoEsta = seguir(cantina);
-const cambiado = seguir(cantina, ordenCantinaCambiado);
+const ejecuciones = [
+  { titulo: "Como está escrito", orden: [1, 2, 3] },
+  { titulo: "Intercambiando la 1 y la 2", orden: ordenPedidoCambiado },
+];
 ---
 
 <PizarronLayout
   title="Seguir un programa paso a paso"
-  description="Pizarrón sobre secuencia y orden: cada instrucción trabaja con los valores que hay en ese momento, y una tabla de seguimiento permite ver cómo cambia la memoria instrucción por instrucción."
+  description="Dos órdenes para un mismo programa: predecí qué muestran, ejecutá una instrucción por vez y compará los valores en una tabla de seguimiento."
   categoria="Pensamiento Computacional"
   encabezado="simple-grande"
 >
   <p class="pregunta">{preguntaInicial}</p>
+  <p class="caso">{casoPedido}</p>
+  <p class="prediccion">¿Los dos órdenes van a mostrar el mismo total? ¿Cuánto va a mostrar cada uno?</p>
 
-  <ul class="palabras" aria-label="Palabras clave">
-    <li>Instrucción</li>
-    <li>Memoria</li>
-    <li>Valor</li>
-    <li>Orden</li>
-    <li>Tabla de seguimiento</li>
-  </ul>
+  <div class="ejecuciones">
+    {ejecuciones.map(({ titulo, orden }, indice) => (
+      <section class="ejecucion" data-ejecucion aria-labelledby={`orden-${indice}`}>
+        <h2 id={`orden-${indice}`}>{titulo}</h2>
+        <TablaSeguimiento
+          titulo={`Orden ${orden.join(" · ")}`}
+          casilleros={pedido.casilleros}
+          inicial={pedido.inicial}
+          filas={seguir(pedido, orden)}
+        />
+        <div class="controles" hidden>
+          <p class="paso" role="status" aria-atomic="true"></p>
+          <div class="botones">
+            <button type="button" data-siguiente>Ejecutar instrucción {orden[0]}</button>
+            <button type="button" data-reiniciar disabled>Volver a empezar</button>
+          </div>
+        </div>
+      </section>
+    ))}
+  </div>
 
-  <p class="idea">{ideaInicial}</p>
+  <p class="comparacion" data-comparacion>
+    Compará las tablas: ¿cuánto vale CANTIDAD cuando se calcula TOTAL en cada orden?
+    ¿Qué cambiarías en el segundo programa para que muestre el total del pedido?
+  </p>
 
-  <section class="verbos" aria-labelledby="verbos-titulo">
-    <h2 id="verbos-titulo" class="rotulo">Qué hace cada instrucción</h2>
+  <section class="referencia" aria-labelledby="tabla-titulo">
+    <h2 id="tabla-titulo">Cómo leer la tabla de seguimiento</h2>
+    <p>
+      La memoria guarda los valores en casilleros con nombre: acá, CANTIDAD y TOTAL.
+      Cada fila muestra cómo quedan <strong>después</strong> de ejecutar una instrucción,
+      aunque no hayan cambiado. Los números identifican las instrucciones del programa original.
+    </p>
+    <p>
+      En «Pantalla» se anota un valor sólo en la fila de «Mostrar».
+      Una celda vacía no significa que se borre la pantalla.{" "}
+      <span class="leyenda" hidden>Los valores subrayados cambiaron en el último paso.</span>
+    </p>
     <dl>
       {verbos.map(({ verbo, explicacion }) => (
-        <div>
-          <dt>{verbo}</dt>
-          <dd>{explicacion}</dd>
-        </div>
+        <div><dt>{verbo}</dt><dd>{explicacion}</dd></div>
       ))}
     </dl>
   </section>
 
-  <section class="ejemplo" aria-labelledby="ejemplo-titulo">
-    <h2 id="ejemplo-titulo" class="rotulo">Seguir el programa con una tabla</h2>
-    <p class="caso">{casoCantina}</p>
-    <ol class="programa">
-      {cantina.instrucciones.map((instruccion) => <li>{instruccion.texto}</li>)}
-    </ol>
-    <p class="explicacion">
-      Una fila por instrucción, en el orden en que se ejecutan. En cada fila se
-      anota cuánto vale cada casillero después de esa instrucción; en
-      «Pantalla», sólo lo que muestra «Mostrar».
-    </p>
-    <div class="tablas">
-      <TablaSeguimiento
-        titulo="Como está escrito"
-        casilleros={cantina.casilleros}
-        inicial={cantina.inicial}
-        filas={comoEsta}
-      />
-      <TablaSeguimiento
-        titulo="Con las instrucciones 1 y 2 intercambiadas"
-        casilleros={cantina.casilleros}
-        inicial={cantina.inicial}
-        filas={cambiado}
-      />
-    </div>
-    <p class="explicacion">
-      Con las instrucciones intercambiadas, el programa cobra 2 empanadas aunque
-      la cantidad ya es 3.
-    </p>
-  </section>
-
-  <details class="cierre">
-    <summary>Para cerrar, después de corregir la hoja</summary>
-    <p>{conclusion}</p>
-  </details>
+  <p class="continuar">
+    Para seguir comparando: <a href="/cuando-importa-el-orden/">Cuándo importa el orden</a>.
+    Podés resolverlo en papel o en la carpeta.
+  </p>
 </PizarronLayout>
+
+<script>
+  import { iniciarSeguimiento } from "../../scripts/seguir-programa";
+  iniciarSeguimiento();
+</script>
 
 <style>
   .pregunta {
-    margin: 0 0 1.35rem;
-    padding: 0.85rem 0 0.95rem 1rem;
+    margin: 0 0 1rem;
+    padding-left: 1rem;
     border-left: 4px solid var(--emphasis);
-    color: var(--ink);
     font-size: clamp(1.2rem, 0.55vw + 1.05rem, 1.5rem);
     font-weight: 700;
     line-height: 1.35;
   }
 
-  .palabras {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.45rem 0.55rem;
-    margin: 0 0 1.5rem;
-    padding: 0;
-    list-style: none;
-  }
+  .caso { margin: 0 0 0.6rem; }
+  .prediccion { margin: 0 0 1.4rem; font-weight: 700; }
 
-  .palabras li {
-    padding: 0.35rem 0.7rem;
-    border: 2px solid var(--line);
-    font-size: 0.92rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
-
-  .idea {
-    margin: 0 0 1.75rem;
-    padding: 1rem 1.15rem;
-    background: var(--accent);
-    color: var(--board);
-    font-size: clamp(1.1rem, 0.4vw + 1rem, 1.3rem);
-    font-weight: 700;
-    line-height: 1.4;
-  }
-
-  .rotulo {
-    margin: 0 0 0.75rem;
-    font-size: 0.85rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
-
-  .verbos {
-    margin: 0 0 1.75rem;
-    padding: 1.1rem 0;
-    border-top: 2px solid var(--line);
-    border-bottom: 2px solid var(--line);
-  }
-
-  .verbos dl {
-    display: grid;
-    gap: 0.45rem;
-    margin: 0;
-  }
-
-  .verbos dl > div {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0 0.5rem;
-  }
-
-  .verbos dt {
-    font-weight: 700;
-  }
-
-  .verbos dt::after {
-    content: ":";
-  }
-
-  .verbos dd {
-    margin: 0;
-  }
-
-  .ejemplo .caso {
-    margin: 0 0 0.6rem;
-  }
-
-  .programa {
-    margin: 0 0 1rem;
-    padding: 0.5rem 0 0.5rem 2.6rem;
-    border-left: 4px solid var(--accent);
-    font-weight: 700;
-  }
-
-  .explicacion {
-    margin: 0 0 1rem;
-    color: var(--muted);
-    font-weight: 600;
-  }
-
-  .tablas {
+  .ejecuciones {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 1rem 1.5rem;
-    margin: 0 0 1rem;
+    gap: 1.5rem;
   }
 
-  .cierre {
-    margin: 1.5rem 0 0;
-    padding-top: 1.1rem;
-    border-top: 2px solid var(--line);
-  }
+  .ejecucion { min-width: 0; }
+  h2 { margin: 0 0 0.4rem; font-size: 1.1em; line-height: 1.3; }
+  .controles[hidden], .leyenda[hidden] { display: none; }
+  .paso { margin: 0.7rem 0 0.4rem; font-size: 0.9em; }
+  .botones { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 
-  .cierre summary {
-    display: flex;
-    align-items: center;
+  button {
     min-height: 2.75rem;
-    color: var(--accent);
+    padding: 0.5rem 0.75rem;
+    border: 2px solid var(--accent);
+    border-radius: 0;
+    background: var(--accent);
+    color: var(--board);
+    font: inherit;
+    font-size: 0.9em;
     font-weight: 700;
     cursor: pointer;
   }
 
-  .cierre summary:focus-visible {
-    outline: 3px solid var(--accent);
-    outline-offset: 2px;
+  [data-reiniciar] { background: transparent; color: var(--accent); }
+  button:disabled { opacity: 0.5; cursor: default; }
+  .ejecucion :global(tr.pendiente .valor) { visibility: hidden; }
+  .ejecucion :global(tr.actual) { background: color-mix(in srgb, var(--accent) 10%, var(--board)); }
+  .ejecucion :global(tr.actual th) { box-shadow: inset 3px 0 var(--accent); }
+  .ejecucion :global(tr.actual td[data-cambio] .valor) { text-decoration: underline; text-underline-offset: 0.2em; }
+  .comparacion { margin: 1.5rem 0; padding-left: 1rem; border-left: 4px solid var(--emphasis); font-weight: 700; }
+  .comparacion[hidden] { display: none; }
+
+  .referencia { margin-top: 1.5rem; padding-top: 1rem; border-top: 2px solid var(--line); }
+  .referencia p { margin: 0.6rem 0; }
+  dl { display: grid; gap: 0.4rem; margin: 1rem 0; }
+  dl > div { display: flex; flex-wrap: wrap; gap: 0 0.4rem; }
+  dt { font-weight: 700; }
+  dt::after { content: ":"; }
+  dd { margin: 0; }
+  .continuar { margin: 1.5rem 0 0; }
+
+  @media (max-width: 60rem) {
+    .ejecuciones { grid-template-columns: 1fr; gap: 1.75rem; }
   }
 
-  .cierre p {
-    margin: 0.4rem 0 0;
-    font-size: clamp(1.08rem, 0.35vw + 1rem, 1.28rem);
-    font-weight: 700;
-    line-height: 1.4;
+  @media (max-width: 30rem) {
+    .ejecucion :global(.seguimiento) { font-size: 0.8em; }
+    .ejecucion :global(th), .ejecucion :global(td) { padding: 0.35rem 0.25rem; }
   }
 
-  @media (max-width: 52rem) {
-    .tablas {
-      grid-template-columns: 1fr;
-    }
+  @media print {
+    .controles, .leyenda, .continuar { display: none; }
+    .ejecucion :global(tr.pendiente .valor) { visibility: visible; }
+    .ejecucion :global(tr.actual) { background: none; }
+    .ejecucion :global(tr.actual th) { box-shadow: none; }
+    .ejecucion :global(tr.actual td[data-cambio] .valor) { text-decoration: none; }
+    .comparacion[hidden] { display: block; }
+    .ejecucion { break-inside: avoid; }
   }
 </style>

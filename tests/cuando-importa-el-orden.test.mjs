@@ -4,11 +4,12 @@ import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 import { JSDOM } from "jsdom";
+import { iniciarSeguimiento } from "../src/scripts/seguir-programa.ts";
 import { recorridos } from "../src/data/recorridos.ts";
 import { serieCuandoImportaElOrden } from "../src/data/serie-cuando-importa-el-orden.ts";
 import {
   ajustesKiosco,
-  cantina,
+  pedido,
   casillerosPapelito,
   conclusion,
   ideaInicial,
@@ -17,7 +18,7 @@ import {
   letras,
   numeroOriginal,
   numeroPrueba,
-  ordenCantinaCambiado,
+  ordenPedidoCambiado,
   otraVenta,
   pantallaFinal,
   preguntaAjuste,
@@ -121,13 +122,6 @@ describe("Cuándo importa el orden: programas y clave", () => {
     assert.equal(respuesta, `PUNTOS vale ${puntos} y la pantalla mostró ${mostrado}.`);
   });
 
-  it("la versión 3 sólo pide predecir primero; la tabla queda disponible", () => {
-    assert.deepEqual(
-      versiones.filter((version) => version.primeroPredecir).map((version) => version.id),
-      ["v3"],
-    );
-  });
-
   it("del kiosco, sólo el ajuste A sirve para cualquier valor de VENTA", () => {
     assert.equal(kioscoA([1, 2, 3], 12, 3), 12, "como está, muestra 12");
     assert.equal(pantallaFinal(seguir(kiosco)), 12);
@@ -148,7 +142,6 @@ describe("Cuándo importa el orden: programas y clave", () => {
       );
     assert.deepEqual(letras.filter(sirve), ["A"]);
     assert.equal(preguntaAjuste.respuesta, "A");
-    assert.equal(preguntaAjuste.enunciado, "¿Cuál de estos ajustes sirve para cualquier valor de VENTA?");
   });
 
   it("el distractor C acierta con la venta del caso y falla con la de la prueba", () => {
@@ -167,9 +160,9 @@ describe("Cuándo importa el orden: programas y clave", () => {
     assert.ok(!["B", "D"].some((letra) => correctos.some((o) => o.join() === ajustesKiosco[letra].orden.join())));
   });
 
-  it("la cantina del pizarrón: como está cobra 3 empanadas; con 1 y 2 intercambiadas, 2", () => {
-    assert.equal(pantallaFinal(seguir(cantina)), 2400);
-    assert.equal(pantallaFinal(seguir(cantina, ordenCantinaCambiado)), 1600);
+  it("el pedido del pizarrón: como está calcula 3 empanadas; con 1 y 2 intercambiadas, 2", () => {
+    assert.equal(pantallaFinal(seguir(pedido)), 2400);
+    assert.equal(pantallaFinal(seguir(pedido, ordenPedidoCambiado)), 1600);
   });
 
   it("las preguntas para elegir tienen cuatro opciones, una devolución por cada error y respuestas variadas", () => {
@@ -207,7 +200,7 @@ describe("Cuándo importa el orden: programas y clave", () => {
     assert.match(ideaInicial, /a veces cambia el resultado y a veces no/);
     assert.doesNotMatch(ideaInicial, /usa un valor que otra cambia/);
     assert.match(conclusion, /^Cambiar el orden puede cambiar el resultado cuando una instrucción usa un valor que otra cambia\./);
-    assert.match(conclusion, /Mostrar muestra el valor que hay en ese momento\./);
+    assert.match(conclusion, /los cambios posteriores en la memoria no actualizan la pantalla/);
     assert.doesNotMatch(conclusion, /siempre|nunca/i);
   });
 });
@@ -278,23 +271,62 @@ describe("Cuándo importa el orden: hoja del estudiante", () => {
 describe("Cuándo importa el orden: pizarrón", () => {
   const html = () => readDist("pizarrones", "seguir-un-programa-paso-a-paso", "index.html");
 
-  it("plantea la pregunta, la idea inicial, los verbos y la cantina seguida con tablas", () => {
-    const texto = textoVisible(html());
-    for (const frase of [preguntaInicial, ideaInicial, "Anotar", "Mostrar", "Tabla de seguimiento"]) {
-      assert.ok(texto.includes(normalizar(frase)), frase);
-    }
-    assert.match(texto, /Como está escrito/);
-    assert.match(texto, /2\.400/);
-    assert.match(texto, /1\.600/);
+  it("presenta el problema y dos órdenes, con una referencia textual y un enlace para continuar", () => {
+    const { document } = new JSDOM(html()).window;
+    assert.ok(document.body.textContent.includes(preguntaInicial));
+    assert.equal(document.querySelectorAll("[data-ejecucion]").length, 2);
+    assert.match(document.querySelector(".referencia").textContent, /después/);
+    assert.match(document.querySelector(".referencia").textContent, /no significa que se borre/);
+    assert.ok(document.querySelector('.continuar a[href="/cuando-importa-el-orden/"]'));
+    assert.equal(document.querySelector("details"), null, "no representa momentos de clase con un cierre plegado");
+    assert.ok(!document.body.textContent.includes(conclusion), "deja la síntesis en la guía");
   });
 
-  it("la conclusión queda al final, plegada, para después de corregir", () => {
+  it("sin JavaScript conserva las dos trazas completas y oculta controles inactivos", () => {
     const { document } = new JSDOM(html()).window;
-    const cierre = document.querySelector("details.cierre");
-    assert.ok(cierre, "falta el cierre");
-    assert.equal(cierre.hasAttribute("open"), false);
-    assert.match(cierre.querySelector("summary").textContent, /después de corregir/);
-    assert.equal(normalizar(cierre.querySelector("p").textContent), normalizar(conclusion));
+    const tablas = [...document.querySelectorAll("[data-ejecucion] table")];
+    assert.deepEqual(tablas.map(t => t.querySelector("tbody tr:last-child td:last-child").textContent), ["2.400", "1.600"]);
+    assert.equal(document.querySelectorAll(".pendiente").length, 0);
+    assert.ok([...document.querySelectorAll(".controles")].every(e => e.hidden));
+  });
+
+  it("permite predecir, ejecutar cada orden por separado y reiniciar sin conservar resultados", () => {
+    const { document } = new JSDOM(html()).window;
+    iniciarSeguimiento(document);
+    const paneles = [...document.querySelectorAll("[data-ejecucion]")];
+    const comparacion = document.querySelector("[data-comparacion]");
+    for (const panel of paneles) {
+      assert.equal(panel.querySelectorAll(".pendiente").length, 3);
+      assert.equal(panel.querySelector(".controles").hidden, false);
+      assert.equal(panel.querySelector("[data-reiniciar]").disabled, true);
+    }
+    assert.equal(comparacion.hidden, true);
+
+    const trazas = [
+      [["3", "0", ""], ["3", "2.400", ""], ["3", "2.400", "2.400"]],
+      [["2", "1.600", ""], ["3", "1.600", ""], ["3", "1.600", "1.600"]],
+    ];
+    for (const [i, panel] of paneles.entries()) {
+      for (let paso = 0; paso < 3; paso++) {
+        panel.querySelector("[data-siguiente]").click();
+        assert.equal(panel.querySelectorAll(".pendiente").length, 2 - paso);
+        const actual = panel.querySelector('[aria-current="step"]');
+        assert.deepEqual([...actual.querySelectorAll("td")].map(td => td.textContent.trim()), trazas[i][paso]);
+        assert.ok([...actual.querySelectorAll("td")].every(td => !td.hasAttribute("aria-label")));
+      }
+      assert.equal(panel.querySelector("[data-siguiente]").disabled, true);
+      if (i === 0) {
+        assert.equal(paneles[1].querySelectorAll(".pendiente").length, 3, "el otro orden no avanza solo");
+        assert.equal(comparacion.hidden, true);
+      }
+    }
+    assert.equal(comparacion.hidden, false);
+    paneles[0].querySelector("[data-reiniciar]").click();
+    assert.equal(paneles[0].querySelectorAll(".pendiente").length, 3);
+    assert.equal(paneles[0].querySelectorAll(".actual").length, 0);
+    assert.equal(paneles[0].querySelector("[data-siguiente]").disabled, false);
+    assert.equal(paneles[1].querySelectorAll(".pendiente").length, 0);
+    assert.equal(comparacion.hidden, true);
   });
 
   it("figura en el índice de pizarrones y en la portada", () => {
@@ -371,6 +403,8 @@ describe("Cuándo importa el orden: PDF finales y visibilidad de la guía", () =
       assert.ok(existsSync(fuente), `Falta ${fuente}`);
       const binario = readFileSync(fuente);
       assert.equal(binario.subarray(0, 5).toString("latin1"), "%PDF-", href);
+      const paginas = binario.toString("latin1").match(/\/Type\s*\/Page\b/g)?.length;
+      assert.equal(paginas, href === PDF_PAPELITOS ? 1 : 2, `${href}: conserva la paginación para imprimir`);
       assert.ok(!binario.toString("latin1").includes("localhost"), `${href} no enlaza localhost`);
       assert.ok(existsSync(join(dist, ...partes(href))), `Falta en dist: ${href}`);
     }

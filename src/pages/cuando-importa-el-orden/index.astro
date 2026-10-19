@@ -62,7 +62,7 @@ function disposicion(pregunta: Pregunta): string {
   </header>
 
   <p class="consigna-general">
-    Resolvé de forma individual, en esta hoja. En las preguntas con opciones,
+    Resolvé de forma individual, en la hoja o en la carpeta. En las preguntas con opciones,
     marcá la que mejor responde.
   </p>
 
@@ -75,15 +75,12 @@ function disposicion(pregunta: Pregunta): string {
 
   <section class="lectura" aria-label="Texto para leer">
     <p>
-      Mientras un programa se ejecuta, la memoria guarda los valores con los que
-      trabaja, cada uno en un casillero con nombre. {ideaInicial}
+      La memoria guarda valores en casilleros con nombre. {ideaInicial}
     </p>
     <p>
-      Para saber qué hace un programa, se lo sigue paso a paso con una{" "}
-      <strong>tabla de seguimiento</strong>: una fila por instrucción, en el
-      orden en que se ejecutan. En cada fila se anota cuánto vale cada
-      casillero <em>después</em> de esa instrucción, aunque no haya cambiado;
-      en «Pantalla», sólo lo que muestra «Mostrar».
+      En la <strong>tabla de seguimiento</strong>, anotá los valores <em>después</em>
+      de ejecutar cada instrucción, aunque no cambien. En «Pantalla», escribí
+      sólo en la fila de «Mostrar». Una celda vacía no significa que se borre la pantalla.
     </p>
     <dl class="verbos">
       {verbos.map(({ verbo, explicacion }) => (
@@ -99,7 +96,7 @@ function disposicion(pregunta: Pregunta): string {
     <h2 id="parte-a" class="parte-titulo">A · El final de un nivel</h2>
     <div class="caso">
       <p>{casoJuego}</p>
-      <p>Al terminar el nivel, la memoria tiene {memoria(juego.inicial, juego.casilleros)}.</p>
+      <p>Antes de ejecutar el programa: {memoria(juego.inicial, juego.casilleros)}.</p>
       <ol class="programa">
         {juego.instrucciones.map((instruccion) => <li>{instruccion.texto}</li>)}
       </ol>
@@ -122,8 +119,8 @@ function disposicion(pregunta: Pregunta): string {
   <section class="parte" aria-labelledby="parte-b">
     <h2 id="parte-b" class="parte-titulo">B · Otros órdenes</h2>
     <p class="presentacion">
-      Cada versión tiene las mismas cuatro instrucciones, en el orden que
-      indican los números.
+      Empezá cada versión con PUNTOS = 40 y MONEDAS = 5.
+      Los números identifican las instrucciones del programa original.
     </p>
 
     {[v1, v2].map((version) => (
@@ -184,7 +181,7 @@ function disposicion(pregunta: Pregunta): string {
       <p class="respuesta-corta">Predicción: la pantalla muestra <span class="linea"></span></p>
       <TablaSeguimiento
         variante="hoja"
-        titulo="Si la necesitás, seguila acá"
+        titulo="Comprobá tu predicción"
         casilleros={juego.casilleros}
         inicial={juego.inicial}
         filas={enBlanco(juego, v3.orden)}
@@ -235,8 +232,8 @@ function disposicion(pregunta: Pregunta): string {
         {kiosco.instrucciones.map((instruccion) => <li>{instruccion.texto}</li>)}
       </ol>
       <p>
-        La pantalla muestra <strong>12</strong>, pero después de vender 3
-        tendrían que quedar <strong>9</strong>.
+        Seguí el programa en la carpeta: ¿qué muestra la pantalla?
+        ¿Cuántos alfajores tendrían que quedar?
       </p>
     </div>
 
@@ -274,8 +271,9 @@ function disposicion(pregunta: Pregunta): string {
       <p class="respuesta-corta respuesta-corta--fila">
         <span>Tendrían que quedar <span class="linea linea--corta"></span></span>
         <span>La pantalla mostró <span class="linea linea--corta"></span></span>
-        <span>¿Sirve para cualquier venta? Sí · No</span>
+        <span>¿Funcionó con esta venta? Sí · No</span>
       </p>
+      <p class="justificacion">Explicá en la carpeta por qué tu ajuste sirve para otras ventas o por qué falla.</p>
     </div>
   </section>
 
@@ -392,6 +390,15 @@ function disposicion(pregunta: Pregunta): string {
 
   .recordatorio {
     display: none;
+  }
+
+  .dorso > .parte-titulo {
+    display: none;
+  }
+
+  .justificacion {
+    margin: 0.5rem 0 0;
+    padding-left: 1.6rem;
   }
 
   .consigna,
@@ -627,6 +634,15 @@ function disposicion(pregunta: Pregunta): string {
     .dorso {
       break-before: page;
       margin-top: 0 !important;
+    }
+
+    .dorso > .parte-titulo {
+      display: block;
+    }
+
+    .justificacion {
+      margin: 1mm 0 5mm;
+      padding-left: 6mm;
     }
 
     .consigna,
