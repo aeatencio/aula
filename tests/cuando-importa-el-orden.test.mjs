@@ -283,11 +283,31 @@ describe("Cuándo importa el orden: pizarrón", () => {
   });
 
   it("sin JavaScript conserva las dos trazas completas y oculta controles inactivos", () => {
-    const { document } = new JSDOM(html()).window;
+    const { window } = new JSDOM(html());
+    const { document } = window;
+    const estilo = document.createElement("style");
+    estilo.textContent = cssDe(html());
+    document.head.append(estilo);
     const tablas = [...document.querySelectorAll("[data-ejecucion] table")];
     assert.deepEqual(tablas.map(t => t.querySelector("tbody tr:last-child td:last-child").textContent), ["2.400", "1.600"]);
     assert.equal(document.querySelectorAll(".pendiente").length, 0);
     assert.ok([...document.querySelectorAll(".controles")].every(e => e.hidden));
+    assert.ok([...document.querySelectorAll("[data-ejecucion] .valor")].every(e => window.getComputedStyle(e).visibility === "visible"));
+  });
+
+  it("con JavaScript oculta las respuestas antes de cargar el módulo y sólo revela el paso ejecutado", () => {
+    // JSDOM no ejecuta módulos; permite comprobar el estado anterior a su carga.
+    const { window } = new JSDOM(html(), { runScripts: "dangerously" });
+    const { document } = window;
+    const estilo = document.createElement("style");
+    estilo.textContent = cssDe(html().replace(/<noscript>[\s\S]*?<\/noscript>/g, ""));
+    document.head.append(estilo);
+    const valores = [...document.querySelectorAll("[data-ejecucion] .valor")];
+    assert.ok(valores.every(e => window.getComputedStyle(e).visibility === "hidden"));
+    iniciarSeguimiento(document);
+    assert.ok(valores.every(e => window.getComputedStyle(e).visibility === "hidden"));
+    document.querySelector("[data-siguiente]").click();
+    assert.equal(valores.filter(e => window.getComputedStyle(e).visibility === "visible").length, 3);
   });
 
   it("permite predecir, ejecutar cada orden por separado y reiniciar sin conservar resultados", () => {

@@ -26,6 +26,12 @@ const ejecuciones = [
   <p class="caso">{casoPedido}</p>
   <p class="prediccion">¿Los dos órdenes van a mostrar el mismo total? ¿Cuánto va a mostrar cada uno?</p>
 
+  <noscript>
+    <style is:inline>
+      [data-ejecucion] .valor { visibility: visible !important; }
+    </style>
+  </noscript>
+
   <div class="ejecuciones">
     {ejecuciones.map(({ titulo, orden }, indice) => (
       <section class="ejecucion" data-ejecucion aria-labelledby={`orden-${indice}`}>
@@ -122,7 +128,9 @@ const ejecuciones = [
 
   [data-reiniciar] { background: transparent; color: var(--accent); }
   button:disabled { opacity: 0.5; cursor: default; }
-  .ejecucion :global(tr.pendiente .valor) { visibility: hidden; }
+  /* Ocultar desde el primer render, antes de que se ejecute el módulo. */
+  .ejecucion :global(.valor) { visibility: hidden; }
+  .ejecucion[data-iniciada] :global(tr:not(.pendiente) .valor) { visibility: visible; }
   .ejecucion :global(tr.actual) { background: color-mix(in srgb, var(--accent) 10%, var(--board)); }
   .ejecucion :global(tr.actual th) { box-shadow: inset 3px 0 var(--accent); }
   .ejecucion :global(tr.actual td[data-cambio] .valor) { text-decoration: underline; text-underline-offset: 0.2em; }
@@ -149,7 +157,7 @@ const ejecuciones = [
 
   @media print {
     .controles, .leyenda, .continuar { display: none; }
-    .ejecucion :global(tr.pendiente .valor) { visibility: visible; }
+    .ejecucion :global(.valor) { visibility: visible; }
     .ejecucion :global(tr.actual) { background: none; }
     .ejecucion :global(tr.actual th) { box-shadow: none; }
     .ejecucion :global(tr.actual td[data-cambio] .valor) { text-decoration: none; }

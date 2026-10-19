@@ -94,7 +94,7 @@ export const pedido: Programa = {
 };
 
 export const casoPedido =
-  "Pediste 2 empanadas y agregás una más. Cada una cuesta $800. El programa tiene que calcular cuánto pagar por el pedido completo.";
+  "Pediste 2 empanadas y agregás una más. Cada una cuesta $800. El programa tiene que calcular cuánto hay que pagar en total.";
 
 /** En el pizarrón, después de seguirlo como está, se prueba este otro orden. */
 export const ordenPedidoCambiado: readonly number[] = [2, 1, 3];

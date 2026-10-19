@@ -45,6 +45,7 @@ export function iniciarSeguimiento(documento: Document = document) {
     reiniciar.addEventListener("click", () => { paso = 0; actualizar(); });
     actualizar();
     ejecucion.querySelector<HTMLElement>(".controles")!.hidden = false;
+    ejecucion.dataset.iniciada = "";
   }
   documento.querySelector<HTMLElement>(".leyenda")?.removeAttribute("hidden");
 }
