@@ -1,16 +1,16 @@
 /*
-  Programas y preguntas de «Cuándo importa el orden»: única fuente para la hoja
-  impresa, el pizarrón «Seguir un programa paso a paso», la guía docente y los
-  papelitos. Las tablas de la clave no se escriben a mano: salen de ejecutar
-  estos mismos programas con `seguir`, para que hoja y clave no puedan
-  desencontrarse.
+  Programas de «Cuándo importa el orden»: única fuente para la hoja (que va
+  dentro de un folio y no se escribe), el pizarrón «Seguir un programa paso a
+  paso», el papelito de cierre y la guía docente. Las claves no se escriben a
+  mano: salen de ejecutar estos mismos programas con `seguir`.
+
+  Un solo contexto, un juego que guarda puntos. El frente trabaja un casillero
+  (PUNTOS) con «Mostrar» al final; el dorso, «Para seguir», suma MONEDAS.
+  Cada programa se escribe en el orden en que se ejecuta, numerado desde 1:
+  nunca hay que traducir una notación como «2 · 1 · 3».
 
   Trabaja sólo secuencia y orden: no hay condiciones ni repeticiones.
 */
-
-export type Letra = "A" | "B" | "C" | "D";
-
-export const letras: readonly Letra[] = ["A", "B", "C", "D"];
 
 /** Los valores que guarda la memoria, por nombre de casillero. */
 export type Memoria = Readonly<Record<string, number>>;
@@ -18,335 +18,247 @@ export type Memoria = Readonly<Record<string, number>>;
 export type Instruccion = {
   texto: string;
   /** Devuelve la memoria después de la instrucción y, si muestra algo, qué. */
-  hacer: (memoria: Memoria) => { memoria: Memoria; pantalla?: number };
+  hacer: (memoria: Memoria) => { memoria: Memoria; muestra?: number };
 };
 
 export type Programa = {
   casilleros: readonly string[];
   inicial: Memoria;
-  /** Numeradas desde 1, en el orden en que están escritas. */
+  /** En el orden en que se ejecutan. */
   instrucciones: readonly Instruccion[];
 };
 
 export type Fila = {
-  /** Número de la instrucción en el programa escrito. */
   numero: number;
   texto: string;
-  /** Cómo queda la memoria después de ejecutarla. */
+  /** Cómo queda la memoria después de ejecutar la instrucción. */
   memoria: Memoria;
   /** Lo que muestra, sólo si es una instrucción «Mostrar». */
-  pantalla?: number;
+  muestra?: number;
 };
 
-/**
- * Ejecuta las instrucciones en el orden indicado (números de instrucción) y
- * devuelve una fila de la tabla de seguimiento por cada una.
- */
-export function seguir(
-  programa: Programa,
-  orden: readonly number[] = programa.instrucciones.map((_, i) => i + 1),
-  inicial: Memoria = programa.inicial,
-  instrucciones: readonly Instruccion[] = programa.instrucciones,
-): Fila[] {
-  let memoria = inicial;
-  return orden.map((numero) => {
-    const instruccion = instrucciones[numero - 1];
-    if (!instruccion) throw new Error(`No hay instrucción ${numero}`);
+/** Ejecuta el programa y devuelve una fila de la tabla por instrucción. */
+export function seguir(programa: Programa): Fila[] {
+  let memoria = programa.inicial;
+  return programa.instrucciones.map((instruccion, indice) => {
     const efecto = instruccion.hacer(memoria);
     memoria = efecto.memoria;
-    return {
-      numero,
-      texto: instruccion.texto,
-      memoria,
-      pantalla: efecto.pantalla,
-    };
+    return { numero: indice + 1, texto: instruccion.texto, memoria, muestra: efecto.muestra };
   });
 }
 
-/** Lo que mostró la pantalla al seguir el programa (la última vez que mostró). */
-export function pantallaFinal(filas: readonly Fila[]): number | undefined {
-  return filas.findLast((fila) => fila.pantalla !== undefined)?.pantalla;
+/** Lo que mostró la pantalla al terminar: el último valor mostrado. */
+export function mostro(programa: Programa): number | undefined {
+  return seguir(programa).findLast((fila) => fila.muestra !== undefined)?.muestra;
+}
+
+/** El valor que tenía un casillero justo antes de ejecutar la instrucción que empieza con `texto`. */
+export function valorAntesDe(programa: Programa, texto: string, casillero = "PUNTOS"): number {
+  const indice = programa.instrucciones.findIndex((instruccion) => instruccion.texto.startsWith(texto));
+  if (indice < 0) throw new Error(`No hay instrucción «${texto}»`);
+  const memoria = indice === 0 ? programa.inicial : seguir(programa)[indice - 1].memoria;
+  return memoria[casillero];
 }
 
 export const formatear = (n: number) => n.toLocaleString("es-AR");
 
 /* ------------------------------------------------------------------------ */
-/* Pizarrón: el pedido de empanadas                                          */
+/* Instrucciones                                                            */
 /* ------------------------------------------------------------------------ */
 
-export const pedido: Programa = {
-  casilleros: ["CANTIDAD", "TOTAL"],
-  inicial: { CANTIDAD: 2, TOTAL: 0 },
-  instrucciones: [
-    {
-      texto: "Sumarle 1 a CANTIDAD.",
-      hacer: (m) => ({ memoria: { ...m, CANTIDAD: m.CANTIDAD + 1 } }),
-    },
-    {
-      texto: "Anotar en TOTAL: CANTIDAD × 800.",
-      hacer: (m) => ({ memoria: { ...m, TOTAL: m.CANTIDAD * 800 } }),
-    },
-    {
-      texto: "Mostrar TOTAL.",
-      hacer: (m) => ({ memoria: m, pantalla: m.TOTAL }),
-    },
-  ],
+const sumarle = (n: number): Instruccion => ({
+  texto: `Sumarle ${n} a PUNTOS.`,
+  hacer: (m) => ({ memoria: { ...m, PUNTOS: m.PUNTOS + n } }),
+});
+
+const duplicar: Instruccion = {
+  texto: "Duplicar PUNTOS.",
+  hacer: (m) => ({ memoria: { ...m, PUNTOS: m.PUNTOS * 2 } }),
 };
 
-export const casoPedido =
-  "Pediste 2 empanadas y agregás una más. Cada una cuesta $800. El programa tiene que calcular cuánto hay que pagar en total.";
+const mostrar: Instruccion = {
+  texto: "Mostrar PUNTOS.",
+  hacer: (m) => ({ memoria: m, muestra: m.PUNTOS }),
+};
 
-/** En el pizarrón, después de seguirlo como está, se prueba este otro orden. */
-export const ordenPedidoCambiado: readonly number[] = [2, 1, 3];
+const sumarleMonedas: Instruccion = {
+  texto: "Sumarle a PUNTOS el valor de MONEDAS.",
+  hacer: (m) => ({ memoria: { ...m, PUNTOS: m.PUNTOS + m.MONEDAS } }),
+};
 
-/* ------------------------------------------------------------------------ */
-/* Hoja: el juego                                                           */
-/* ------------------------------------------------------------------------ */
+const anotar0: Instruccion = {
+  texto: "Anotar 0 en MONEDAS.",
+  hacer: (m) => ({ memoria: { ...m, MONEDAS: 0 } }),
+};
 
-export const juego: Programa = {
+const conPuntos = (puntos: number, ...instrucciones: Instruccion[]): Programa => ({
+  casilleros: ["PUNTOS"],
+  inicial: { PUNTOS: puntos },
+  instrucciones,
+});
+
+const conMonedas = (...instrucciones: Instruccion[]): Programa => ({
   casilleros: ["PUNTOS", "MONEDAS"],
-  inicial: { PUNTOS: 40, MONEDAS: 5 },
-  instrucciones: [
-    {
-      texto: "Sumarle a PUNTOS el valor de MONEDAS × 10.",
-      hacer: (m) => ({ memoria: { ...m, PUNTOS: m.PUNTOS + m.MONEDAS * 10 } }),
-    },
-    {
-      texto: "Anotar 0 en MONEDAS.",
-      hacer: (m) => ({ memoria: { ...m, MONEDAS: 0 } }),
-    },
-    {
-      texto: "Duplicar PUNTOS.",
-      hacer: (m) => ({ memoria: { ...m, PUNTOS: m.PUNTOS * 2 } }),
-    },
-    {
-      texto: "Mostrar PUNTOS.",
-      hacer: (m) => ({ memoria: m, pantalla: m.PUNTOS }),
-    },
-  ],
-};
+  inicial: { PUNTOS: 4, MONEDAS: 3 },
+  instrucciones,
+});
 
-export const casoJuego =
-  "Al terminar un nivel, las monedas que juntaste se convierten en puntos: 10 por moneda. El contador de monedas vuelve a 0. Después se duplican los puntos y se muestra el total en la pantalla.";
-
-export type Version = {
-  id: string;
-  /** Número de la consigna en la hoja y en el papelito. */
-  numero: number;
-  nombre: string;
-  orden: readonly number[];
-};
-
-export const versiones: readonly Version[] = [
-  { id: "v1", numero: 2, nombre: "Versión 1", orden: [1, 3, 2, 4] },
-  { id: "v2", numero: 3, nombre: "Versión 2", orden: [2, 1, 3, 4] },
-  { id: "v3", numero: 5, nombre: "Versión 3", orden: [3, 1, 2, 4] },
-  { id: "v4", numero: 6, nombre: "Versión 4", orden: [1, 2, 4, 3] },
+/** Para cada verbo, qué hace. Visible en la hoja, el pizarrón y el papelito. */
+export const verbos: readonly { verbo: string; explicacion: string }[] = [
+  { verbo: "Sumarle", explicacion: "agrega al valor que hay ahora." },
+  { verbo: "Duplicar", explicacion: "deja el doble del valor que hay ahora." },
+  { verbo: "Mostrar", explicacion: "pone el valor en la pantalla; el casillero no cambia." },
 ];
 
-/* ------------------------------------------------------------------------ */
-/* Hoja: el kiosco                                                          */
-/* ------------------------------------------------------------------------ */
-
-export const kiosco: Programa = {
-  casilleros: ["STOCK", "VENTA"],
-  inicial: { STOCK: 12, VENTA: 3 },
-  instrucciones: [
-    {
-      texto: "Mostrar STOCK.",
-      hacer: (m) => ({ memoria: m, pantalla: m.STOCK }),
-    },
-    {
-      texto: "Restarle a STOCK el valor de VENTA.",
-      hacer: (m) => ({ memoria: { ...m, STOCK: m.STOCK - m.VENTA } }),
-    },
-    {
-      texto: "Anotar 0 en VENTA.",
-      hacer: (m) => ({ memoria: { ...m, VENTA: 0 } }),
-    },
-  ],
-};
-
-export const casoKiosco =
-  "Un kiosco usa un programa para llevar la cuenta de los alfajores. STOCK guarda cuántos hay y VENTA, cuántos se vendieron. El programa tiene que descontar la venta y mostrar cuántos quedan.";
-
-/** Lo que se quiere que muestre: los alfajores que quedan después de la venta. */
-export const quedan = (m: Memoria) => m.STOCK - m.VENTA;
-
-/** La otra venta con la que se prueba si el ajuste sirve para cualquier venta. */
-export const otraVenta: Memoria = { STOCK: 12, VENTA: 5 };
-
-const mostrarMenos3: Instruccion = {
-  texto: "Mostrar STOCK − 3.",
-  hacer: (m) => ({ memoria: m, pantalla: m.STOCK - 3 }),
-};
-
-/**
- * Cada opción de la pregunta del kiosco, como programa que se puede seguir.
- * Las instrucciones se numeran como en el programa escrito; la opción C
- * reemplaza la instrucción 1.
- */
-export const ajustesKiosco: Record<
-  Letra,
-  { orden: readonly number[]; instrucciones: readonly Instruccion[] }
-> = {
-  A: { orden: [2, 3, 1], instrucciones: kiosco.instrucciones },
-  B: { orden: [1, 3, 2], instrucciones: kiosco.instrucciones },
-  C: {
-    orden: [1, 2, 3],
-    instrucciones: [mostrarMenos3, ...kiosco.instrucciones.slice(1)],
-  },
-  D: { orden: [3, 2, 1], instrucciones: kiosco.instrucciones },
-};
-
-export function seguirAjuste(letra: Letra, inicial: Memoria = kiosco.inicial): Fila[] {
-  const ajuste = ajustesKiosco[letra];
-  return seguir(kiosco, ajuste.orden, inicial, ajuste.instrucciones);
-}
-
-/* ------------------------------------------------------------------------ */
-/* Preguntas para elegir                                                    */
-/* ------------------------------------------------------------------------ */
-
-export type Pregunta = {
-  id: string;
-  /** Número de la consigna en la hoja y en el papelito. */
-  numero: number;
-  enunciado: string;
-  opciones: Record<Letra, string>;
-  respuesta: Letra;
-  /** Por qué es la mejor respuesta. Sólo en la guía. */
-  porque: string;
-  /** Qué preguntar a quien eligió cada opción incorrecta. Sólo en la guía. */
-  siEligieron: Partial<Record<Letra, string>>;
-};
-
-export const preguntaPorQue: Pregunta = {
-  id: "por-que",
-  numero: 4,
-  enunciado:
-    "Compará el programa original con las versiones 1 y 2. ¿Qué explicación coincide con tus tablas?",
-  opciones: {
-    A: "En la versión 2, «Anotar 0 en MONEDAS» borra todos los valores de la memoria.",
-    B: "En la versión 1, la máquina decide cuándo poner MONEDAS en 0 para que el total no cambie.",
-    C: "En la versión 2 se suman puntos cuando MONEDAS ya vale 0. En la versión 1, cambiar de lugar «Anotar 0 en MONEDAS» no cambia los puntos que se duplican.",
-    D: "En la versión 2 la máquina calcula mal MONEDAS × 10 y suma menos puntos.",
-  },
-  respuesta: "C",
-  porque:
-    "Cada instrucción trabaja con los valores que hay en ese momento. En la versión 2, la instrucción 1 se ejecuta cuando MONEDAS ya vale 0: suma 0 puntos. En la versión 1, al duplicar, PUNTOS vale 90 como en el original; que MONEDAS se ponga en 0 antes o después no cambia PUNTOS.",
-  siEligieron: {
-    A: "Mirá tu tabla de la versión 2: después de «Anotar 0 en MONEDAS», ¿cuánto vale PUNTOS? Anotar cambia sólo su casillero.",
-    B: "La máquina no sabe qué orden conviene: ejecuta lo que está escrito. ¿Qué valores hay en la memoria cuando se duplica, en cada versión?",
-    D: "Hacé la cuenta con lo que hay en la memoria en ese momento: si MONEDAS vale 0, ¿cuánto es MONEDAS × 10? La cuenta está bien hecha.",
-  },
-};
-
-export const preguntaMemoriaYPantalla: Pregunta = {
-  id: "memoria-y-pantalla",
-  numero: 7,
-  enunciado:
-    "Al terminar la versión 4, ¿cuánto vale PUNTOS en la memoria y qué número se vio en la pantalla?",
-  opciones: {
-    A: "PUNTOS vale 180 y la pantalla mostró 180.",
-    B: "PUNTOS vale 90 y la pantalla mostró 90.",
-    C: "PUNTOS vale 90 y la pantalla mostró 180.",
-    D: "PUNTOS vale 180 y la pantalla mostró 90.",
-  },
-  respuesta: "D",
-  porque:
-    "«Mostrar PUNTOS» se ejecuta cuando PUNTOS vale 90 y muestra ese valor. Después se duplica: la memoria queda en 180, pero la pantalla ya mostró 90.",
-  siEligieron: {
-    A: "Mirá la fila de «Mostrar PUNTOS» en tu tabla: cuando se ejecuta, ¿ya se duplicaron los puntos?",
-    B: "Después de mostrar se ejecuta la instrucción 3. ¿Qué le hace a PUNTOS?",
-    C: "La pantalla muestra lo que vale PUNTOS cuando se ejecuta «Mostrar». ¿Cuánto valía en ese momento? ¿Y al final?",
-  },
-};
-
-export const preguntaAjuste: Pregunta = {
-  id: "ajuste",
-  numero: 8,
-  enunciado: "¿Cuál de estos ajustes sirve para cualquier valor de VENTA?",
-  opciones: {
-    A: "Pasar la instrucción 1 al final.",
-    B: "Intercambiar las instrucciones 2 y 3.",
-    C: "Cambiar la instrucción 1 por «Mostrar STOCK − 3».",
-    D: "Intercambiar las instrucciones 1 y 3.",
-  },
-  respuesta: "A",
-  porque:
-    "Así se muestra STOCK cuando ya tiene descontada la venta, sea cual sea VENTA: con 3 muestra 9 y con 5 muestra 7.",
-  siEligieron: {
-    B: "Seguilo: VENTA vale 0 cuando se resta. ¿Cuánto se descuenta? ¿Y cuándo se muestra STOCK?",
-    C: "Con VENTA = 3 muestra 9. Probalo en la tabla con VENTA = 5: ¿muestra cuántos quedan?",
-    D: "Seguilo: VENTA se pone en 0 antes de restar. ¿Cuánto se descuenta?",
-  },
-};
-
-export const preguntas: readonly Pregunta[] = [
-  preguntaPorQue,
-  preguntaMemoriaYPantalla,
-  preguntaAjuste,
-];
-
-/* ------------------------------------------------------------------------ */
-/* Papelito                                                                 */
-/* ------------------------------------------------------------------------ */
-
-/** Número de las dos consignas que no son versiones ni preguntas para elegir. */
-export const numeroOriginal = 1;
-export const numeroPrueba = 9;
-
-export type Casillero = { numero: number; tipo: "numero" | "letra" };
-
-/**
- * Casilleros del papelito en el orden de la hoja: una fila por cara, para que
- * un curso que sólo llegó al frente complete la primera.
- */
-export const casillerosPapelito: readonly { cara: string; casilleros: readonly Casillero[] }[] = [
+export const verbosDorso: readonly { verbo: string; explicacion: string }[] = [
   {
-    cara: "Frente",
-    casilleros: [
-      { numero: 1, tipo: "numero" },
-      { numero: 2, tipo: "numero" },
-      { numero: 3, tipo: "numero" },
-      { numero: 4, tipo: "letra" },
-    ],
+    verbo: "Sumarle a PUNTOS el valor de MONEDAS",
+    explicacion: "agrega a PUNTOS lo que vale MONEDAS ahora.",
   },
   {
-    cara: "Dorso",
-    casilleros: [
-      { numero: 5, tipo: "numero" },
-      { numero: 6, tipo: "numero" },
-      { numero: 7, tipo: "letra" },
-      { numero: 8, tipo: "letra" },
-      { numero: 9, tipo: "numero" },
-    ],
+    verbo: "Anotar 0 en MONEDAS",
+    explicacion: "reemplaza lo que había en MONEDAS por 0. PUNTOS no cambia.",
   },
 ];
 
+/** Cómo seguir un programa, paso por paso. No contiene resultados. */
+export const rutina: readonly string[] = [
+  "Mirá cuánto vale el casillero ahora.",
+  "Ejecutá una sola instrucción con ese valor.",
+  "Anotá cómo queda.",
+  "Pasá a la instrucción siguiente.",
+];
+
 /* ------------------------------------------------------------------------ */
-/* Ideas                                                                    */
+/* Ejemplo: en el pizarrón y resuelto en la hoja                            */
 /* ------------------------------------------------------------------------ */
 
-export const preguntaInicial = "¿Cuándo cambiar el orden cambia el resultado?";
+export const preguntaInicial = "¿Cuándo cambiar el orden cambia lo que se muestra?";
+
+export const casoEjemplo = "Un juego guarda los puntos en el casillero PUNTOS. Al empezar, PUNTOS vale 2.";
+
+export const ejemplo = {
+  primero: conPuntos(2, sumarle(1), duplicar, mostrar),
+  segundo: conPuntos(2, duplicar, sumarle(1), mostrar),
+};
+
+/* ------------------------------------------------------------------------ */
+/* Frente: núcleo común                                                     */
+/* ------------------------------------------------------------------------ */
+
+export const casoNivel =
+  "Al terminar un nivel, el juego tiene que sumar 3 puntos de premio y después duplicar todo.";
+
+/** A hace lo que se quería; B tiene el orden cambiado. */
+export const programaA = conPuntos(4, sumarle(3), duplicar, mostrar);
+export const programaB = conPuntos(4, duplicar, sumarle(3), mostrar);
+
+/** Dos sumas: el orden cambia el camino pero no lo que se muestra. */
+export const programaC = conPuntos(4, sumarle(3), sumarle(1), mostrar);
+export const programaD = conPuntos(4, sumarle(1), sumarle(3), mostrar);
+
+export type Consigna = { numero: number; texto: string };
+
+export const consignasFrente: readonly Consigna[] = [
+  { numero: 1, texto: "Antes de seguirlos: ¿A y B van a mostrar lo mismo? Escribí sí o no. No importa si no acertás." },
+  { numero: 2, texto: "Seguí A en la carpeta, como en el ejemplo. Después seguí B, empezando otra vez con PUNTOS\u00a0=\u00a04." },
+  { numero: 3, texto: "Mirá «Duplicar PUNTOS» en tus dos tablas. ¿Qué número se duplica en A? ¿Y en B?" },
+  { numero: 4, texto: "Se quería sumar los 3 puntos y después duplicar todo. ¿Cuál de los dos programas lo hace?" },
+  { numero: 5, texto: "Seguí C y D en la carpeta. ¿Muestran lo mismo? ¿Pasan por los mismos valores?" },
+];
+
+/** Después de la consigna 3, la hoja marca una pausa para comparar en común. */
+export const pausaDespuesDe = 3;
 
 export const ideaInicial =
-  "Cada instrucción trabaja con los valores que hay en ese momento. Por eso cambiar el orden a veces cambia el resultado y a veces no.";
+  "Cada instrucción usa el valor que hay en ese momento. Por eso cambiar el orden a veces cambia lo que se muestra y a veces no.";
 
-/** Síntesis para la guía docente, para discutir a partir de los casos. */
+/** Síntesis para el pizarrón, después de comparar A y B, y C y D. */
 export const conclusion =
-  "Cambiar el orden puede cambiar el resultado cuando una instrucción usa un valor que otra cambia. «Mostrar» usa el valor que hay en ese momento; los cambios posteriores en la memoria no actualizan la pantalla.";
+  "En A se duplica 7 y en B se duplica 4: cada instrucción usa el valor que hay cuando le toca. En C y D las dos sumas dan lo mismo en cualquier orden: el camino cambia, pero se muestra lo mismo.";
 
-export const verbos: readonly { verbo: string; explicacion: string }[] = [
-  { verbo: "Anotar", explicacion: "reemplaza lo que había en el casillero." },
+/* ------------------------------------------------------------------------ */
+/* Dorso: Para seguir                                                       */
+/* ------------------------------------------------------------------------ */
+
+export const casoMonedas =
+  "Ahora el juego también guarda MONEDAS. Al terminar el nivel, cada moneda vale un punto: se suman las monedas, el contador de monedas vuelve a 0, se duplica PUNTOS y se muestra.";
+
+export type ConsignaDorso = Consigna & {
+  programa: Programa;
+  /** Lo que tiene que quedar; se imprime invertido al pie del dorso. */
+  respuesta: string;
+};
+
+const nivel = conMonedas(sumarleMonedas, anotar0, duplicar, mostrar);
+const borraAntes = conMonedas(anotar0, sumarleMonedas, duplicar, mostrar);
+const duplicaAntes = conMonedas(sumarleMonedas, duplicar, anotar0, mostrar);
+const muestraAntes = conMonedas(sumarleMonedas, anotar0, mostrar, duplicar);
+
+export const consignasDorso: readonly ConsignaDorso[] = [
   {
-    verbo: "Sumarle, Restarle, Duplicar",
-    explicacion: "cambian el valor a partir de lo que había.",
+    numero: 6,
+    programa: nivel,
+    texto: "Seguí este programa en la carpeta, con PUNTOS y MONEDAS. ¿Qué muestra?",
+    respuesta: `muestra ${mostro(nivel)}`,
   },
-  { verbo: "Mostrar", explicacion: "pone un valor en la pantalla; no cambia la memoria." },
+  {
+    numero: 7,
+    programa: borraAntes,
+    texto: "¿Qué muestra este otro programa? Cuando se suma, ¿cuánto vale MONEDAS?",
+    respuesta: `muestra ${mostro(borraAntes)}; MONEDAS vale ${valorAntesDe(borraAntes, "Sumarle", "MONEDAS")}`,
+  },
+  {
+    numero: 8,
+    programa: duplicaAntes,
+    texto: "¿Muestra lo mismo que el programa de la 6? ¿Por qué?",
+    respuesta: `sí, ${mostro(duplicaAntes)}: cuando se duplica, PUNTOS ya vale ${valorAntesDe(duplicaAntes, "Duplicar")} en los dos`,
+  },
+  {
+    numero: 9,
+    programa: muestraAntes,
+    texto: "¿Qué número se vio en la pantalla? Al terminar, ¿cuánto vale PUNTOS en la memoria?",
+    respuesta: `pantalla ${mostro(muestraAntes)}; PUNTOS ${seguir(muestraAntes).at(-1)!.memoria.PUNTOS}`,
+  },
 ];
 
-/** Sin punto final: se cita entre comillas. */
-export const consignaFrase =
-  "Cambiar el orden de dos instrucciones a veces cambia el resultado y a veces no. Mostrá un ejemplo de cada caso y explicá por qué pasa";
+/* ------------------------------------------------------------------------ */
+/* Papelito de cierre: evidencia individual                                 */
+/* ------------------------------------------------------------------------ */
+
+/*
+  Mismo tipo de programa que A y B, con otros números. Se resuelve sin la hoja
+  ni la carpeta; los verbos vienen impresos en el papelito.
+*/
+export const cierre = {
+  primero: conPuntos(3, sumarle(2), duplicar, mostrar),
+  segundo: conPuntos(3, duplicar, sumarle(2), mostrar),
+  /** ¿Muestran lo mismo? Sí: dos sumas. */
+  sumas: [conPuntos(3, sumarle(2), sumarle(4), mostrar), conPuntos(3, sumarle(4), sumarle(2), mostrar)] as const,
+};
+
+export const preguntaSumas = "Estos dos programas empiezan con PUNTOS = 3. ¿Muestran lo mismo?";
+
+/** Respuestas esperables equivocadas en el papelito y qué sugieren. Para la guía. */
+export const erroresCierre: readonly { si: string; sugiere: string }[] = [
+  {
+    si: "En el primero, 5 · 6 · 6",
+    sugiere: "duplicó el valor del comienzo (3), no el que había en ese momento.",
+  },
+  {
+    si: "El segundo igual al primero",
+    sugiere: "siguió el orden de antes, no el que está escrito.",
+  },
+  {
+    si: "«Se duplica» 3 en los dos",
+    sugiere: "piensa que la instrucción usa el valor inicial.",
+  },
+  {
+    si: "«Mostró» distinto de la última fila",
+    sugiere: "cree que «Mostrar» cambia el valor, o anota en otro lugar.",
+  },
+  {
+    si: "«No» en las dos sumas",
+    sugiere: "generaliza: cree que cambiar el orden siempre cambia lo que se muestra.",
+  },
+];

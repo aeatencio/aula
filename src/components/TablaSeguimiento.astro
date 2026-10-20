@@ -1,16 +1,18 @@
 ---
 /*
-  Tabla de seguimiento: una fila por instrucción ejecutada y una columna por
-  casillero de la memoria, más la pantalla. Sin `memoria` en una fila, la fila
-  queda en blanco para completar a mano.
+  Tabla de seguimiento: una fila por instrucción, en el orden en que se
+  ejecuta, y una columna por casillero de la memoria con su valor *después*
+  de esa instrucción. Lo que se muestra no es una columna: va aparte, en la
+  última fila, porque la pantalla conserva lo que mostró aunque la memoria
+  siga cambiando. Sin `memoria`, las celdas quedan en blanco para escribir.
 */
 import { formatear, type Memoria } from "../data/actividad-cuando-importa-el-orden";
 
 type FilaTabla = {
-  numero?: number;
-  texto?: string;
+  numero: number;
+  texto: string;
   memoria?: Memoria;
-  pantalla?: number;
+  muestra?: number;
 };
 
 interface Props {
@@ -18,49 +20,55 @@ interface Props {
   inicial: Memoria;
   filas: readonly FilaTabla[];
   titulo?: string;
-  /** «hoja»: renglones altos para escribir a mano; «clave»: compacta. */
-  variante?: "pizarron" | "hoja" | "clave";
+  /**
+   * «pizarron»: valores para revelar paso a paso; «hoja»: ejemplo resuelto;
+   * «clave»: compacta; «papelito»: celdas en blanco, altas, para escribir.
+   */
+  variante?: "pizarron" | "hoja" | "clave" | "papelito";
 }
 
-const {
-  casilleros,
-  inicial,
-  filas,
-  titulo,
-  variante = "pizarron",
-} = Astro.props;
+const { casilleros, inicial, filas, titulo, variante = "pizarron" } = Astro.props;
+
+const resuelta = filas.some((fila) => fila.memoria);
+const mostro = filas.findLast((fila) => fila.muestra !== undefined)?.muestra;
+const anterior = (indice: number) => (indice === 0 ? inicial : filas[indice - 1].memoria);
 ---
 
 <table class:list={["seguimiento", `seguimiento--${variante}`]}>
   {titulo && <caption>{titulo}</caption>}
   <thead>
     <tr>
-      <th scope="col" class="col-instruccion">Instrucción</th>
+      <th scope="col" class="col-instruccion">Después de ejecutar</th>
       {casilleros.map((casillero) => <th scope="col">{casillero}</th>)}
-      <th scope="col">Pantalla</th>
     </tr>
   </thead>
   <tbody>
     <tr class="fila-inicial">
       <th scope="row">Al empezar</th>
       {casilleros.map((casillero) => <td>{formatear(inicial[casillero] ?? 0)}</td>)}
-      <td class="vacia"></td>
     </tr>
     {filas.map((fila, indice) => (
-      <tr data-instruccion={fila.numero}>
+      <tr data-instruccion={fila.numero} data-muestra={fila.muestra !== undefined ? "" : undefined}>
         <th scope="row">
-          {fila.numero !== undefined && <span class="numero">{fila.numero}.</span>}
-          {fila.texto && <span>{fila.texto}</span>}
+          <span class="numero">{fila.numero}.</span>
+          <span>{fila.texto}</span>
         </th>
         {casilleros.map((casillero) => (
-          <td data-cambio={fila.memoria && fila.memoria[casillero] !== (indice === 0 ? inicial : filas[indice - 1].memoria)?.[casillero] ? "" : undefined}>
+          <td data-cambio={fila.memoria && fila.memoria[casillero] !== anterior(indice)?.[casillero] ? "" : undefined}>
             <span class="valor">{fila.memoria ? formatear(fila.memoria[casillero] ?? 0) : ""}</span>
           </td>
         ))}
-        <td><span class="valor">{fila.pantalla !== undefined ? formatear(fila.pantalla) : ""}</span></td>
       </tr>
     ))}
   </tbody>
+  <tfoot>
+    <tr class="fila-pantalla">
+      <th scope="row">La pantalla mostró</th>
+      <td colspan={casilleros.length}>
+        <span class="valor">{resuelta && mostro !== undefined ? formatear(mostro) : ""}</span>
+      </td>
+    </tr>
+  </tfoot>
 </table>
 
 <style>
@@ -92,7 +100,7 @@ const {
   /* Las columnas de valores se ajustan a su contenido; la instrucción usa el
      resto del ancho. */
   thead th:not(:first-child),
-  td {
+  tbody td {
     width: 1%;
     white-space: nowrap;
   }
@@ -122,6 +130,16 @@ const {
     font-style: italic;
   }
 
+  /* La pantalla, separada de la memoria por un borde doble. */
+  .fila-pantalla th,
+  .fila-pantalla td {
+    border-top: 4px double var(--line);
+  }
+
+  .fila-pantalla th {
+    font-weight: 700;
+  }
+
   .seguimiento--pizarron td {
     min-width: 2.6em;
   }
@@ -130,9 +148,9 @@ const {
     line-height: 1.35;
   }
 
-  .seguimiento--hoja td,
-  .seguimiento--hoja tbody th {
-    height: 2.4rem;
+  .seguimiento--papelito td,
+  .seguimiento--papelito th {
+    height: 2.6rem;
   }
 
   @media (max-width: 30rem) {
@@ -164,8 +182,8 @@ const {
     }
 
     thead th:not(:first-child),
-    td {
-      width: 19mm;
+    tbody td {
+      width: 17mm;
     }
 
     .fila-inicial th,
@@ -173,9 +191,9 @@ const {
       background: none;
     }
 
-    .seguimiento--hoja td,
-    .seguimiento--hoja tbody th {
-      height: 7mm;
+    .fila-pantalla th,
+    .fila-pantalla td {
+      border-top: 2.5pt double #000;
     }
 
     .seguimiento--clave {
@@ -183,8 +201,25 @@ const {
     }
 
     .seguimiento--clave thead th:not(:first-child),
-    .seguimiento--clave td {
-      width: 15mm;
+    .seguimiento--clave tbody td {
+      width: 13mm;
+    }
+
+    /* Renglones cómodos para escribir a mano. */
+    .seguimiento--papelito {
+      font-size: 10.5pt;
+    }
+
+    .seguimiento--papelito tbody th,
+    .seguimiento--papelito tbody td,
+    .seguimiento--papelito tfoot th,
+    .seguimiento--papelito tfoot td {
+      height: 9mm;
+    }
+
+    .seguimiento--papelito thead th:not(:first-child),
+    .seguimiento--papelito tbody td {
+      width: 20mm;
     }
   }
 </style>

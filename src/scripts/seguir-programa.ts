@@ -7,23 +7,31 @@ export function iniciarSeguimiento(documento: Document = document) {
   for (const ejecucion of ejecuciones) {
     const tabla = ejecucion.querySelector<HTMLTableElement>("table")!;
     const filas = [...tabla.querySelectorAll<HTMLTableRowElement>("tbody tr")].slice(1);
+    // La pantalla aparece recién cuando se ejecutó «Mostrar».
+    const pantalla = tabla.querySelector<HTMLTableRowElement>("tfoot tr");
     const siguiente = ejecucion.querySelector<HTMLButtonElement>("[data-siguiente]")!;
     const reiniciar = ejecucion.querySelector<HTMLButtonElement>("[data-reiniciar]")!;
     const estado = ejecucion.querySelector<HTMLElement>("[role=status]")!;
     let paso = 0;
 
+    function marcarPendiente(fila: HTMLTableRowElement, pendiente: boolean) {
+      fila.classList.toggle("pendiente", pendiente);
+      fila.querySelectorAll("td").forEach((celda) => {
+        if (pendiente) celda.setAttribute("aria-label", "Sin ejecutar");
+        else celda.removeAttribute("aria-label");
+      });
+    }
+
     function actualizar() {
       filas.forEach((fila, indice) => {
-        const pendiente = indice >= paso;
-        fila.classList.toggle("pendiente", pendiente);
+        marcarPendiente(fila, indice >= paso);
         fila.classList.toggle("actual", indice === paso - 1);
         if (indice === paso - 1) fila.setAttribute("aria-current", "step");
         else fila.removeAttribute("aria-current");
-        fila.querySelectorAll("td").forEach((celda) => {
-          if (pendiente) celda.setAttribute("aria-label", "Sin ejecutar");
-          else celda.removeAttribute("aria-label");
-        });
       });
+      if (pantalla) {
+        marcarPendiente(pantalla, !filas.slice(0, paso).some((fila) => fila.hasAttribute("data-muestra")));
+      }
 
       const termino = paso === filas.length;
       if (termino) terminadas.add(ejecucion);
@@ -34,7 +42,7 @@ export function iniciarSeguimiento(documento: Document = document) {
         : `Ejecutar instrucción ${filas[paso].dataset.instruccion}`;
       reiniciar.disabled = paso === 0;
       estado.textContent = paso === 0
-        ? `Paso 0 de ${filas.length}. Antes de ejecutar, predecí el total.`
+        ? `Paso 0 de ${filas.length}. Antes de ejecutar, predecí qué va a mostrar.`
         : `Paso ${paso} de ${filas.length}. Se ejecutó la instrucción ${filas[paso - 1].dataset.instruccion}.`;
       if (comparacion) comparacion.hidden = terminadas.size !== ejecuciones.length;
     }

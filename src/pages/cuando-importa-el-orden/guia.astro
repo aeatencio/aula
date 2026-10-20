@@ -1,25 +1,19 @@
 ---
-import TablaSeguimiento from "../../components/TablaSeguimiento.astro";
 import {
-  casoPedido,
+  cierre,
   conclusion,
-  consignaFrase,
+  consignasDorso,
+  erroresCierre,
   formatear,
-  ideaInicial,
-  juego,
-  kiosco,
-  letras,
-  numeroOriginal,
-  numeroPrueba,
-  otraVenta,
-  pantallaFinal,
-  pedido,
+  mostro,
   preguntaInicial,
-  preguntas,
-  quedan,
+  programaA,
+  programaB,
+  programaC,
+  programaD,
   seguir,
-  seguirAjuste,
-  versiones,
+  valorAntesDe,
+  type Programa,
 } from "../../data/actividad-cuando-importa-el-orden";
 import { serieCuandoImportaElOrden } from "../../data/serie-cuando-importa-el-orden";
 import MaterialLayout from "../../layouts/MaterialLayout.astro";
@@ -27,40 +21,21 @@ import MaterialLayout from "../../layouts/MaterialLayout.astro";
 const pdfGuia =
   "/materiales/cuando-importa-el-orden/cuando-importa-el-orden-guia-oficio-216x356.pdf";
 
-const original = seguir(juego);
-const tablasVersiones = versiones.map((version) => ({
-  version,
-  filas: seguir(juego, version.orden),
-}));
-const filasResumen = [
-  { numero: numeroOriginal, nombre: "Como está", filas: original },
-  ...tablasVersiones.map(({ version, filas }) => ({
-    numero: version.numero,
-    nombre: version.nombre,
-    filas,
-  })),
-];
-const ajusteCorrecto = preguntas.find((pregunta) => pregunta.id === "ajuste")!;
-const pruebaCorrecta = seguirAjuste(ajusteCorrecto.respuesta, otraVenta);
-const pruebaSoloEsteCaso = seguirAjuste("C", otraVenta);
+/** «4 → 7 → 14 → 14 · mostró 14»: lo que se anota en la carpeta, en una línea. */
+const traza = (programa: Programa) =>
+  [programa.inicial.PUNTOS, ...seguir(programa).map((fila) => fila.memoria.PUNTOS)]
+    .map(formatear)
+    .join(" → ") + ` · mostró ${formatear(mostro(programa)!)}`;
 
-/** Lo que tiene que quedar en cada casillero del papelito, en orden. */
-const respuestasPapelito = [
-  { numero: numeroOriginal, valor: formatear(pantallaFinal(original)!) },
-  ...tablasVersiones.map(({ version, filas }) => ({
-    numero: version.numero,
-    valor: formatear(pantallaFinal(filas)!),
-  })),
-  ...preguntas.map((pregunta) => ({ numero: pregunta.numero, valor: pregunta.respuesta })),
-  { numero: numeroPrueba, valor: formatear(pantallaFinal(pruebaCorrecta)!) },
-].sort((a, b) => a.numero - b.numero);
+const duplica = (programa: Programa) => valorAntesDe(programa, "Duplicar");
+const mismo = (a: Programa, b: Programa) => (mostro(a) === mostro(b) ? "Sí" : "No");
 ---
 
 <MaterialLayout
   title="Guía para la clase"
-  description="Guía docente de «Cuándo importa el orden»: idea central, dos recorridos posibles —para cursos que hicieron la apertura y para cursos que la recuperan—, qué escribir en el pizarrón, tablas resueltas y clave para corregir en común."
+  description="Guía docente de «Cuándo importa el orden»: qué tiene que poder hacer cada estudiante, la clase en 60 minutos para todos los cursos, qué mirar al circular, cómo leer los papelitos de cierre y clave."
   tipo="Guía docente"
-  bajada="Para conducir la clase y corregir en común"
+  bajada="Para conducir la clase y mirar los papelitos"
   serie={serieCuandoImportaElOrden}
   tituloPizarrones="Para recuperar"
   imprimirPie={false}
@@ -68,363 +43,176 @@ const respuestasPapelito = [
   <p class="guia-pdf">
     Para imprimir:{" "}
     <a href={pdfGuia} type="application/pdf">la guía en PDF</a>{" "}
-    (oficio 216 × 356 mm; la segunda hoja tiene las tablas resueltas y la
-    clave). Para juntar las respuestas:{" "}
-    <a href="/cuando-importa-el-orden/respuestas/">papelitos recortables</a>{" "}
-    (12 por hoja oficio).
+    (oficio 216 × 356 mm; la segunda página tiene la clave).
+    Para el final de la clase:{" "}
+    <a href="/cuando-importa-el-orden/respuestas/">papelitos de cierre</a>{" "}
+    (dos por hoja oficio).
   </p>
 
-  <section class="bloque" aria-labelledby="idea">
-    <h2 id="idea">Idea que tiene que quedar</h2>
-    <p class="idea">{ideaInicial}</p>
-    <p>
-      El objetivo es que cada estudiante use la <strong>tabla de seguimiento</strong>{" "}
-      para comprobar una predicción y encontrar dónde se equivocó.
-      Se trabaja sólo con secuencia y orden. Después de comparar los casos,
-      discutir esta síntesis:
-    </p>
-    <p class="idea idea--final">{conclusion}</p>
-  </section>
-
-  <section class="bloque" aria-labelledby="recuperar">
-    <h2 id="recuperar">Qué se recupera</h2>
+  <section class="bloque" aria-labelledby="minimo">
+    <h2 id="minimo">Qué tiene que poder hacer cada uno</h2>
     <ul class="lista">
+      <li>Seguir un programa de tres instrucciones, anotando cómo queda PUNTOS después de cada una.</li>
       <li>
-        <a href="/lo-que-queriamos-y-lo-que-paso/">Lo que queríamos y lo que pasó</a>
-        {" — "}la tienda es el ejemplo resuelto; sus dos tablas están en{" "}
-        <a href="/lo-que-queriamos-y-lo-que-paso/guia/#pizarron">su guía</a>.
+        Decir qué número usa una instrucción cuando le toca: en A se duplica{" "}
+        {duplica(programaA)}; en B, {duplica(programaB)}.
       </li>
-      <li>
-        <a href="/pizarrones/la-maquina-obedece-exactamente/">
-          La máquina obedece exactamente
-        </a>
-        {" — "}sólo en los cursos que no tuvieron la apertura.
-      </li>
-      <li>
-        <a href="/pizarrones/procesador-y-memoria-durante-la-ejecucion/">
-          Procesador y memoria durante la ejecución
-        </a>
-        {" — "}la memoria mantiene datos y resultados parciales: la tabla lo
-        muestra fila por fila.
-      </li>
-      <li>
-        <a href="/pizarrones/el-estado-de-un-sistema/">El estado de un sistema</a>
-        {" — "}el stock que cambia con una venta. Es el contexto del kiosco,
-        no un contenido nuevo.
-      </li>
+      <li>Reconocer que cambiar el orden a veces cambia lo que se muestra (A y B) y a veces no (C y D).</li>
     </ul>
+    <p>
+      Eso es el frente. El dorso, «Para seguir», es para quien llega: agrega un
+      segundo casillero, un valor que se borra antes de usarlo y la diferencia
+      entre memoria y pantalla. Nadie tiene que terminarlo.
+    </p>
   </section>
 
-  <section class="bloque" aria-labelledby="recorrido">
-    <h2 id="recorrido">Un recorrido posible</h2>
-    <p class="apoyo">
-      Unos 60 minutos, con papel, carpeta y pizarrón. Los tiempos son orientativos.
-      La web permite retomar los ejemplos y ejecutarlos paso a paso;
-      no hace falta usarla durante la clase.
+  <section class="bloque" aria-labelledby="materiales">
+    <h2 id="materiales">Qué se necesita</h2>
+    <p>
+      Una hoja por estudiante dentro de un folio (se lee, no se escribe; se juntan
+      al final), la carpeta, un papelito de cierre por estudiante y el pizarrón.
+      No hace falta ningún dispositivo.
     </p>
+  </section>
 
-    <div class="pedido">
-      <h3 class="subtitulo">El pedido de empanadas, para el pizarrón</h3>
-      <p>{casoPedido} Al empezar: CANTIDAD = 2 y TOTAL = 0.</p>
-      <ol class="programa">
-        {pedido.instrucciones.map((instruccion) => <li>{instruccion.texto}</li>)}
-      </ol>
-    </div>
+  <section class="bloque" aria-labelledby="clase">
+    <h2 id="clase">La clase, en unos 60 minutos</h2>
+    <p class="apoyo">El mismo plan para todos los cursos. Los tiempos son orientativos.</p>
+    <ol class="momentos">
+      <li>
+        <p class="momento-nombre">Entrada <span class="momento-tiempo">5 min</span></p>
+        <p>
+          Repartir los folios y escribir en el pizarrón «{preguntaInicial}». Avisar que la
+          hoja no se escribe: todo va a la carpeta. En los cursos que no tuvieron la
+          apertura, una frase alcanza: la máquina hace exactamente lo que está escrito,
+          en ese orden.
+        </p>
+      </li>
+      <li>
+        <p class="momento-nombre">El ejemplo, en el pizarrón <span class="momento-tiempo">8 min</span></p>
+        <p>
+          Es el ejemplo resuelto de la hoja. Seguir el primer programa en voz alta,
+          anotando como en la carpeta; el segundo lo dictan ellos. Señalar qué número
+          usa «Duplicar» en cada uno.
+        </p>
+      </li>
+      <li>
+        <p class="momento-nombre">A y B <span class="momento-tiempo">12 min</span></p>
+        <p>Consignas 1 a 3, en la carpeta. Al circular, mirar la fila de «Duplicar».</p>
+      </li>
+      <li>
+        <p class="momento-nombre">Comparar A y B entre todos <span class="momento-tiempo">5 min</span></p>
+        <p>
+          Las dos tablas en el pizarrón. Quien tiene algo distinto marca la{" "}
+          <strong>primera fila que no coincide</strong> y corrige desde ahí, sin borrar.
+        </p>
+      </li>
+      <li>
+        <p class="momento-nombre">Seguir <span class="momento-tiempo">12 min</span></p>
+        <p>
+          Consignas 4 y 5; quien termina, da vuelta la hoja. Al final de este tramo,
+          preguntar en voz alta por C y D: ¿muestran lo mismo?
+        </p>
+      </li>
+      <li>
+        <p class="momento-nombre">Papelito de cierre <span class="momento-tiempo">10 min</span></p>
+        <p>
+          Juntar los folios y cerrar las carpetas. Repartir los papelitos y leerlos en
+          voz alta. Cada uno resuelve solo y entrega.
+        </p>
+      </li>
+      <li>
+        <p class="momento-nombre">Cierre <span class="momento-tiempo">5 min</span></p>
+        <p>
+          Escribir la conclusión en el pizarrón; la copian en la carpeta. Si sobra
+          tiempo, resolver el papelito entre todos, ya entregado.
+        </p>
+      </li>
+    </ol>
+    <p class="idea">{conclusion}</p>
+  </section>
 
-    <div class="variantes">
-      <div class="variante">
-        <h3 class="subtitulo">En los cursos que ya hicieron la apertura</h3>
-        <ol class="momentos">
-          <li>
-            <p class="momento-nombre">
-              Retomar la tienda <span class="momento-tiempo">unos 4 minutos</span>
-            </p>
-            <p>
-              «¿Cuánto valía el total justo antes de la instrucción 3?». Que dicten
-              el total después de cada instrucción y armar la tabla en el
-              pizarrón. Esta primera tabla sirve para mostrar el formato.
-              Ponerle nombre: <em>tabla de seguimiento</em>.
-            </p>
-          </li>
-          <li>
-            <p class="momento-nombre">
-              El pedido de empanadas <span class="momento-tiempo">unos 8 minutos</span>
-            </p>
-            <p>
-              Plantear «{preguntaInicial}». Escribir el pedido, el programa y
-              una tabla vacía. Pedir una predicción y completar la tabla en
-              la carpeta. Intercambiar la 1 y la 2 y volver a seguirlo.
-              Comparar las tablas antes de formular una regla.
-            </p>
-          </li>
-          <li>
-            <p class="momento-nombre">
-              Hoja individual <span class="momento-tiempo">unos 28 minutos</span>
-            </p>
-            <p>
-              Sin confirmar respuestas: repreguntar. «¿Cuánto vale MONEDAS justo
-              antes de esa instrucción?» «Esa fila, ¿anota lo que vale después de la
-              instrucción o antes?» En la 5, que escriban la predicción antes de
-              usar la tabla.
-            </p>
-          </li>
-          <li>
-            <p class="momento-nombre">
-              Papelitos <span class="momento-tiempo">unos 2 minutos</span>
-            </p>
-            <p>
-              Cada uno copia sus respuestas en el papelito y lo entrega{" "}
-              <strong>antes</strong> de corregir. La hoja queda en la carpeta.
-            </p>
-          </li>
-          <li>
-            <p class="momento-nombre">
-              Corrección en común <span class="momento-tiempo">unos 13 minutos</span>
-            </p>
-            <p>
-              Ver «Cómo corregir», en la segunda hoja. Al final, escribir la
-              conclusión en el pizarrón, a partir de las versiones 1, 2 y 4.
-            </p>
-          </li>
-          <li>
-            <p class="momento-nombre">
-              Cerrar <span class="momento-tiempo">unos 5 minutos</span>
-            </p>
-            <p>
-              En la carpeta, cada uno responde: «{consignaFrase}». Leer dos o tres
-              en voz alta y contrastarlas con la conclusión.
-            </p>
-          </li>
-        </ol>
-      </div>
-      <div class="variante">
-        <h3 class="subtitulo">En los cursos que no tuvieron la apertura</h3>
-        <p>
-          No se repone la clase anterior: la tienda entra como ejemplo resuelto de
-          la tabla, y desde ahí se sigue igual que en los demás cursos.
-        </p>
-        <ol class="momentos">
-          <li>
-            <p class="momento-nombre">
-              La máquina obedece exactamente
-              <span class="momento-tiempo">unos 3 minutos</span>
-            </p>
-            <p>Sólo la pregunta y la cadena de cuatro pasos, de forma oral.</p>
-          </li>
-          <li>
-            <p class="momento-nombre">
-              La tienda <span class="momento-tiempo">unos 8 minutos</span>
-            </p>
-            <p>
-              Escribir en el pizarrón el caso y las cuatro instrucciones. En la
-              carpeta, cada uno responde: «¿Qué muestra la pantalla? ¿Por qué no
-              $11.000?» (2 minutos). Después, la tabla en el pizarrón y el
-              intercambio de la 2 y la 3, que da $11.000. Un minuto oral para
-              distinguir: en el microondas el problema estuvo en la entrada; en la
-              tienda, en el orden de las instrucciones.
-            </p>
-          </li>
-          <li>
-            <p class="momento-nombre">
-              El pedido de empanadas <span class="momento-tiempo">unos 5 minutos</span>
-            </p>
-            <p>Una sola tabla, completada por cada estudiante en la carpeta.</p>
-          </li>
-          <li>
-            <p class="momento-nombre">
-              Hoja individual <span class="momento-tiempo">unos 24 minutos</span>
-            </p>
-            <p>Primero el frente (1 a 4). El dorso, si alcanza el tiempo.</p>
-          </li>
-          <li>
-            <p class="momento-nombre">
-              Papelitos y corrección <span class="momento-tiempo">unos 15 minutos</span>
-            </p>
-            <p>Se corrige lo que se resolvió.</p>
-          </li>
-          <li>
-            <p class="momento-nombre">
-              Cerrar <span class="momento-tiempo">unos 3 minutos</span>
-            </p>
-            <p>La conclusión en el pizarrón y la frase en la carpeta.</p>
-          </li>
-        </ol>
-        <p>
-          Lo que no se llegó a resolver del dorso puede hacerse en casa o abrir el
-          encuentro siguiente. Retomar las dudas que aparezcan en las tablas.
-        </p>
-      </div>
-    </div>
+  <section class="bloque" aria-labelledby="circular">
+    <h2 id="circular">Al circular</h2>
+    <ul class="lista">
+      <li><strong>Duplica el número del comienzo.</strong> «¿Cuánto vale PUNTOS justo antes de duplicar?»</li>
+      <li><strong>En B repite lo de A.</strong> «Leé la primera instrucción de B.»</li>
+      <li><strong>Anota sólo el final.</strong> «¿Cuánto valía después de la 1?»</li>
+    </ul>
+    <p>
+      Ayudan sin resolver: leer en voz alta, señalar la fila con el dedo o una regla,
+      hacer las cuentas al costado. No ayuda decir el número que va.
+    </p>
   </section>
 
   <section class="bloque" aria-labelledby="corte">
-    <h2 id="corte">Si se corta antes</h2>
+    <h2 id="corte">Si hay menos tiempo</h2>
     <ul class="lista">
-      <li>
-        Con el pedido resuelto por cada uno, la tabla ya queda presentada; la
-        hoja puede abrir el encuentro siguiente.
-      </li>
-      <li>
-        Con poco tiempo para la hoja, priorizar el frente: la 1, la 2 y la 3; la
-        4 se puede discutir en la corrección.
-      </li>
-      <li>
-        Si falta tiempo para corregir, juntar los papelitos y retomar
-        la corrección en el próximo encuentro.
-      </li>
+      <li>Se recorta primero «Seguir».</li>
+      <li>Si no llega el papelito, abre la clase siguiente: no tomarlo apurado.</li>
+      <li>Lo que falte del frente se retoma en clase; no queda como tarea obligatoria.</li>
     </ul>
   </section>
 
-  <section class="bloque correccion" aria-labelledby="como-corregir">
-    <h2 id="como-corregir">
-      Cómo corregir
+  <section class="bloque correccion" aria-labelledby="papelitos">
+    <h2 id="papelitos">
+      Después de la clase: mirar los papelitos
       <span class="clave-de">Cuándo importa el orden</span>
     </h2>
-    <ul class="lista">
-      <li>
-        Reconstruir las tablas entre todos: pedir que expliquen qué cambió y
-        qué quedó igual en cada fila. Cada estudiante compara con la suya y
-        marca con otro color <strong>la primera fila donde no coincide</strong>;
-        corrige desde ahí, sin borrar lo que había escrito. En el pizarrón,
-        flechas concretas: «cuando se ejecuta la 1, MONEDAS ya vale 0»;
-        «cuando se muestra, PUNTOS todavía no se duplicó».
-      </li>
-      <li>
-        Antes de dar el resultado de cada versión y de cada pregunta con
-        opciones, preguntar cuántos obtuvieron cada valor o eligieron cada
-        letra. En la 8, comparar A y C con las dos ventas. Que expliquen
-        por qué probar otro valor puede descartar un ajuste, pero acertar
-        dos veces no alcanza para asegurar que sirve siempre.
-      </li>
-      <li>
-        Para ampliar: «¿hay otro orden del kiosco que también sirva?». Sí,
-        2 · 1 · 3: otro caso en que cambiar el orden no cambia el resultado.
-      </li>
-      <li>Sin nota.</li>
-    </ul>
-
-    <p class="papelito-respuestas">
-      <strong>Papelito:</strong>{" "}
-      {respuestasPapelito.map(({ numero, valor }) => (
-        <span class="par"><span>{numero}:</span> {valor}</span>
-      ))}
+    <p class="clave-linea"><strong>Primer programa:</strong> {traza(cierre.primero)}</p>
+    <p class="clave-linea"><strong>Segundo programa:</strong> {traza(cierre.segundo)}</p>
+    <p class="clave-linea">
+      <strong>Se duplica:</strong> {duplica(cierre.primero)} en el primero y{" "}
+      {duplica(cierre.segundo)} en el segundo.{" "}
+      <strong>¿Muestran lo mismo?</strong> {mismo(...cierre.sumas)}.
     </p>
-
-    <h3 class="subtitulo">El nivel</h3>
-    <ol class="programa">
-      {juego.instrucciones.map((instruccion) => <li>{instruccion.texto}</li>)}
-    </ol>
-    <div class="resumen-marco">
-      <table class="resumen">
-        <caption>
-          Al empezar, {juego.casilleros.map((c) => `${c} = ${juego.inicial[c]}`).join(" y ")}.
-          En cada paso, {juego.casilleros.join(" / ")} después de la instrucción
-          indicada.
-        </caption>
-        <thead>
-          <tr>
-            <th scope="col">Programa</th>
-            <th scope="col" colspan="4">Instrucción ejecutada → {juego.casilleros.join(" / ")}</th>
-            <th scope="col">Muestra</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filasResumen.map(({ numero, nombre, filas }) => (
-            <tr>
-              <th scope="row">{numero}. {nombre}</th>
-              {filas.map((fila) => (
-                <td>
-                  <span class="paso">{fila.numero}.</span>{" "}
-                  {juego.casilleros.map((c) => formatear(fila.memoria[c] ?? 0)).join(" / ")}
-                  {fila.pantalla !== undefined && <span class="muestra"> → {formatear(fila.pantalla)}</span>}
-                </td>
-              ))}
-              <td class="pantalla">{formatear(pantallaFinal(filas)!)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-    <ul class="lista lista--compacta">
-      <li>
-        <strong>Versión 1:</strong> la 2 y la 3 se intercambian y el resultado
-        no cambia: al duplicar, PUNTOS vale 90 igual que en el original.
-      </li>
-      <li>
-        <strong>Versión 2:</strong> cuando se ejecuta la 1, MONEDAS ya vale 0:
-        se comporta como si no se hubieran juntado monedas.
-      </li>
-      <li>
-        <strong>Versión 3:</strong> los 50 puntos de las monedas se suman después
-        de duplicar PUNTOS, por eso esos 50 puntos no se duplican.
-      </li>
-      <li>
-        <strong>Versión 4:</strong> se muestra antes de duplicar. En la
-        memoria, PUNTOS termina en 180, pero la pantalla mostró 90.
-      </li>
-    </ul>
-
-    <h3 class="subtitulo">El kiosco, con otra venta</h3>
-    <div class="tablas">
-      <TablaSeguimiento
-        variante="clave"
-        titulo={`${numeroPrueba}. Con el ajuste A: muestra ${formatear(pantallaFinal(pruebaCorrecta)!)}`}
-        casilleros={kiosco.casilleros}
-        inicial={otraVenta}
-        filas={pruebaCorrecta}
-      />
-      <TablaSeguimiento
-        variante="clave"
-        titulo={`Con el ajuste C: muestra ${formatear(pantallaFinal(pruebaSoloEsteCaso)!)}`}
-        casilleros={kiosco.casilleros}
-        inicial={otraVenta}
-        filas={pruebaSoloEsteCaso}
-      />
-    </div>
     <p>
-      Tendrían que quedar {formatear(quedan(otraVenta))}. El ajuste C acierta
-      con VENTA = 3 pero no con otra venta: la prueba con otro valor es la que
-      lo muestra.
+      Alcanza con separarlos en tres pilas: todo bien; tablas bien pero falla «se
+      duplica» o el sí/no; tablas que se rompen (mirar la primera fila distinta).
+      Con eso se decide qué retomar al empezar la clase siguiente. No hace falta
+      una devolución escrita a cada uno.
     </p>
+    <table class="errores">
+      <caption>Respuestas frecuentes y qué sugieren</caption>
+      <tbody>
+        {erroresCierre.map(({ si, sugiere }) => (
+          <tr><th scope="row">{si}</th><td>{sugiere}</td></tr>
+        ))}
+      </tbody>
+    </table>
   </section>
 
   <section class="bloque clave" aria-labelledby="clave">
     <h2 id="clave">
       Clave
-      <span class="clave-de">preguntas para elegir</span>
+      <span class="clave-de">hoja</span>
     </h2>
-    <p class="apoyo">
-      Para corregir en común y autocorregir; no es para poner nota. Cada
-      opción incorrecta puede señalar una confusión: escuchar por qué la
-      eligieron antes de sacar conclusiones.
-    </p>
-    <ul class="clave-lista">
-      {preguntas.map((pregunta) => (
-        <li class="clave-item">
-          <p class="clave-respuesta">
-            <span class="clave-numero">{pregunta.numero}.</span>
-            <span class="clave-letra">{pregunta.respuesta}</span>
-            {pregunta.opciones[pregunta.respuesta]}
-          </p>
-          <p class="clave-porque">{pregunta.porque}</p>
-          <ul class="clave-otras">
-            {letras
-              .filter((letra) => letra !== pregunta.respuesta)
-              .map((letra) => (
-                <li>
-                  <strong>{letra}</strong> · {pregunta.siEligieron[letra]}
-                </li>
-              ))}
-          </ul>
-        </li>
+    <ul class="lista lista--compacta">
+      <li><strong>1.</strong> Predicción: no se corrige.</li>
+      <li><strong>2.</strong> A: {traza(programaA)}. B: {traza(programaB)}.</li>
+      <li>
+        <strong>3.</strong> En A se duplica {duplica(programaA)}; en B,{" "}
+        {duplica(programaB)}.
+      </li>
+      <li><strong>4.</strong> A.</li>
+      <li>
+        <strong>5.</strong> C: {traza(programaC)}. D: {traza(programaD)}. Muestran lo
+        mismo, pero pasan por valores distintos.
+      </li>
+      {consignasDorso.map((c) => (
+        <li><strong>{c.numero}.</strong> {c.respuesta[0].toUpperCase() + c.respuesta.slice(1)}.</li>
       ))}
     </ul>
+    <p class="apoyo">
+      Las respuestas del dorso están al pie de la hoja, cabeza abajo, para que
+      quien llega pueda comprobarlas solo.
+    </p>
   </section>
 </MaterialLayout>
 
 <style>
   .bloque + .bloque {
-    margin-top: 2.25rem;
+    margin-top: 2rem;
   }
 
   .guia-pdf {
@@ -442,28 +230,19 @@ const respuestasPapelito = [
   }
 
   .bloque h2 {
-    margin: 0 0 0.85rem;
+    margin: 0 0 0.75rem;
     font-size: clamp(1.2rem, 0.35vw + 1.1rem, 1.45rem);
     line-height: 1.25;
   }
 
-  .subtitulo {
-    margin: 1.4rem 0 0.7rem;
-    font-size: 1.05rem;
-  }
-
   .bloque p {
-    margin: 0 0 0.75rem;
+    margin: 0 0 0.7rem;
   }
 
   .idea {
-    padding: 0.85rem 0 0.9rem 1rem;
+    padding: 0.7rem 0 0.75rem 1rem;
     border-left: 4px solid var(--emphasis);
     font-weight: 700;
-  }
-
-  .idea--final {
-    border-left-color: var(--accent);
   }
 
   .apoyo {
@@ -471,19 +250,13 @@ const respuestasPapelito = [
     font-weight: 600;
   }
 
-  .pedido {
-    margin: 1rem 0;
-    padding-left: 1rem;
-    border-left: 3px solid var(--accent);
-  }
-
   .lista {
-    margin: 0 0 0.75rem;
+    margin: 0 0 0.7rem;
     padding-left: 1.3rem;
   }
 
   .lista li + li {
-    margin-top: 0.5rem;
+    margin-top: 0.45rem;
   }
 
   .lista--compacta li + li {
@@ -497,17 +270,13 @@ const respuestasPapelito = [
     border-bottom: 2px solid var(--accent);
   }
 
-  .bloque a:hover {
-    color: var(--accent);
-  }
-
   .momentos {
     margin: 0 0 1rem;
     padding-left: 1.9rem;
   }
 
   .momentos > li + li {
-    margin-top: 1rem;
+    margin-top: 0.8rem;
   }
 
   .momentos > li::marker {
@@ -530,81 +299,8 @@ const respuestasPapelito = [
     font-weight: 600;
   }
 
-  .papelito-respuestas {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.35rem 1.1rem;
-    padding: 0.6rem 0.9rem;
-    border: 2px solid var(--line);
-  }
-
-  .par {
-    white-space: nowrap;
-    font-weight: 700;
-  }
-
-  .par > span {
-    color: var(--muted);
-    font-weight: 600;
-  }
-
-  .tablas {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 1rem 1.5rem;
-    margin: 0 0 1rem;
-  }
-
-  /* En pantallas angostas, la tabla se desplaza sin romper la página. */
-  .resumen-marco {
-    max-width: 100%;
-    overflow-x: auto;
-  }
-
-  .resumen {
-    width: 100%;
-    margin: 0 0 0.75rem;
-    border-collapse: collapse;
-    font-size: 0.95em;
-  }
-
-  .resumen caption {
-    margin-bottom: 0.35rem;
-    color: var(--muted);
-    font-weight: 600;
-    text-align: left;
-  }
-
-  .resumen th,
-  .resumen td {
-    padding: 0.3rem 0.5rem;
-    border: 1px solid var(--line);
-    text-align: left;
-    white-space: nowrap;
-  }
-
-  .resumen td {
-    font-variant-numeric: tabular-nums;
-    font-weight: 700;
-  }
-
-  .resumen .paso {
-    color: var(--muted);
-    font-weight: 600;
-  }
-
-  .resumen .pantalla {
-    text-align: center;
-  }
-
-  .programa {
-    margin: 0 0 0.75rem;
-    padding-left: 2rem;
-    font-weight: 700;
-  }
-
-  .clave h2,
-  .correccion h2 {
+  .correccion h2,
+  .clave h2 {
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
@@ -617,58 +313,40 @@ const respuestasPapelito = [
     font-weight: 600;
   }
 
-  .clave-lista {
-    margin: 0;
-    padding: 0;
-    list-style: none;
+  .clave-linea {
+    margin-bottom: 0.3rem !important;
+    font-variant-numeric: tabular-nums;
   }
 
-  .clave-item + .clave-item {
-    margin-top: 1.1rem;
+  .errores {
+    width: 100%;
+    margin: 0.5rem 0 0;
+    border-collapse: collapse;
   }
 
-  .clave-item p {
-    margin: 0;
+  .errores caption {
+    margin-bottom: 0.35rem;
+    font-weight: 700;
+    text-align: left;
   }
 
-  .clave-respuesta {
+  .errores th,
+  .errores td {
+    padding: 0.35rem 0.55rem;
+    border: 1px solid var(--line);
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .errores th {
+    width: 38%;
     font-weight: 700;
   }
 
-  .clave-numero {
-    margin-right: 0.3rem;
-  }
-
-  .clave-letra {
-    display: inline-block;
-    min-width: 1.6em;
-    margin-right: 0.4rem;
-    border: 2px solid var(--line);
-    text-align: center;
-  }
-
-  .clave-porque {
-    margin-top: 0.2rem !important;
-  }
-
-  .clave-otras {
-    margin: 0.35rem 0 0;
-    padding: 0;
-    color: var(--muted);
-    font-size: 0.95em;
-    list-style: none;
-  }
-
-  @media (max-width: 44rem) {
-    .tablas {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  /* Mismo papel que la hoja del estudiante: oficio (216 × 356 mm). */
+  /* Mismo papel que la hoja: oficio (216 × 356 mm). */
   @page {
     size: 216mm 356mm;
-    margin: 11mm 14mm 10mm;
+    margin: 12mm 15mm 11mm;
   }
 
   @media print {
@@ -679,18 +357,18 @@ const respuestasPapelito = [
     :global(body),
     :global(.material) {
       color: #000;
-      font-size: 9.5pt;
-      line-height: 1.3;
+      font-size: 10.5pt;
+      line-height: 1.32;
     }
 
     :global(.material > .apertura) {
-      margin-bottom: 3mm;
-      padding-bottom: 1.5mm;
+      margin-bottom: 4mm;
+      padding-bottom: 2mm;
     }
 
     :global(.material > .apertura .page-title) {
-      font-size: 15pt;
       margin: 0;
+      font-size: 16pt;
     }
 
     :global(.material > .apertura .ubicacion),
@@ -701,46 +379,31 @@ const respuestasPapelito = [
     }
 
     :global(.material > .apertura .bajada) {
-      font-size: 10pt;
       margin-top: 1mm;
+      font-size: 11pt;
     }
 
     .bloque + .bloque {
-      margin-top: 3mm;
+      margin-top: 4mm;
     }
 
     .bloque h2 {
-      margin-top: 0;
-      margin-bottom: 1.2mm;
-      font-size: 11.5pt;
-    }
-
-    .pedido {
-      margin: 2mm 0;
-      padding-left: 3mm;
-      border-left-color: #000;
-    }
-
-    .subtitulo {
-      margin: 2.5mm 0 1.2mm;
-      font-size: 10.5pt;
+      margin-bottom: 1.5mm;
+      font-size: 12pt;
     }
 
     .bloque p {
-      margin-bottom: 1.2mm;
+      margin-bottom: 1.5mm;
     }
 
     .idea {
-      padding: 0.8mm 0 0.8mm 3mm;
-      border-left-width: 2pt;
-      border-left-color: #000;
+      padding: 1mm 0 1mm 3mm;
+      border-left: 2pt solid #000;
     }
 
     .apoyo,
     .momento-tiempo,
-    .clave-de,
-    .clave-otras,
-    .par > span {
+    .clave-de {
       color: #000;
     }
 
@@ -749,100 +412,30 @@ const respuestasPapelito = [
     }
 
     .lista {
-      margin-bottom: 1.2mm;
-    }
-
-    .lista li + li {
-      margin-top: 0.6mm;
-    }
-
-    .lista--compacta li + li {
-      margin-top: 0.3mm;
-    }
-
-    .momentos {
       margin-bottom: 1.5mm;
     }
 
+    .lista li + li {
+      margin-top: 0.8mm;
+    }
+
     .momentos > li + li {
-      margin-top: 1.2mm;
+      margin-top: 1.5mm;
     }
 
     .momentos > li::marker {
       color: #000;
     }
 
-    .papelito-respuestas {
-      gap: 0.5mm 4mm;
-      margin-right: 1pt;
-      padding: 1mm 2.5mm;
-      border-width: 0.75pt;
-    }
-
-    .tablas {
-      gap: 2mm 5mm;
-      margin-bottom: 1.5mm;
-    }
-
-    .resumen-marco {
-      overflow: visible;
-    }
-
-    .resumen {
-      margin-bottom: 1.5mm;
-      font-size: 9.5pt;
-    }
-
-    .resumen caption {
-      margin-bottom: 1mm;
-      color: #000;
-    }
-
-    .resumen th,
-    .resumen td {
-      padding: 0.6mm 1.5mm;
+    .errores th,
+    .errores td {
+      padding: 0.8mm 2mm;
       border: 0.75pt solid #000;
     }
 
-    .resumen .paso {
-      color: #000;
-    }
-
-    .programa {
-      display: grid;
-      grid-template-columns: repeat(2, max-content);
-      gap: 0 8mm;
-      margin-bottom: 1.5mm;
-      padding-left: 5mm;
-    }
-
-    /* Los dos recorridos, uno al lado del otro. */
-    .variantes {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 0 6mm;
-    }
-
-    .variante > .subtitulo:first-child {
-      margin-top: 1mm;
-    }
-
-    /* Segunda hoja: todo lo necesario para corregir, separado del guion. */
+    /* Segunda página: todo lo que se usa después de la clase. */
     .correccion {
       break-before: page;
-    }
-
-    .clave-item {
-      break-inside: avoid;
-    }
-
-    .clave-item + .clave-item {
-      margin-top: 2.5mm;
-    }
-
-    .clave-letra {
-      border-width: 1pt;
-      border-color: #000;
     }
   }
 </style>

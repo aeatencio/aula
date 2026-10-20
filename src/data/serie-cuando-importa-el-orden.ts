@@ -1,12 +1,12 @@
 /*
   Segundo tramo de Pensamiento Computacional: secuencia y orden. El pizarrón
   «Seguir un programa paso a paso» presenta la tabla de seguimiento; la hoja la
-  pone en manos de cada estudiante. Reutiliza la apertura (la tienda de «Lo que
-  queríamos y lo que pasó») como ejemplo ya conocido.
+  pone en manos de cada estudiante, con el mismo ejemplo resuelto. Un solo
+  contexto, un juego que guarda puntos, para toda la clase.
 
   La guía docente (/cuando-importa-el-orden/guia/) no figura en esta lista a
-  propósito: contiene la clave y las tablas resueltas, y la lista aparece al
-  pie de la hoja. Sigue pública y se enlaza desde «Para docentes» en la
+  propósito: contiene la clave de la hoja y del papelito de cierre, y la lista
+  aparece al pie de la hoja. Sigue pública y se enlaza desde «Para docentes» en la
   portada.
 */
 
@@ -27,7 +27,7 @@ export const serieCuandoImportaElOrden = {
       href: "/cuando-importa-el-orden/",
       title: "Cuándo importa el orden",
       tipo: "Actividad",
-      para: "para resolver en papel, con tablas de seguimiento",
+      para: "para leer en un folio y resolver en la carpeta",
     },
   ] satisfies MaterialSerie[],
   pizarrones: [

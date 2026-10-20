@@ -1,30 +1,30 @@
 ---
 import TablaSeguimiento from "../../components/TablaSeguimiento.astro";
 import {
-  pedido,
-  casoPedido,
-  ordenPedidoCambiado,
+  casoEjemplo,
+  ejemplo,
   preguntaInicial,
+  rutina,
   seguir,
   verbos,
 } from "../../data/actividad-cuando-importa-el-orden";
 import PizarronLayout from "../../layouts/PizarronLayout.astro";
 
 const ejecuciones = [
-  { titulo: "Como está escrito", orden: [1, 2, 3] },
-  { titulo: "Intercambiando la 1 y la 2", orden: ordenPedidoCambiado },
+  { titulo: "Primero sumar, después duplicar", programa: ejemplo.primero },
+  { titulo: "Primero duplicar, después sumar", programa: ejemplo.segundo },
 ];
 ---
 
 <PizarronLayout
   title="Seguir un programa paso a paso"
-  description="Dos órdenes para un mismo programa: predecí qué muestran, ejecutá una instrucción por vez y compará los valores en una tabla de seguimiento."
+  description="Dos programas con las mismas instrucciones en distinto orden: predecí qué muestran, ejecutá una instrucción por vez y compará los valores en una tabla de seguimiento."
   categoria="Pensamiento Computacional"
   encabezado="simple-grande"
 >
   <p class="pregunta">{preguntaInicial}</p>
-  <p class="caso">{casoPedido}</p>
-  <p class="prediccion">¿Los dos órdenes van a mostrar el mismo total? ¿Cuánto va a mostrar cada uno?</p>
+  <p class="caso">{casoEjemplo}</p>
+  <p class="prediccion">¿Los dos programas van a mostrar lo mismo? ¿Qué va a mostrar cada uno?</p>
 
   <noscript>
     <style is:inline>
@@ -33,19 +33,18 @@ const ejecuciones = [
   </noscript>
 
   <div class="ejecuciones">
-    {ejecuciones.map(({ titulo, orden }, indice) => (
-      <section class="ejecucion" data-ejecucion aria-labelledby={`orden-${indice}`}>
-        <h2 id={`orden-${indice}`}>{titulo}</h2>
+    {ejecuciones.map(({ titulo, programa }, indice) => (
+      <section class="ejecucion" data-ejecucion aria-labelledby={`programa-${indice}`}>
+        <h2 id={`programa-${indice}`}>{titulo}</h2>
         <TablaSeguimiento
-          titulo={`Orden ${orden.join(" · ")}`}
-          casilleros={pedido.casilleros}
-          inicial={pedido.inicial}
-          filas={seguir(pedido, orden)}
+          casilleros={programa.casilleros}
+          inicial={programa.inicial}
+          filas={seguir(programa)}
         />
         <div class="controles" hidden>
           <p class="paso" role="status" aria-atomic="true"></p>
           <div class="botones">
-            <button type="button" data-siguiente>Ejecutar instrucción {orden[0]}</button>
+            <button type="button" data-siguiente>Ejecutar instrucción 1</button>
             <button type="button" data-reiniciar disabled>Volver a empezar</button>
           </div>
         </div>
@@ -54,32 +53,33 @@ const ejecuciones = [
   </div>
 
   <p class="comparacion" data-comparacion>
-    Compará las tablas: ¿cuánto vale CANTIDAD cuando se calcula TOTAL en cada orden?
-    ¿Qué cambiarías en el segundo programa para que muestre el total del pedido?
+    Compará las tablas: ¿qué número se duplica en cada programa? ¿Por qué no es el mismo?
   </p>
 
   <section class="referencia" aria-labelledby="tabla-titulo">
-    <h2 id="tabla-titulo">Cómo leer la tabla de seguimiento</h2>
-    <p>
-      La memoria guarda los valores en casilleros con nombre: acá, CANTIDAD y TOTAL.
-      Cada fila muestra cómo quedan <strong>después</strong> de ejecutar una instrucción,
-      aunque no hayan cambiado. Los números identifican las instrucciones del programa original.
-    </p>
-    <p>
-      En «Pantalla» se anota un valor sólo en la fila de «Mostrar».
-      Una celda vacía no significa que se borre la pantalla.{" "}
-      <span class="leyenda" hidden>Los valores subrayados cambiaron en el último paso.</span>
-    </p>
+    <h2 id="tabla-titulo">Cómo seguir un programa</h2>
+    <ol class="rutina">
+      {rutina.map((paso) => <li>{paso}</li>)}
+    </ol>
     <dl>
       {verbos.map(({ verbo, explicacion }) => (
         <div><dt>{verbo}</dt><dd>{explicacion}</dd></div>
       ))}
     </dl>
+    <p>
+      En la <strong>tabla de seguimiento</strong>, cada fila muestra cómo queda la memoria{" "}
+      <strong>después</strong> de ejecutar una instrucción, aunque no cambie. La última fila
+      es la pantalla: lo que se mostró queda ahí aunque la memoria siga cambiando.{" "}
+      <span class="leyenda" hidden>Los valores subrayados cambiaron en el último paso.</span>
+    </p>
+    <p>
+      En la carpeta alcanza con anotar el número de cada instrucción y cómo queda el
+      casillero, sin copiar el texto de la instrucción.
+    </p>
   </section>
 
   <p class="continuar">
     Para seguir comparando: <a href="/cuando-importa-el-orden/">Cuándo importa el orden</a>.
-    Podés resolverlo en papel o en la carpeta.
   </p>
 </PizarronLayout>
 
@@ -139,6 +139,7 @@ const ejecuciones = [
 
   .referencia { margin-top: 1.5rem; padding-top: 1rem; border-top: 2px solid var(--line); }
   .referencia p { margin: 0.6rem 0; }
+  .rutina { margin: 0.6rem 0; padding-left: 1.6rem; }
   dl { display: grid; gap: 0.4rem; margin: 1rem 0; }
   dl > div { display: flex; flex-wrap: wrap; gap: 0 0.4rem; }
   dt { font-weight: 700; }
