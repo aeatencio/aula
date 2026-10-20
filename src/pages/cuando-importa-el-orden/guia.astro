@@ -1,0 +1,441 @@
+---
+import {
+  cierre,
+  conclusion,
+  consignasDorso,
+  erroresCierre,
+  formatear,
+  mostro,
+  preguntaInicial,
+  programaA,
+  programaB,
+  programaC,
+  programaD,
+  seguir,
+  valorAntesDe,
+  type Programa,
+} from "../../data/actividad-cuando-importa-el-orden";
+import { serieCuandoImportaElOrden } from "../../data/serie-cuando-importa-el-orden";
+import MaterialLayout from "../../layouts/MaterialLayout.astro";
+
+const pdfGuia =
+  "/materiales/cuando-importa-el-orden/cuando-importa-el-orden-guia-oficio-216x356.pdf";
+
+/** «4 → 7 → 14 → 14 · mostró 14»: lo que se anota en la carpeta, en una línea. */
+const traza = (programa: Programa) =>
+  [programa.inicial.PUNTOS, ...seguir(programa).map((fila) => fila.memoria.PUNTOS)]
+    .map(formatear)
+    .join(" → ") + ` · mostró ${formatear(mostro(programa)!)}`;
+
+const duplica = (programa: Programa) => valorAntesDe(programa, "Duplicar");
+const mismo = (a: Programa, b: Programa) => (mostro(a) === mostro(b) ? "Sí" : "No");
+---
+
+<MaterialLayout
+  title="Guía para la clase"
+  description="Guía docente de «Cuándo importa el orden»: qué tiene que poder hacer cada estudiante, la clase en 60 minutos para todos los cursos, qué mirar al circular, cómo leer los papelitos de cierre y clave."
+  tipo="Guía docente"
+  bajada="Para conducir la clase y mirar los papelitos"
+  serie={serieCuandoImportaElOrden}
+  tituloPizarrones="Para recuperar"
+  imprimirPie={false}
+>
+  <p class="guia-pdf">
+    Para imprimir:{" "}
+    <a href={pdfGuia} type="application/pdf">la guía en PDF</a>{" "}
+    (oficio 216 × 356 mm; la segunda página tiene la clave).
+    Para el final de la clase:{" "}
+    <a href="/cuando-importa-el-orden/respuestas/">papelitos de cierre</a>{" "}
+    (dos por hoja oficio).
+  </p>
+
+  <section class="bloque" aria-labelledby="minimo">
+    <h2 id="minimo">Qué tiene que poder hacer cada uno</h2>
+    <ul class="lista">
+      <li>Seguir un programa de tres instrucciones, anotando cómo queda PUNTOS después de cada una.</li>
+      <li>
+        Decir qué número usa una instrucción cuando le toca: en A se duplica{" "}
+        {duplica(programaA)}; en B, {duplica(programaB)}.
+      </li>
+      <li>Reconocer que cambiar el orden a veces cambia lo que se muestra (A y B) y a veces no (C y D).</li>
+    </ul>
+    <p>
+      Eso es el frente. El dorso, «Para seguir», es para quien llega: agrega un
+      segundo casillero, un valor que se borra antes de usarlo y la diferencia
+      entre memoria y pantalla. Nadie tiene que terminarlo.
+    </p>
+  </section>
+
+  <section class="bloque" aria-labelledby="materiales">
+    <h2 id="materiales">Qué se necesita</h2>
+    <p>
+      Una hoja por estudiante dentro de un folio (se lee, no se escribe; se juntan
+      al final), la carpeta, un papelito de cierre por estudiante y el pizarrón.
+      No hace falta ningún dispositivo.
+    </p>
+  </section>
+
+  <section class="bloque" aria-labelledby="clase">
+    <h2 id="clase">La clase, en unos 60 minutos</h2>
+    <p class="apoyo">El mismo plan para todos los cursos. Los tiempos son orientativos.</p>
+    <ol class="momentos">
+      <li>
+        <p class="momento-nombre">Entrada <span class="momento-tiempo">5 min</span></p>
+        <p>
+          Repartir los folios y escribir en el pizarrón «{preguntaInicial}». Avisar que la
+          hoja no se escribe: todo va a la carpeta. En los cursos que no tuvieron la
+          apertura, una frase alcanza: la máquina hace exactamente lo que está escrito,
+          en ese orden.
+        </p>
+      </li>
+      <li>
+        <p class="momento-nombre">El ejemplo, en el pizarrón <span class="momento-tiempo">8 min</span></p>
+        <p>
+          Es el ejemplo resuelto de la hoja. Seguir el primer programa en voz alta,
+          anotando como en la carpeta; el segundo lo dictan ellos. Señalar qué número
+          usa «Duplicar» en cada uno.
+        </p>
+      </li>
+      <li>
+        <p class="momento-nombre">A y B <span class="momento-tiempo">12 min</span></p>
+        <p>Consignas 1 a 3, en la carpeta. Al circular, mirar la fila de «Duplicar».</p>
+      </li>
+      <li>
+        <p class="momento-nombre">Comparar A y B entre todos <span class="momento-tiempo">5 min</span></p>
+        <p>
+          Las dos tablas en el pizarrón. Quien tiene algo distinto marca la{" "}
+          <strong>primera fila que no coincide</strong> y corrige desde ahí, sin borrar.
+        </p>
+      </li>
+      <li>
+        <p class="momento-nombre">Seguir <span class="momento-tiempo">12 min</span></p>
+        <p>
+          Consignas 4 y 5; quien termina, da vuelta la hoja. Al final de este tramo,
+          preguntar en voz alta por C y D: ¿muestran lo mismo?
+        </p>
+      </li>
+      <li>
+        <p class="momento-nombre">Papelito de cierre <span class="momento-tiempo">10 min</span></p>
+        <p>
+          Juntar los folios y cerrar las carpetas. Repartir los papelitos y leerlos en
+          voz alta. Cada uno resuelve solo y entrega.
+        </p>
+      </li>
+      <li>
+        <p class="momento-nombre">Cierre <span class="momento-tiempo">5 min</span></p>
+        <p>
+          Escribir la conclusión en el pizarrón; la copian en la carpeta. Si sobra
+          tiempo, resolver el papelito entre todos, ya entregado.
+        </p>
+      </li>
+    </ol>
+    <p class="idea">{conclusion}</p>
+  </section>
+
+  <section class="bloque" aria-labelledby="circular">
+    <h2 id="circular">Al circular</h2>
+    <ul class="lista">
+      <li><strong>Duplica el número del comienzo.</strong> «¿Cuánto vale PUNTOS justo antes de duplicar?»</li>
+      <li><strong>En B repite lo de A.</strong> «Leé la primera instrucción de B.»</li>
+      <li><strong>Anota sólo el final.</strong> «¿Cuánto valía después de la 1?»</li>
+    </ul>
+    <p>
+      Ayudan sin resolver: leer en voz alta, señalar la fila con el dedo o una regla,
+      hacer las cuentas al costado. No ayuda decir el número que va.
+    </p>
+  </section>
+
+  <section class="bloque" aria-labelledby="corte">
+    <h2 id="corte">Si hay menos tiempo</h2>
+    <ul class="lista">
+      <li>Se recorta primero «Seguir».</li>
+      <li>Si no llega el papelito, abre la clase siguiente: no tomarlo apurado.</li>
+      <li>Lo que falte del frente se retoma en clase; no queda como tarea obligatoria.</li>
+    </ul>
+  </section>
+
+  <section class="bloque correccion" aria-labelledby="papelitos">
+    <h2 id="papelitos">
+      Después de la clase: mirar los papelitos
+      <span class="clave-de">Cuándo importa el orden</span>
+    </h2>
+    <p class="clave-linea"><strong>Primer programa:</strong> {traza(cierre.primero)}</p>
+    <p class="clave-linea"><strong>Segundo programa:</strong> {traza(cierre.segundo)}</p>
+    <p class="clave-linea">
+      <strong>Se duplica:</strong> {duplica(cierre.primero)} en el primero y{" "}
+      {duplica(cierre.segundo)} en el segundo.{" "}
+      <strong>¿Muestran lo mismo?</strong> {mismo(...cierre.sumas)}.
+    </p>
+    <p>
+      Alcanza con separarlos en tres pilas: todo bien; tablas bien pero falla «se
+      duplica» o el sí/no; tablas que se rompen (mirar la primera fila distinta).
+      Con eso se decide qué retomar al empezar la clase siguiente. No hace falta
+      una devolución escrita a cada uno.
+    </p>
+    <table class="errores">
+      <caption>Respuestas frecuentes y qué sugieren</caption>
+      <tbody>
+        {erroresCierre.map(({ si, sugiere }) => (
+          <tr><th scope="row">{si}</th><td>{sugiere}</td></tr>
+        ))}
+      </tbody>
+    </table>
+  </section>
+
+  <section class="bloque clave" aria-labelledby="clave">
+    <h2 id="clave">
+      Clave
+      <span class="clave-de">hoja</span>
+    </h2>
+    <ul class="lista lista--compacta">
+      <li><strong>1.</strong> Predicción: no se corrige.</li>
+      <li><strong>2.</strong> A: {traza(programaA)}. B: {traza(programaB)}.</li>
+      <li>
+        <strong>3.</strong> En A se duplica {duplica(programaA)}; en B,{" "}
+        {duplica(programaB)}.
+      </li>
+      <li><strong>4.</strong> A.</li>
+      <li>
+        <strong>5.</strong> C: {traza(programaC)}. D: {traza(programaD)}. Muestran lo
+        mismo, pero pasan por valores distintos.
+      </li>
+      {consignasDorso.map((c) => (
+        <li><strong>{c.numero}.</strong> {c.respuesta[0].toUpperCase() + c.respuesta.slice(1)}.</li>
+      ))}
+    </ul>
+    <p class="apoyo">
+      Las respuestas del dorso están al pie de la hoja, cabeza abajo, para que
+      quien llega pueda comprobarlas solo.
+    </p>
+  </section>
+</MaterialLayout>
+
+<style>
+  .bloque + .bloque {
+    margin-top: 2rem;
+  }
+
+  .guia-pdf {
+    margin: 0 0 2rem;
+    color: var(--muted);
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  .guia-pdf a {
+    color: var(--ink);
+    font-weight: 700;
+    text-decoration: none;
+    border-bottom: 2px solid var(--accent);
+  }
+
+  .bloque h2 {
+    margin: 0 0 0.75rem;
+    font-size: clamp(1.2rem, 0.35vw + 1.1rem, 1.45rem);
+    line-height: 1.25;
+  }
+
+  .bloque p {
+    margin: 0 0 0.7rem;
+  }
+
+  .idea {
+    padding: 0.7rem 0 0.75rem 1rem;
+    border-left: 4px solid var(--emphasis);
+    font-weight: 700;
+  }
+
+  .apoyo {
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  .lista {
+    margin: 0 0 0.7rem;
+    padding-left: 1.3rem;
+  }
+
+  .lista li + li {
+    margin-top: 0.45rem;
+  }
+
+  .lista--compacta li + li {
+    margin-top: 0.25rem;
+  }
+
+  .bloque a {
+    color: var(--ink);
+    font-weight: 700;
+    text-decoration: none;
+    border-bottom: 2px solid var(--accent);
+  }
+
+  .momentos {
+    margin: 0 0 1rem;
+    padding-left: 1.9rem;
+  }
+
+  .momentos > li + li {
+    margin-top: 0.8rem;
+  }
+
+  .momentos > li::marker {
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .momentos p {
+    margin: 0;
+  }
+
+  .momento-nombre {
+    font-weight: 700;
+  }
+
+  .momento-tiempo {
+    margin-left: 0.5rem;
+    color: var(--muted);
+    font-size: 0.9em;
+    font-weight: 600;
+  }
+
+  .correccion h2,
+  .clave h2 {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.2rem 0.7rem;
+  }
+
+  .clave-de {
+    color: var(--muted);
+    font-size: 0.75em;
+    font-weight: 600;
+  }
+
+  .clave-linea {
+    margin-bottom: 0.3rem !important;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .errores {
+    width: 100%;
+    margin: 0.5rem 0 0;
+    border-collapse: collapse;
+  }
+
+  .errores caption {
+    margin-bottom: 0.35rem;
+    font-weight: 700;
+    text-align: left;
+  }
+
+  .errores th,
+  .errores td {
+    padding: 0.35rem 0.55rem;
+    border: 1px solid var(--line);
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .errores th {
+    width: 38%;
+    font-weight: 700;
+  }
+
+  /* Mismo papel que la hoja: oficio (216 × 356 mm). */
+  @page {
+    size: 216mm 356mm;
+    margin: 12mm 15mm 11mm;
+  }
+
+  @media print {
+    .guia-pdf {
+      display: none;
+    }
+
+    :global(body),
+    :global(.material) {
+      color: #000;
+      font-size: 10.5pt;
+      line-height: 1.32;
+    }
+
+    :global(.material > .apertura) {
+      margin-bottom: 4mm;
+      padding-bottom: 2mm;
+    }
+
+    :global(.material > .apertura .page-title) {
+      margin: 0;
+      font-size: 16pt;
+    }
+
+    :global(.material > .apertura .ubicacion),
+    :global(.material > .apertura .ubicacion a),
+    :global(.material > .apertura .bajada) {
+      color: #000 !important;
+      border-bottom: 0 !important;
+    }
+
+    :global(.material > .apertura .bajada) {
+      margin-top: 1mm;
+      font-size: 11pt;
+    }
+
+    .bloque + .bloque {
+      margin-top: 4mm;
+    }
+
+    .bloque h2 {
+      margin-bottom: 1.5mm;
+      font-size: 12pt;
+    }
+
+    .bloque p {
+      margin-bottom: 1.5mm;
+    }
+
+    .idea {
+      padding: 1mm 0 1mm 3mm;
+      border-left: 2pt solid #000;
+    }
+
+    .apoyo,
+    .momento-tiempo,
+    .clave-de {
+      color: #000;
+    }
+
+    .bloque a {
+      border-bottom: 0;
+    }
+
+    .lista {
+      margin-bottom: 1.5mm;
+    }
+
+    .lista li + li {
+      margin-top: 0.8mm;
+    }
+
+    .momentos > li + li {
+      margin-top: 1.5mm;
+    }
+
+    .momentos > li::marker {
+      color: #000;
+    }
+
+    .errores th,
+    .errores td {
+      padding: 0.8mm 2mm;
+      border: 0.75pt solid #000;
+    }
+
+    /* Segunda página: todo lo que se usa después de la clase. */
+    .correccion {
+      break-before: page;
+    }
+  }
+</style>

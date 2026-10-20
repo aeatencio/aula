@@ -1,0 +1,967 @@
+---
+import ModeloCarpeta from "../../components/ModeloCarpeta.astro";
+import TablaSeguimiento from "../../components/TablaSeguimiento.astro";
+import {
+  casoEjemplo,
+  casoMonedas,
+  casoNivel,
+  consignasDorso,
+  consignasFrente,
+  ejemplo,
+  ejemploMonedas,
+  formatear,
+  ideaInicial,
+  pausaDespuesDe,
+  probadores,
+  programaA,
+  programaB,
+  programaC,
+  programaD,
+  rutina,
+  seguir,
+  valorAntesDe,
+  verbos,
+  verbosDorso,
+  type Programa,
+} from "../../data/actividad-cuando-importa-el-orden";
+import { serieCuandoImportaElOrden } from "../../data/serie-cuando-importa-el-orden";
+import MaterialLayout from "../../layouts/MaterialLayout.astro";
+
+const title = "Cuándo importa el orden";
+const pdfHoja =
+  "/materiales/cuando-importa-el-orden/cuando-importa-el-orden-oficio-216x356.pdf";
+
+const inicio = (programa: Programa) =>
+  programa.casilleros.map((c) => `${c}\u00a0=\u00a0${formatear(programa.inicial[c])}`).join(" y ");
+
+const enBlanco = (programa: Programa) =>
+  programa.instrucciones.map((instruccion, i) => ({ numero: i + 1, texto: instruccion.texto }));
+
+const ejemplos = [
+  { nombre: "Primero sumar", programa: ejemplo.primero },
+  { nombre: "Primero duplicar", programa: ejemplo.segundo },
+];
+const duplicaEjemplo = ejemplos.map(({ programa }) => valorAntesDe(programa, "Duplicar"));
+
+const antesDePausa = consignasFrente.filter((c) => c.numero <= pausaDespuesDe);
+const consigna = (numero: number) => consignasFrente.find((c) => c.numero === numero)!;
+---
+
+<MaterialLayout
+  title={title}
+  description="Actividad de Pensamiento Computacional sobre secuencia y orden: en pantalla, predecir qué muestra un programa, ejecutarlo paso a paso y cambiar el orden de sus instrucciones para comparar; en papel, una hoja para seguir programas en la carpeta."
+  tipo="Actividad"
+  bajada="Seguir programas paso a paso y comparar qué cambia cuando cambia el orden"
+  serie={serieCuandoImportaElOrden}
+  tituloPizarrones="Para recuperar"
+  imprimirPie={false}
+>
+  <header class="hoja-cabecera">
+    <p class="hoja-ubicacion">Pensamiento Computacional · Actividad</p>
+    <p class="hoja-titulo">{title}</p>
+  </header>
+
+  <p class="hoja-pdf">
+    Para la clase en papel:{" "}
+    <a href={pdfHoja} type="application/pdf">la hoja en PDF</a>{" "}
+    <span class="hoja-pdf-formato">(oficio 216 × 356 mm, doble faz)</span>.
+    Va dentro de un folio y se resuelve en la carpeta.
+  </p>
+
+  <p class="consigna-general">Esta hoja no se escribe. Anotá todo en la carpeta.</p>
+
+  <section class="referencia" aria-label="Cómo seguir un programa">
+    <p class="idea">{ideaInicial}</p>
+    <div class="referencia-columnas">
+      <div>
+        <p class="referencia-titulo">Cómo seguir un programa</p>
+        <ol class="rutina">
+          {rutina.map((paso) => <li>{paso}</li>)}
+        </ol>
+      </div>
+      <dl class="verbos">
+        {verbos.map(({ verbo, explicacion }) => (
+          <div>
+            <dt>{verbo}</dt>
+            <dd>{explicacion}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  </section>
+
+  {/* En pantalla: probar órdenes. No se imprime. */}
+  <div class="web">
+    <p class="web-intro">
+      El ejemplo resuelto está en el pizarrón{" "}
+      <a href="/pizarrones/seguir-un-programa-paso-a-paso/">Seguir un programa paso a paso</a>.
+      Acá, en cada programa: predecí qué va a mostrar, ejecutalo paso a paso y cambiá el orden
+      de las instrucciones para comparar.
+    </p>
+
+    {probadores.map((probador) => {
+      const total = probador.programa.instrucciones.length;
+      return (
+        <section class="parte probador" data-probador={probador.id} aria-labelledby={`probador-${probador.id}`}>
+          <h2 id={`probador-${probador.id}`} class="parte-titulo">
+            {probador.fijasAlFinal === 0 && <span class="para-seguir">Para seguir · </span>}
+            {probador.titulo}
+          </h2>
+          <p class="caso-texto">{probador.consigna}</p>
+          {probador.programa.casilleros.length > 1 && (
+            <dl class="verbos verbos--probador">
+              {verbosDorso.map(({ verbo, explicacion }) => (
+                <div>
+                  <dt>{verbo}</dt>
+                  <dd>{explicacion}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
+          <div class="probador-cuerpo">
+            <div class="probador-programa">
+              <p class="probador-subtitulo">Programa · al empezar, {inicio(probador.programa)}</p>
+              <ol class="orden" data-orden>
+                {probador.programa.instrucciones.map((instruccion, i) => (
+                  <li data-instruccion={i} class:list={["orden-item", { fija: i >= total - probador.fijasAlFinal }]}>
+                    <span class="orden-numero" data-numero>{i + 1}.</span>
+                    <span class="orden-texto">{instruccion.texto}</span>
+                    {i >= total - probador.fijasAlFinal ? (
+                      <span class="orden-fija">queda al final</span>
+                    ) : (
+                      <span class="orden-botones" data-con-js hidden>
+                        <button type="button" data-subir aria-label={`Subir «${instruccion.texto}»`}>Subir</button>
+                        <button type="button" data-bajar aria-label={`Bajar «${instruccion.texto}»`}>Bajar</button>
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ol>
+              <label class="prediccion" data-con-js hidden>
+                <span>Tu predicción: la pantalla va a mostrar</span>
+                <input type="text" inputmode="numeric" autocomplete="off" size="5" data-prediccion />
+              </label>
+            </div>
+            <div class="probador-tabla">
+              <TablaSeguimiento
+                casilleros={probador.programa.casilleros}
+                inicial={probador.programa.inicial}
+                filas={enBlanco(probador.programa)}
+              />
+              <div class="controles" data-con-js hidden>
+                <p class="paso" role="status" aria-atomic="true"></p>
+                <div class="botones">
+                  <button type="button" data-siguiente>Ejecutar instrucción 1</button>
+                  <button type="button" data-reiniciar disabled>Volver a empezar</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="devolucion" data-devolucion aria-live="polite"></div>
+          {probador.desafios.length > 0 && (
+            <div class="desafios">
+              <p class="probador-subtitulo">Desafíos</p>
+              <ul>
+                {probador.desafios.map((desafio) => (
+                  <li data-desafio><span class="marca" data-marca>Pendiente</span> {desafio.texto}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          <div class="historial-caja">
+            <p class="probador-subtitulo">Órdenes que probaste</p>
+            <ol class="historial" data-historial></ol>
+          </div>
+          <p class="sin-js" data-sin-js>
+            Para probar órdenes hace falta JavaScript. También se puede resolver en papel, con la hoja en PDF.
+          </p>
+        </section>
+      );
+    })}
+  </div>
+
+  {/* En papel: la hoja del folio. Sólo se imprime. */}
+  <div class="papel">
+    <section class="parte" aria-labelledby="ejemplo">
+      <h2 id="ejemplo" class="parte-titulo">Ejemplo resuelto</h2>
+      <p class="caso-texto">{casoEjemplo} Las mismas instrucciones, en dos órdenes:</p>
+      <div class="pares">
+        {ejemplos.map(({ nombre, programa }) => (
+          <TablaSeguimiento
+            variante="hoja"
+            titulo={nombre}
+            casilleros={programa.casilleros}
+            inicial={programa.inicial}
+            filas={seguir(programa)}
+          />
+        ))}
+      </div>
+      <div class="ejemplo-pie">
+        <ModeloCarpeta
+          casilleros={ejemplo.primero.casilleros}
+          inicial={ejemplo.primero.inicial}
+          filas={seguir(ejemplo.primero)}
+          titulo="Primero sumar"
+        />
+        <div class="ejemplo-notas">
+          <p class="nota">
+            En la carpeta, anotá sólo el número de cada instrucción y cómo queda, como en el recuadro.
+          </p>
+          <p class="destacado">
+            «Duplicar» usa el valor que hay en ese momento: en el primero duplica{" "}
+            {duplicaEjemplo[0]}; en el segundo, {duplicaEjemplo[1]}.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="parte" aria-labelledby="a-y-b">
+      <h2 id="a-y-b" class="parte-titulo">A y B</h2>
+      <p class="caso-texto">{casoNivel} Dos programas. Los dos empiezan con {inicio(programaA)}.</p>
+      <div class="pares">
+        {[["A", programaA], ["B", programaB]].map(([letra, programa]) => (
+          <div class="programa-caja">
+            <p class="programa-nombre">Programa {letra as string}</p>
+            <ol class="programa">
+              {(programa as Programa).instrucciones.map((instruccion) => <li>{instruccion.texto}</li>)}
+            </ol>
+          </div>
+        ))}
+      </div>
+      <ol class="consignas" start={antesDePausa[0].numero}>
+        {antesDePausa.map((c) => <li>{c.texto}</li>)}
+      </ol>
+      <p class="pausa">Cuando lo indique el docente, comparamos A y B entre todos.</p>
+      <ol class="consignas" start={4}>
+        <li>{consigna(4).texto}</li>
+      </ol>
+    </section>
+
+    <section class="parte" aria-labelledby="c-y-d">
+      <h2 id="c-y-d" class="parte-titulo">C y D</h2>
+      <p class="caso-texto">Otros dos programas. También empiezan con {inicio(programaC)}.</p>
+      <div class="pares">
+        {[["C", programaC], ["D", programaD]].map(([letra, programa]) => (
+          <div class="programa-caja">
+            <p class="programa-nombre">Programa {letra as string}</p>
+            <ol class="programa">
+              {(programa as Programa).instrucciones.map((instruccion) => <li>{instruccion.texto}</li>)}
+            </ol>
+          </div>
+        ))}
+      </div>
+      <ol class="consignas" start={5}>
+        <li>{consigna(5).texto}</li>
+      </ol>
+    </section>
+
+    {/* Dorso: para quien termina el frente. */}
+    <section class="parte dorso" aria-labelledby="para-seguir">
+      <h2 id="para-seguir" class="parte-titulo">Para seguir</h2>
+      <p class="caso-texto">Cuando termines la primera página, continuá acá. También se anota en la carpeta.</p>
+      <p class="caso-texto">{casoMonedas}</p>
+      <dl class="verbos verbos--dorso">
+        {verbosDorso.map(({ verbo, explicacion }) => (
+          <div>
+            <dt>{verbo}</dt>
+            <dd>{explicacion}</dd>
+          </div>
+        ))}
+      </dl>
+      <div class="dorso-ejemplo">
+        <TablaSeguimiento
+          variante="hoja"
+          titulo={`Ejemplo: al empezar, ${inicio(ejemploMonedas)}`}
+          casilleros={ejemploMonedas.casilleros}
+          inicial={ejemploMonedas.inicial}
+          filas={seguir(ejemploMonedas)}
+        />
+      </div>
+      <div class="ejemplo-pie dorso-ejemplo-pie">
+        <ModeloCarpeta
+          casilleros={ejemploMonedas.casilleros}
+          inicial={ejemploMonedas.inicial}
+          filas={seguir(ejemploMonedas)}
+        />
+        <div class="ejemplo-notas">
+          <p class="nota">En la carpeta, una columna por casillero, como en el recuadro.</p>
+          <p class="destacado">En cada fila se anotan los dos casilleros, aunque uno no cambie.</p>
+        </div>
+      </div>
+      <p class="caso-texto">Cada programa empieza con {inicio(consignasDorso[0].programa)}.</p>
+      <div class="dorso-programas">
+        {consignasDorso.map((c) => (
+          <div class="programa-caja">
+            <ol class="programa">
+              {c.programa.instrucciones.map((instruccion) => <li>{instruccion.texto}</li>)}
+            </ol>
+            <p class="consigna-dorso"><span class="numero">{c.numero}.</span> {c.texto}</p>
+          </div>
+        ))}
+      </div>
+      <div class="comprobar">
+        <p class="comprobar-titulo">Para comprobar, cuando termines</p>
+        <ul class="comprobar-lista">
+          {consignasDorso.map((c) => (
+            <li><span class="numero">{c.numero}.</span> {c.respuesta[0].toUpperCase() + c.respuesta.slice(1)}.</li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  </div>
+
+  <p class="hoja-pie">
+    Para volver a mirar: pizarrón «Seguir un programa paso a paso» ·
+    aula.andresatencio.com
+  </p>
+</MaterialLayout>
+
+<script>
+  import { iniciarProbadores } from "../../scripts/probar-orden";
+  iniciarProbadores();
+</script>
+
+<style>
+  /* La hoja del folio (cabecera, aviso, papel y pie) sólo aparece al imprimir;
+     en pantalla está la actividad para probar órdenes. */
+  .hoja-cabecera,
+  .hoja-pie,
+  .consigna-general,
+  .papel {
+    display: none;
+  }
+
+  .hoja-pdf {
+    margin: -0.75rem 0 1.5rem;
+    padding: 0.6rem 0.9rem;
+    border-left: 4px solid var(--accent);
+    background: var(--board);
+    font-size: 1rem;
+  }
+
+  .hoja-pdf a {
+    color: var(--ink);
+    font-weight: 700;
+    text-decoration: none;
+    border-bottom: 2px solid var(--accent);
+  }
+
+  .hoja-pdf a:hover {
+    color: var(--accent);
+  }
+
+  .hoja-pdf-formato {
+    color: var(--muted);
+  }
+
+  .consigna-general {
+    margin: 0 0 1.25rem;
+    font-size: 1.1em;
+    font-weight: 700;
+  }
+
+  .referencia {
+    margin: 0 0 2rem;
+    padding: 0.9rem 1.1rem;
+    border: 2px solid var(--line);
+    background: var(--board);
+  }
+
+  .idea {
+    margin: 0 0 0.8rem;
+    font-weight: 700;
+  }
+
+  .referencia-columnas {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0.5rem 2rem;
+  }
+
+  .referencia-titulo {
+    margin: 0 0 0.3rem;
+    font-weight: 700;
+  }
+
+  .rutina {
+    margin: 0;
+    padding-left: 1.5rem;
+  }
+
+  .verbos {
+    display: grid;
+    gap: 0.3rem;
+    align-content: start;
+    margin: 0;
+  }
+
+  .verbos dt {
+    display: inline;
+    font-weight: 700;
+  }
+
+  .verbos dt::after {
+    content: ": ";
+  }
+
+  .verbos dd {
+    display: inline;
+    margin: 0;
+  }
+
+  .parte + .parte {
+    margin-top: 2.25rem;
+  }
+
+  .parte-titulo {
+    margin: 0 0 0.9rem;
+    padding-bottom: 0.45rem;
+    border-bottom: 2px solid var(--line);
+    font-size: clamp(1.15rem, 0.35vw + 1.05rem, 1.35rem);
+  }
+
+  .caso-texto {
+    margin: 0 0 0.9rem;
+  }
+
+  .pares {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem 1.5rem;
+    margin: 0 0 1rem;
+  }
+
+  .ejemplo-pie {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem 2rem;
+  }
+
+  .nota {
+    margin: 0 0 0.4rem;
+    font-size: 0.95em;
+  }
+
+  .ejemplo-notas {
+    flex: 1 1 16rem;
+  }
+
+  .ejemplo-notas .nota {
+    margin-bottom: 0.8rem;
+  }
+
+  .destacado {
+    margin: 0;
+    padding-left: 1rem;
+    border-left: 4px solid var(--emphasis);
+    font-weight: 700;
+  }
+
+  .programa-caja {
+    min-width: 0;
+    padding: 0.6rem 0.9rem;
+    border: 2px solid var(--line);
+  }
+
+  .programa-nombre {
+    margin: 0 0 0.3rem;
+    font-weight: 700;
+  }
+
+  .programa {
+    margin: 0;
+    padding-left: 1.6rem;
+    font-weight: 700;
+  }
+
+  .consignas {
+    margin: 0;
+    padding-left: 1.8rem;
+  }
+
+  .consignas li + li {
+    margin-top: 0.5rem;
+  }
+
+  .consignas li::marker {
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .pausa {
+    margin: 0.9rem 0;
+    padding: 0.5rem 0.9rem;
+    border: 2px dashed var(--accent);
+    font-weight: 700;
+  }
+
+  .verbos--dorso {
+    margin: 0 0 1rem;
+  }
+
+  .dorso-ejemplo {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 1rem 2rem;
+    margin: 0 0 1rem;
+  }
+
+  .dorso-ejemplo > :first-child {
+    flex: 1 1 22rem;
+  }
+
+  .dorso-ejemplo-pie {
+    margin: 0 0 1rem;
+  }
+
+  .dorso-programas {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem 1.5rem;
+  }
+
+  .consigna-dorso {
+    margin: 0.5rem 0 0;
+  }
+
+  .consigna-dorso .numero {
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  /* Al pie del dorso, separadas de las consignas, para comprobar al final. */
+  .comprobar {
+    margin: 1.5rem 0 0;
+    padding: 0.6rem 0.9rem;
+    border: 2px dashed var(--line);
+  }
+
+  .comprobar-titulo {
+    margin: 0 0 0.3rem;
+    font-weight: 700;
+  }
+
+  .comprobar-lista {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.2rem 1.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .comprobar-lista .numero {
+    font-weight: 700;
+  }
+
+  /* Probar órdenes, en pantalla. */
+  .web [hidden] {
+    display: none !important;
+  }
+
+  .web-intro {
+    margin: 0 0 2rem;
+  }
+
+  .web-intro a {
+    color: var(--ink);
+    font-weight: 700;
+    border-bottom: 2px solid var(--accent);
+    text-decoration: none;
+  }
+
+  .para-seguir {
+    color: var(--muted);
+  }
+
+  .verbos--probador {
+    margin: 0 0 1rem;
+  }
+
+  .probador-cuerpo {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 1rem 1.75rem;
+    align-items: start;
+  }
+
+  .probador-subtitulo {
+    margin: 0 0 0.4rem;
+    font-weight: 700;
+  }
+
+  .orden {
+    display: grid;
+    gap: 0.4rem;
+    margin: 0 0 1rem;
+    padding: 0;
+    list-style: none;
+  }
+
+  .orden-item {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem 0.6rem;
+    padding: 0.45rem 0.6rem;
+    border: 2px solid var(--line);
+    background: var(--board);
+  }
+
+  .orden-item.fija {
+    border-style: dashed;
+  }
+
+  .orden-numero {
+    font-weight: 700;
+  }
+
+  .orden-texto {
+    flex: 1 1 10rem;
+    font-weight: 700;
+  }
+
+  .orden-fija {
+    color: var(--muted);
+    font-size: 0.85em;
+  }
+
+  .orden-botones {
+    display: flex;
+    gap: 0.35rem;
+  }
+
+  .probador button {
+    min-height: 2.5rem;
+    padding: 0.35rem 0.7rem;
+    border: 2px solid var(--accent);
+    border-radius: 0;
+    background: var(--accent);
+    color: var(--board);
+    font: inherit;
+    font-size: 0.9em;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .orden-botones button,
+  .probador [data-reiniciar] {
+    background: transparent;
+    color: var(--accent);
+  }
+
+  .probador button:disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
+
+  .prediccion {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem 0.6rem;
+    font-weight: 700;
+  }
+
+  .prediccion input {
+    width: 5em;
+    min-height: 2.5rem;
+    padding: 0.3rem 0.5rem;
+    border: 2px solid var(--line);
+    background: var(--board);
+    color: var(--ink);
+    font: inherit;
+  }
+
+  .probador .controles {
+    margin-top: 0.6rem;
+  }
+
+  .paso {
+    margin: 0 0 0.4rem;
+    font-size: 0.9em;
+  }
+
+  .botones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .probador :global(tr.pendiente th) {
+    color: var(--muted);
+  }
+
+  .probador :global(tr.actual) {
+    background: color-mix(in srgb, var(--accent) 10%, var(--board));
+  }
+
+  .devolucion:not(:empty) {
+    margin: 1rem 0 0;
+    padding: 0.6rem 0.9rem;
+    border-left: 4px solid var(--emphasis);
+  }
+
+  .devolucion :global(p) {
+    margin: 0.2rem 0;
+  }
+
+  .desafios,
+  .historial-caja {
+    margin: 1rem 0 0;
+  }
+
+  .desafios ul {
+    display: grid;
+    gap: 0.3rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .marca {
+    display: inline-block;
+    min-width: 5.5em;
+    margin-right: 0.4rem;
+    padding: 0 0.4rem;
+    border: 1.5px solid var(--line);
+    color: var(--muted);
+    font-size: 0.85em;
+    font-weight: 700;
+    text-align: center;
+  }
+
+  .desafios :global(li.cumplido .marca) {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: var(--board);
+  }
+
+  .historial {
+    margin: 0;
+    padding-left: 1.6rem;
+  }
+
+  .historial:empty::before {
+    content: "Todavía ninguno.";
+    margin-left: -1.6rem;
+    color: var(--muted);
+  }
+
+  .sin-js {
+    margin: 1rem 0 0;
+    color: var(--muted);
+  }
+
+  @media (max-width: 44rem) {
+    .referencia-columnas,
+    .pares,
+    .dorso-programas,
+    .probador-cuerpo,
+    .comprobar-lista {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* Una hoja oficio (216 × 356 mm) doble faz, en blanco y negro, para un
+     folio: no hay lugar para escribir. Frente: núcleo; dorso: Para seguir. */
+  @page {
+    size: 216mm 356mm;
+    margin: 9mm 15mm 10mm;
+  }
+
+  @media print {
+    :global(body),
+    :global(.material) {
+      color: #000;
+      font-size: 12pt;
+      line-height: 1.32;
+    }
+
+    :global(.material > .apertura) {
+      display: none;
+    }
+
+    .hoja-cabecera {
+      display: block;
+      margin: 0 0 3mm;
+      padding-bottom: 1.5mm;
+      border-bottom: 1.5pt solid #000;
+    }
+
+    .hoja-ubicacion {
+      margin: 0;
+      font-size: 8.5pt;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .hoja-titulo {
+      margin: 0.5mm 0 0;
+      font-size: 17pt;
+      font-weight: 700;
+      line-height: 1.15;
+    }
+
+    .hoja-pdf,
+    .web {
+      display: none !important;
+    }
+
+    .papel {
+      display: block;
+    }
+
+    .consigna-general {
+      display: block;
+      margin: 0 0 2.5mm;
+      font-size: 12pt;
+    }
+
+    .referencia {
+      margin: 0 1pt 3mm 0;
+      padding: 2mm 3.5mm;
+      border: 1pt solid #000;
+      background: none;
+      break-inside: avoid;
+    }
+
+    .idea {
+      margin-bottom: 1.5mm;
+    }
+
+    .referencia-columnas {
+      gap: 0 6mm;
+    }
+
+    .parte + .parte {
+      margin-top: 3.5mm;
+    }
+
+    .parte-titulo {
+      margin: 0 0 2mm;
+      padding-bottom: 0.8mm;
+      border-bottom: 1pt solid #000;
+      font-size: 11.5pt;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .caso-texto {
+      margin: 0 0 2mm;
+    }
+
+    .pares {
+      gap: 2mm 6mm;
+      margin: 0 1pt 2.5mm 0;
+    }
+
+    .ejemplo-pie {
+      gap: 2mm 6mm;
+    }
+
+    .nota {
+      margin-bottom: 1mm;
+      font-size: 10pt;
+    }
+
+    .ejemplo-notas .nota {
+      margin-bottom: 2.5mm;
+    }
+
+    .destacado {
+      padding-left: 3mm;
+      border-left: 2pt solid #000;
+    }
+
+    .programa-caja {
+      padding: 1.5mm 3mm;
+      border: 1pt solid #000;
+      break-inside: avoid;
+    }
+
+    .programa-nombre {
+      margin-bottom: 0.8mm;
+    }
+
+    .programa {
+      padding-left: 6mm;
+    }
+
+    .consignas {
+      padding-left: 7mm;
+    }
+
+    .consignas li + li {
+      margin-top: 1.2mm;
+    }
+
+    .consignas li::marker {
+      color: #000;
+    }
+
+    .pausa {
+      margin: 2.5mm 1pt 2.5mm 0;
+      padding: 1.2mm 3mm;
+      border: 1pt dashed #000;
+    }
+
+    .dorso {
+      break-before: page;
+      margin-top: 0 !important;
+    }
+
+    .verbos--dorso {
+      margin-bottom: 3mm;
+    }
+
+    .dorso-ejemplo {
+      gap: 2mm 8mm;
+      margin-bottom: 3mm;
+    }
+
+    .dorso-ejemplo-pie {
+      margin-bottom: 4mm;
+    }
+
+    .dorso-programas {
+      gap: 5mm 6mm;
+      margin-right: 1pt;
+    }
+
+    .consigna-dorso {
+      margin-top: 1.5mm;
+    }
+
+    .consigna-dorso .numero {
+      color: #000;
+    }
+
+    .comprobar {
+      margin: 6mm 1pt 0 0;
+      padding: 2mm 3.5mm;
+      border: 1pt dashed #000;
+      break-inside: avoid;
+    }
+
+    .comprobar-titulo {
+      margin-bottom: 1mm;
+    }
+
+    .comprobar-lista {
+      gap: 0.5mm 6mm;
+      font-size: 10.5pt;
+    }
+
+    .hoja-pie {
+      display: block;
+      margin: 4mm 0 0;
+      padding-top: 1mm;
+      border-top: 0.5pt solid #000;
+      font-size: 8.5pt;
+    }
+  }
+</style>

@@ -1,0 +1,107 @@
+---
+/*
+  Cómo se anota un seguimiento en la carpeta: sólo el número de cada
+  instrucción y cómo quedan los casilleros, sin copiar el texto. Sale de la
+  misma ejecución que la tabla, para que el modelo no pueda desencontrarse.
+*/
+import { formatear, type Fila, type Memoria } from "../data/actividad-cuando-importa-el-orden";
+
+interface Props {
+  casilleros: readonly string[];
+  inicial: Memoria;
+  filas: readonly Fila[];
+  titulo?: string;
+}
+
+const { casilleros, inicial, filas, titulo } = Astro.props;
+const mostro = filas.findLast((fila) => fila.muestra !== undefined)?.muestra;
+const valores = (memoria: Memoria) => casilleros.map((c) => formatear(memoria[c] ?? 0));
+const conNombres = casilleros.length > 1;
+---
+
+<figure class="carpeta" style={`--columnas: ${casilleros.length}`}>
+  {titulo && <figcaption>{titulo}</figcaption>}
+  <div class="renglones" role="table" aria-label="Ejemplo de cómo anotar en la carpeta">
+    {conNombres && (
+      <div class="renglon renglon--nombres" role="row">
+        <span role="columnheader"></span>
+        {casilleros.map((c) => <span role="columnheader">{c}</span>)}
+      </div>
+    )}
+    <div class="renglon" role="row">
+      <span role="rowheader">Al empezar</span>
+      {valores(inicial).map((v) => <span role="cell">{v}</span>)}
+    </div>
+    {filas.map((fila) => (
+      <div class="renglon" role="row">
+        <span role="rowheader">{fila.numero}</span>
+        {valores(fila.memoria).map((v) => <span role="cell">{v}</span>)}
+      </div>
+    ))}
+    {mostro !== undefined && (
+      <div class="renglon renglon--mostro" role="row">
+        <span role="rowheader">Mostró</span>
+        <span role="cell">{formatear(mostro)}</span>
+      </div>
+    )}
+  </div>
+</figure>
+
+<style>
+  .carpeta {
+    display: inline-block;
+    margin: 0;
+    padding: 0.55rem 1rem 0.65rem;
+    border: 2px dashed var(--line);
+    background: var(--board);
+  }
+
+  figcaption {
+    margin: 0 0 0.3rem;
+    font-size: 0.85em;
+    font-weight: 700;
+  }
+
+  .renglones {
+    display: grid;
+    grid-template-columns: auto repeat(var(--columnas), minmax(2.6em, auto));
+    gap: 0.1rem 1.1rem;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.35;
+  }
+
+  .renglon {
+    display: contents;
+  }
+
+  .renglon > span {
+    font-weight: 700;
+  }
+
+  .renglon > span:not(:first-child) {
+    text-align: right;
+  }
+
+  .renglon--nombres > span {
+    font-size: 0.78em;
+    letter-spacing: 0.03em;
+  }
+
+  .renglon--mostro > span {
+    padding-top: 0.3rem;
+  }
+
+  @media print {
+    .carpeta {
+      padding: 1.2mm 3.5mm 1.5mm;
+      border: 0.75pt dashed #000;
+      background: none;
+      break-inside: avoid;
+    }
+
+    .renglones {
+      gap: 0 4mm;
+      line-height: 1.25;
+    }
+  }
+</style>

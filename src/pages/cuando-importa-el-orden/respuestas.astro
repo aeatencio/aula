@@ -1,0 +1,285 @@
+---
+import TablaSeguimiento from "../../components/TablaSeguimiento.astro";
+import {
+  cierre,
+  preguntaSumas,
+  verbos,
+  type Programa,
+} from "../../data/actividad-cuando-importa-el-orden";
+import { serieCuandoImportaElOrden } from "../../data/serie-cuando-importa-el-orden";
+import MaterialLayout from "../../layouts/MaterialLayout.astro";
+
+const material = "Cuándo importa el orden";
+const pdf =
+  "/materiales/cuando-importa-el-orden/cuando-importa-el-orden-respuestas-oficio-216x356.pdf";
+
+/** Medio oficio cada uno: dos por hoja. */
+const PAPELITOS = 2;
+
+const enBlanco = (programa: Programa) =>
+  programa.instrucciones.map((instruccion, indice) => ({ numero: indice + 1, texto: instruccion.texto }));
+
+const tablas = [
+  { titulo: "Primer programa", programa: cierre.primero },
+  { titulo: "Segundo programa", programa: cierre.segundo },
+];
+---
+
+<MaterialLayout
+  title="Papelito de cierre"
+  description="Papelito individual de «Cuándo importa el orden», para resolver al final de la clase sin la hoja: seguir dos programas con una tabla, decir qué número se duplica en cada uno y si dos sumas en distinto orden muestran lo mismo. Dos por hoja oficio."
+  tipo="Para imprimir"
+  bajada="Para resolver solo al final de la clase y entregar"
+  serie={serieCuandoImportaElOrden}
+  tituloPizarrones="Para recuperar"
+  imprimirPie={false}
+>
+  <p class="aviso">
+    Dos papelitos por hoja oficio (216 × 356 mm), para cortar por la línea
+    punteada. Se reparten al final, después de juntar las hojas; cada
+    estudiante lo resuelve solo y lo entrega.{" "}
+    <a href={pdf} type="application/pdf">Papelitos en PDF</a>
+  </p>
+
+  <div class="hoja" aria-label={`${PAPELITOS} papelitos recortables`}>
+    {Array.from({ length: PAPELITOS }, () => (
+      <section class="papelito">
+        <p class="titulo">{material} · Papelito de cierre</p>
+        <div class="campos">
+          <p class="campo campo--nombre"><span>Nombre y apellido</span><span class="linea"></span></p>
+          <p class="campo"><span>Curso</span><span class="linea"></span></p>
+          <p class="campo"><span>Fecha</span><span class="linea"></span></p>
+        </div>
+
+        <p class="indicacion">
+          Resolvé solo. En cada tabla, anotá cuánto vale PUNTOS después de cada
+          instrucción y qué mostró la pantalla.
+        </p>
+        <p class="recordatorio">
+          {verbos.map(({ verbo, explicacion }) => (
+            <span><strong>{verbo}:</strong> {explicacion}</span>
+          ))}
+        </p>
+
+        <div class="tablas">
+          {tablas.map(({ titulo, programa }) => (
+            <TablaSeguimiento
+              variante="papelito"
+              titulo={titulo}
+              casilleros={programa.casilleros}
+              inicial={programa.inicial}
+              filas={enBlanco(programa)}
+            />
+          ))}
+        </div>
+
+        <p class="pregunta">
+          <span>¿Qué número se duplica en el primer programa?</span>
+          <span class="casilla"></span>
+          <span>¿Y en el segundo?</span>
+          <span class="casilla"></span>
+        </p>
+
+        <div class="sumas">
+          <p class="pregunta-sumas">{preguntaSumas}</p>
+          <div class="sumas-programas">
+            {cierre.sumas.map((programa) => (
+              <ol>
+                {programa.instrucciones.map((instruccion) => <li>{instruccion.texto}</li>)}
+              </ol>
+            ))}
+          </div>
+          <p class="marcar">Rodeá: <span>Sí</span> <span>No</span></p>
+        </div>
+      </section>
+    ))}
+  </div>
+</MaterialLayout>
+
+<style>
+  .aviso {
+    margin: 0 0 1.5rem;
+    color: var(--muted);
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  .aviso a {
+    color: var(--ink);
+    font-weight: 700;
+    text-decoration: none;
+    border-bottom: 2px solid var(--accent);
+  }
+
+  /* La hoja usa medidas físicas para que pantalla e impresión coincidan. */
+  .hoja {
+    width: 200mm;
+    max-width: 100%;
+    overflow-x: auto;
+    border-top: 0.75pt dashed #000;
+    background: #fff;
+    color: #000;
+  }
+
+  .papelito {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 2.6mm;
+    width: 200mm;
+    height: 169mm;
+    padding: 5mm 6mm;
+    border-bottom: 0.75pt dashed #000;
+    font-size: 10.5pt;
+    line-height: 1.25;
+  }
+
+  .papelito p {
+    margin: 0;
+  }
+
+  .titulo {
+    font-size: 8pt;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .campos {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 5mm;
+  }
+
+  .campo {
+    display: flex;
+    align-items: flex-end;
+    gap: 2mm;
+    white-space: nowrap;
+  }
+
+  .linea {
+    flex: 1;
+    height: 7mm;
+    border-bottom: 0.75pt solid #000;
+  }
+
+  .indicacion {
+    font-weight: 700;
+  }
+
+  .recordatorio {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 5mm;
+    font-size: 9pt;
+  }
+
+  .tablas {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6mm;
+  }
+
+  /* El componente usa colores de pantalla; en el papelito, siempre negro. */
+  .tablas :global(th),
+  .tablas :global(td) {
+    border-color: #000;
+    color: #000;
+  }
+
+  .tablas :global(.seguimiento) {
+    font-size: 10pt;
+  }
+
+  .tablas :global(.seguimiento tbody td),
+  .tablas :global(.seguimiento tbody th),
+  .tablas :global(.seguimiento tfoot td),
+  .tablas :global(.seguimiento tfoot th) {
+    height: 9mm;
+  }
+
+  .tablas :global(.seguimiento thead th:not(:first-child)),
+  .tablas :global(.seguimiento tbody td) {
+    width: 20mm;
+  }
+
+  .pregunta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2mm 3mm;
+    font-weight: 600;
+  }
+
+  .casilla {
+    display: inline-block;
+    width: 16mm;
+    height: 9mm;
+    border: 1pt solid #000;
+  }
+
+  .pregunta .casilla {
+    margin-right: 4mm;
+  }
+
+  .sumas {
+    display: grid;
+    gap: 1.5mm;
+  }
+
+  .pregunta-sumas {
+    font-weight: 600;
+  }
+
+  .sumas-programas {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6mm;
+  }
+
+  .sumas-programas ol {
+    margin: 0;
+    padding: 1.5mm 3mm 1.5mm 8mm;
+    border: 0.75pt solid #000;
+    font-weight: 600;
+  }
+
+  .marcar {
+    display: flex;
+    gap: 6mm;
+    align-items: center;
+    font-weight: 600;
+  }
+
+  .marcar span {
+    padding: 0.5mm 3mm;
+    font-weight: 700;
+  }
+
+  /* Una hoja oficio: dos papelitos de medio oficio. */
+  @page {
+    size: 216mm 356mm;
+    margin: 8mm;
+  }
+
+  @media print {
+    :global(.material > .apertura),
+    .aviso {
+      display: none;
+    }
+
+    :global(.material) {
+      max-width: none;
+    }
+
+    .hoja {
+      max-width: none;
+      overflow: visible;
+    }
+
+    .papelito {
+      break-inside: avoid;
+    }
+  }
+</style>

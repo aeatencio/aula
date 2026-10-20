@@ -1,0 +1,190 @@
+---
+import TablaSeguimiento from "../../components/TablaSeguimiento.astro";
+import {
+  casoEjemplo,
+  ejemplo,
+  formatear,
+  mostro,
+  preguntaInicial,
+  rutina,
+  seguir,
+  valorAntesDe,
+  verbos,
+} from "../../data/actividad-cuando-importa-el-orden";
+import PizarronLayout from "../../layouts/PizarronLayout.astro";
+
+/*
+  Lo que no es control de la web (ejecutar, volver a empezar, el paso actual)
+  es lo que se escribe en el pizarrón y se copia en la carpeta: líneas breves.
+  Los nombres son los del ejemplo resuelto de la hoja; «A» y «B» son, en la
+  hoja, los programas que se resuelven después.
+*/
+const ejecuciones = [
+  { titulo: "Primero sumar", programa: ejemplo.primero },
+  { titulo: "Primero duplicar", programa: ejemplo.segundo },
+];
+---
+
+<PizarronLayout
+  title="Seguir un programa paso a paso"
+  description="Dos programas con las mismas instrucciones en distinto orden: predecí qué muestran, ejecutá una instrucción por vez y compará los valores en una tabla de seguimiento."
+  categoria="Pensamiento Computacional"
+  encabezado="simple-grande"
+>
+  <p class="pregunta">{preguntaInicial}</p>
+  <p class="caso">{casoEjemplo}</p>
+
+  <noscript>
+    <style is:inline>
+      [data-ejecucion] .valor { visibility: visible !important; }
+    </style>
+  </noscript>
+
+  <div class="ejecuciones">
+    {ejecuciones.map(({ titulo, programa }, indice) => (
+      <section class="ejecucion" data-ejecucion aria-labelledby={`programa-${indice}`}>
+        <h2 id={`programa-${indice}`}>{titulo}</h2>
+        <TablaSeguimiento
+          casilleros={programa.casilleros}
+          inicial={programa.inicial}
+          filas={seguir(programa)}
+        />
+        <div class="controles" hidden>
+          <p class="paso" role="status" aria-atomic="true"></p>
+          <div class="botones">
+            <button type="button" data-siguiente>Ejecutar instrucción 1</button>
+            <button type="button" data-reiniciar disabled>Volver a empezar</button>
+          </div>
+        </div>
+      </section>
+    ))}
+  </div>
+
+  <p class="leyenda" hidden>Los valores subrayados cambiaron en el último paso.</p>
+
+  <section class="comparacion" data-comparacion aria-labelledby="comparacion-titulo">
+    <h2 id="comparacion-titulo">Al comparar</h2>
+    <ul class="resultados">
+      {ejecuciones.map(({ titulo, programa }) => (
+        <li>
+          {titulo} → muestra {formatear(mostro(programa)!)}{" "}
+          <span class="duplica">(duplica {formatear(valorAntesDe(programa, "Duplicar"))})</span>
+        </li>
+      ))}
+    </ul>
+    <p>Mismo valor inicial y mismas instrucciones, en distinto orden.</p>
+    <p>«Duplicar» usa el valor que hay en ese momento.</p>
+    <p class="conclusion">El orden de las instrucciones puede cambiar lo que se muestra.</p>
+  </section>
+
+  <section class="referencia" aria-labelledby="tabla-titulo">
+    <h2 id="tabla-titulo">Cómo seguir un programa</h2>
+    <ol class="rutina">
+      {rutina.map((paso) => <li>{paso}</li>)}
+    </ol>
+    <dl>
+      {verbos.map(({ verbo, explicacion }) => (
+        <div><dt>{verbo}</dt><dd>{explicacion}</dd></div>
+      ))}
+    </dl>
+    <h3>La tabla de seguimiento</h3>
+    <ul class="tabla-claves">
+      <li>Cada fila: cuánto vale PUNTOS después de esa instrucción.</li>
+      <li>Abajo: lo que mostró la pantalla.</li>
+    </ul>
+  </section>
+
+  <p class="continuar">
+    Para seguir comparando: <a href="/cuando-importa-el-orden/">Cuándo importa el orden</a>.
+  </p>
+</PizarronLayout>
+
+<script>
+  import { iniciarSeguimiento } from "../../scripts/seguir-programa";
+  iniciarSeguimiento();
+</script>
+
+<style>
+  .pregunta {
+    margin: 0 0 1rem;
+    padding-left: 1rem;
+    border-left: 4px solid var(--emphasis);
+    font-size: clamp(1.2rem, 0.55vw + 1.05rem, 1.5rem);
+    font-weight: 700;
+    line-height: 1.35;
+  }
+
+  .caso { margin: 0 0 1.4rem; }
+
+  .ejecuciones {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem;
+  }
+
+  .ejecucion { min-width: 0; }
+  h2 { margin: 0 0 0.4rem; font-size: 1.1em; line-height: 1.3; }
+  .controles[hidden], .leyenda[hidden] { display: none; }
+  .paso { margin: 0.7rem 0 0.4rem; font-size: 0.9em; }
+  .botones { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+  button {
+    min-height: 2.75rem;
+    padding: 0.5rem 0.75rem;
+    border: 2px solid var(--accent);
+    border-radius: 0;
+    background: var(--accent);
+    color: var(--board);
+    font: inherit;
+    font-size: 0.9em;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  [data-reiniciar] { background: transparent; color: var(--accent); }
+  button:disabled { opacity: 0.5; cursor: default; }
+  /* Ocultar desde el primer render, antes de que se ejecute el módulo. */
+  .ejecucion :global(.valor) { visibility: hidden; }
+  .ejecucion[data-iniciada] :global(tr:not(.pendiente) .valor) { visibility: visible; }
+  .ejecucion :global(tr.actual) { background: color-mix(in srgb, var(--accent) 10%, var(--board)); }
+  .ejecucion :global(tr.actual th) { box-shadow: inset 3px 0 var(--accent); }
+  .ejecucion :global(tr.actual td[data-cambio] .valor) { text-decoration: underline; text-underline-offset: 0.2em; }
+  .leyenda { margin: 0.9rem 0 0; color: var(--muted); font-size: 0.9em; }
+  .comparacion { margin: 1.5rem 0; padding: 0.2rem 0 0.2rem 1rem; border-left: 4px solid var(--emphasis); }
+  .comparacion p, .resultados { margin: 0.45rem 0; }
+  .resultados { padding-left: 1.3rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .comparacion .conclusion { font-weight: 700; }
+  .duplica { font-weight: 400; }
+  .comparacion[hidden] { display: none; }
+
+  .referencia { margin-top: 1.5rem; padding-top: 1rem; border-top: 2px solid var(--line); }
+  .referencia p { margin: 0.6rem 0; }
+  .rutina { margin: 0.6rem 0; padding-left: 1.6rem; }
+  h3 { margin: 1.1rem 0 0.4rem; font-size: 1em; }
+  .tabla-claves { margin: 0.4rem 0; padding-left: 1.3rem; }
+  dl { display: grid; gap: 0.4rem; margin: 1rem 0; }
+  dl > div { display: flex; flex-wrap: wrap; gap: 0 0.4rem; }
+  dt { font-weight: 700; }
+  dt::after { content: ":"; }
+  dd { margin: 0; }
+  .continuar { margin: 1.5rem 0 0; }
+
+  @media (max-width: 60rem) {
+    .ejecuciones { grid-template-columns: 1fr; gap: 1.75rem; }
+  }
+
+  @media (max-width: 30rem) {
+    .ejecucion :global(.seguimiento) { font-size: 0.8em; }
+    .ejecucion :global(th), .ejecucion :global(td) { padding: 0.35rem 0.25rem; }
+  }
+
+  @media print {
+    .controles, .leyenda, .continuar { display: none; }
+    .ejecucion :global(.valor) { visibility: visible; }
+    .ejecucion :global(tr.actual) { background: none; }
+    .ejecucion :global(tr.actual th) { box-shadow: none; }
+    .ejecucion :global(tr.actual td[data-cambio] .valor) { text-decoration: none; }
+    .comparacion[hidden] { display: block; }
+    .ejecucion { break-inside: avoid; }
+  }
+</style>
