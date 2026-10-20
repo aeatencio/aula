@@ -186,8 +186,15 @@ export const casoMonedas =
 
 export type ConsignaDorso = Consigna & {
   programa: Programa;
-  /** Lo que tiene que quedar; se imprime invertido al pie del dorso. */
+  /** Lo que tiene que quedar; se imprime al pie del dorso, para comprobar. */
   respuesta: string;
+};
+
+/** Ejemplo resuelto del dorso: cómo se sigue un programa con dos casilleros. */
+export const ejemploMonedas: Programa = {
+  casilleros: ["PUNTOS", "MONEDAS"],
+  inicial: { PUNTOS: 1, MONEDAS: 2 },
+  instrucciones: [sumarleMonedas, anotar0, mostrar],
 };
 
 const nivel = conMonedas(sumarleMonedas, anotar0, duplicar, mostrar);
@@ -260,5 +267,81 @@ export const erroresCierre: readonly { si: string; sugiere: string }[] = [
   {
     si: "«No» en las dos sumas",
     sugiere: "generaliza: cree que cambiar el orden siempre cambia lo que se muestra.",
+  },
+];
+
+/* ------------------------------------------------------------------------ */
+/* Web: probar órdenes                                                      */
+/* ------------------------------------------------------------------------ */
+
+/*
+  En pantalla, la actividad no reproduce la hoja: el estudiante predice qué
+  mostrará un programa, lo ejecuta paso a paso, cambia el orden de las
+  instrucciones y compara. Cada probador empieza con un programa; las
+  instrucciones fijas (Mostrar al final, en el frente) no se mueven.
+*/
+
+export type Desafio = {
+  texto: string;
+  cumple: (resultado: { muestra?: number; memoria: Memoria }) => boolean;
+};
+
+export type Probador = {
+  id: string;
+  titulo: string;
+  consigna: string;
+  programa: Programa;
+  /** Cuántas instrucciones del final quedan fijas. */
+  fijasAlFinal: number;
+  /** Instrucciones cuyo valor usado se informa al terminar: «Cuando se ejecutó X, C valía n». */
+  usos: readonly { instruccion: string; casillero: string }[];
+  desafios: readonly Desafio[];
+};
+
+export const probadores: readonly Probador[] = [
+  {
+    id: "arreglar",
+    titulo: "Arreglá el programa",
+    consigna:
+      "Al terminar un nivel se quiere sumar 3 puntos de premio y después duplicar todo. Este programa tiene el orden cambiado: predecí qué muestra, ejecutalo y después cambiá el orden para que haga lo que se quería.",
+    programa: programaB,
+    fijasAlFinal: 1,
+    usos: [{ instruccion: duplicar.texto, casillero: "PUNTOS" }],
+    desafios: [
+      {
+        texto: "Que sume los 3 puntos antes de duplicar.",
+        cumple: (r) => r.muestra === mostro(programaA),
+      },
+    ],
+  },
+  {
+    id: "siempre-cambia",
+    titulo: "¿Siempre cambia?",
+    consigna:
+      "Ahora el programa suma dos veces. Probá los dos órdenes y compará: ¿cambia lo que se muestra? ¿Y los valores por los que pasa PUNTOS?",
+    programa: programaC,
+    fijasAlFinal: 1,
+    usos: [],
+    desafios: [],
+  },
+  {
+    id: "dos-casilleros",
+    titulo: "Dos casilleros",
+    consigna:
+      "Ahora el juego también guarda MONEDAS. Podés mover todas las instrucciones, también «Mostrar». Buscá un orden para cada desafío.",
+    programa: nivel,
+    fijasAlFinal: 0,
+    usos: [
+      { instruccion: sumarleMonedas.texto, casillero: "MONEDAS" },
+      { instruccion: duplicar.texto, casillero: "PUNTOS" },
+    ],
+    desafios: [
+      { texto: "Que muestre 14.", cumple: (r) => r.muestra === 14 },
+      { texto: "Que muestre 8.", cumple: (r) => r.muestra === 8 },
+      {
+        texto: "Que la pantalla muestre 7, pero PUNTOS termine valiendo 14.",
+        cumple: (r) => r.muestra === 7 && r.memoria.PUNTOS === 14,
+      },
+    ],
   },
 ];

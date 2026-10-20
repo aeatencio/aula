@@ -27,7 +27,7 @@ export const serieCuandoImportaElOrden = {
       href: "/cuando-importa-el-orden/",
       title: "Cuándo importa el orden",
       tipo: "Actividad",
-      para: "para leer en un folio y resolver en la carpeta",
+      para: "para probar órdenes en pantalla, o en papel con la carpeta",
     },
   ] satisfies MaterialSerie[],
   pizarrones: [

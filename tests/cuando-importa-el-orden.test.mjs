@@ -5,6 +5,7 @@ import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 import { JSDOM } from "jsdom";
 import { iniciarSeguimiento } from "../src/scripts/seguir-programa.ts";
+import { iniciarProbadores } from "../src/scripts/probar-orden.ts";
 import { recorridos } from "../src/data/recorridos.ts";
 import { serieCuandoImportaElOrden } from "../src/data/serie-cuando-importa-el-orden.ts";
 import {
@@ -13,10 +14,12 @@ import {
   consignasDorso,
   consignasFrente,
   ejemplo,
+  ejemploMonedas,
   ideaInicial,
   mostro,
   preguntaInicial,
   preguntaSumas,
+  probadores,
   programaA,
   programaB,
   programaC,
@@ -80,6 +83,9 @@ function ejecutar(programa) {
 }
 
 const frente = { programaA, programaB, programaC, programaD, ...ejemplo };
+
+const permutaciones = (xs) =>
+  xs.length <= 1 ? [xs] : xs.flatMap((x, i) => permutaciones([...xs.slice(0, i), ...xs.slice(i + 1)]).map((r) => [x, ...r]));
 
 /** Sólo secuencia y orden: ni condiciones ni repeticiones. */
 const ADELANTA = /\bentonces\b|repet|\bpor cada\b|\bcada vez\b|\bhasta que\b|\bmientras que\b/i;
@@ -150,11 +156,16 @@ describe("Cuándo importa el orden: programas y clave", () => {
   });
 });
 
-describe("Cuándo importa el orden: hoja en el folio", () => {
+describe("Cuándo importa el orden: hoja en el folio (impresión)", () => {
   const html = () => readDist("cuando-importa-el-orden", "index.html");
+  /** Lo que se imprime: la referencia común y la hoja de papel. */
+  const papel = () => {
+    const { document } = new JSDOM(html()).window;
+    return { document, texto: normalizar(`${document.querySelector(".referencia").textContent} ${document.querySelector(".papel").textContent}`) };
+  };
 
   it("muestra los programas y las consignas, en su orden de ejecución y sin la clave", () => {
-    const texto = textoVisible(html());
+    const { texto } = papel();
     for (const c of consignasFrente) assert.ok(texto.includes(normalizar(c.texto)), `consigna ${c.numero}`);
     for (const c of consignasDorso) assert.ok(texto.includes(normalizar(c.texto)), `consigna ${c.numero}`);
     for (const programa of [...Object.values(frente), ...consignasDorso.map((c) => c.programa)]) {
@@ -162,38 +173,41 @@ describe("Cuándo importa el orden: hoja en el folio", () => {
     }
     for (const { verbo } of verbos) assert.ok(texto.includes(verbo));
     for (const paso of rutina) assert.ok(texto.includes(paso));
-    assert.doesNotMatch(texto, NOTACION_ORDEN);
-    assert.ok(!/\bClave\b/.test(texto));
+    assert.doesNotMatch(textoVisible(html()), NOTACION_ORDEN);
+    assert.ok(!/\bClave\b/.test(textoVisible(html())));
     assert.ok(!texto.includes(normalizar(conclusion)), "la conclusión se escribe en el pizarrón después de comparar");
   });
 
   it("no se escribe: avisa que todo va a la carpeta y no tiene casilleros en blanco", () => {
-    const { document } = new JSDOM(html()).window;
+    const { document } = papel();
+    const hoja = document.querySelector(".papel");
     assert.match(document.querySelector(".consigna-general").textContent, /no se escribe.*carpeta/);
-    assert.equal(document.querySelectorAll(".linea, input, textarea, .casilla").length, 0);
-    const tablas = [...document.querySelectorAll("table.seguimiento")];
-    assert.equal(tablas.length, 2, "sólo el ejemplo resuelto");
+    assert.equal(hoja.querySelectorAll(".linea, input, textarea, .casilla").length, 0);
+    const tablas = [...hoja.querySelectorAll("table.seguimiento")];
+    assert.equal(tablas.length, 3, "los ejemplos resueltos: dos en el frente y uno con dos casilleros en el dorso");
     for (const tabla of tablas) {
       for (const celda of tabla.querySelectorAll("td")) assert.notEqual(celda.textContent.trim(), "", "tabla resuelta");
     }
-    assert.ok(document.querySelector(".carpeta"), "muestra cómo anotar en la carpeta");
+    assert.equal(hoja.querySelectorAll(".carpeta").length, 2, "muestra cómo anotar en la carpeta, con uno y con dos casilleros");
   });
 
   it("marca la pausa para comparar en común después de A y B", () => {
-    const texto = textoVisible(html());
+    const { texto } = papel();
     const pausa = texto.indexOf("comparamos A y B entre todos");
     assert.ok(pausa > texto.indexOf(normalizar(consignasFrente[2].texto)));
     assert.ok(pausa < texto.indexOf(normalizar(consignasFrente[3].texto)));
   });
 
-  it("el dorso «Para seguir» trae sus respuestas cabeza abajo para autocorregirse", () => {
-    const { document } = new JSDOM(html()).window;
-    const dorso = document.querySelector(".dorso");
+  it("el dorso «Para seguir» tiene un ejemplo con dos casilleros y respuestas para comprobar, sin texto rotado", () => {
+    const { document } = papel();
+    const dorso = document.querySelector(".papel .dorso");
     assert.match(dorso.querySelector("h2").textContent, /^Para seguir$/);
     assert.doesNotMatch(dorso.textContent, /avanzad|nivel [0-9]|difícil/i, "sin rótulos de nivel");
-    const respuestas = dorso.querySelector(".respuestas-dorso").textContent;
-    for (const c of consignasDorso) assert.ok(respuestas.includes(`${c.numero}: ${c.respuesta}`));
-    assert.match(cssDe(html()), /\.respuestas-dorso[^{]*span[^{]*\{[^}]*transform:rotate\(180deg\)/);
+    assert.deepEqual(ejecutar(ejemploMonedas).estados.map((e) => `${e.PUNTOS}/${e.MONEDAS}`), ["3/2", "3/0", "3/0"]);
+    const comprobar = normalizar(dorso.querySelector(".comprobar").textContent);
+    assert.match(comprobar, /^Para comprobar, cuando termines/);
+    for (const c of consignasDorso) assert.ok(comprobar.toLowerCase().includes(`${c.numero}. ${c.respuesta}.`.toLowerCase()), `respuesta ${c.numero}`);
+    assert.doesNotMatch(cssDe(html()), /rotate\(/, "nada de texto dado vuelta, ni en pantalla ni en papel");
   });
 
   it("un solo contexto y nada de condiciones ni repeticiones", () => {
@@ -208,12 +222,148 @@ describe("Cuándo importa el orden: hoja en el folio", () => {
     }
   });
 
-  it("se imprime en oficio doble faz: núcleo en el frente, «Para seguir» en el dorso", () => {
+  it("en pantalla se prueba; al imprimir sale la hoja, en oficio doble faz", () => {
     const css = cssDe(html());
     assert.match(css, /@page\{size:216mm 356mm/);
-    const impresion = css.slice(css.indexOf("@media print"));
+    // El bloque de impresión de esta página: el que oculta la actividad en pantalla.
+    const impresion = css.slice(css.search(/@media print\{(?:(?!@media)[\s\S])*\.web\[data-astro-cid-/));
+    assert.match(css, /\.papel\[data-astro-cid-[^\]]+\]\{display:none\}/, "en pantalla no se ve la hoja de papel");
+    assert.match(impresion, /\.web\[data-astro-cid-[^\]]+\]\{display:none!important/);
+    assert.match(impresion, /\.papel\[data-astro-cid-[^\]]+\]\{display:block\}/);
     assert.match(impresion, /\.hoja-pdf\[data-astro-cid-[^\]]+\][^{]*\{display:none!important/);
     assert.match(impresion, /\.dorso\[data-astro-cid-[^\]]+\]\{break-before:page/);
+  });
+});
+
+describe("Cuándo importa el orden: probar órdenes en pantalla", () => {
+  const html = () => readDist("cuando-importa-el-orden", "index.html");
+
+  function pagina() {
+    const { document, Event } = new JSDOM(html()).window;
+    iniciarProbadores(document);
+    const probador = (id) => {
+      const raiz = document.querySelector(`[data-probador="${id}"]`);
+      const q = (selector) => raiz.querySelector(selector);
+      return {
+        raiz,
+        q,
+        orden: () => [...raiz.querySelectorAll(".orden-texto")].map((e) => e.textContent),
+        predecir(valor) {
+          q("[data-prediccion]").value = valor;
+          q("[data-prediccion]").dispatchEvent(new Event("input"));
+        },
+        ejecutarTodo() {
+          while (!q("[data-siguiente]").disabled) q("[data-siguiente]").click();
+        },
+        mover(texto, direccion) {
+          const item = [...raiz.querySelectorAll("li[data-instruccion]")].find((li) => li.textContent.includes(texto));
+          item.querySelector(direccion === "subir" ? "[data-subir]" : "[data-bajar]").click();
+        },
+        devolucion: () => normalizar(q("[data-devolucion]").textContent),
+        historial: () => [...raiz.querySelectorAll("[data-historial] li")].map((li) => normalizar(li.textContent)),
+      };
+    };
+    return { document, probador };
+  }
+
+  it("tres probadores con el mismo juego que la hoja: arreglar B, dos sumas y, para seguir, dos casilleros", () => {
+    assert.deepEqual(probadores.map((p) => p.id), ["arreglar", "siempre-cambia", "dos-casilleros"]);
+    assert.equal(probadores[0].programa, programaB);
+    assert.equal(probadores[1].programa, programaC);
+    const { probador } = pagina();
+    assert.deepEqual(probador("arreglar").orden(), programaB.instrucciones.map((i) => i.texto));
+    for (const id of ["arreglar", "siempre-cambia"]) {
+      const fija = probador(id).raiz.querySelector("li.fija");
+      assert.match(fija.textContent, /Mostrar PUNTOS\./);
+      assert.equal(fija.querySelector("button"), null, "«Mostrar» queda al final en el núcleo");
+    }
+    assert.equal(probador("dos-casilleros").raiz.querySelectorAll("li.fija").length, 0, "para seguir, también se mueve «Mostrar»");
+  });
+
+  it("cada desafío se puede lograr con algún orden", () => {
+    for (const p of probadores) {
+      for (const desafio of p.desafios) {
+        const logrado = permutaciones(p.programa.instrucciones).some((instrucciones) => {
+          const r = ejecutar({ ...p.programa, instrucciones });
+          return desafio.cumple({ muestra: r.mostrado, memoria: r.estados.at(-1) });
+        });
+        assert.ok(logrado, desafio.texto);
+      }
+    }
+  });
+
+  it("sin predicción no se ejecuta; ejecutado, compara con la predicción y dice qué valor usó «Duplicar»", () => {
+    const { probador } = pagina();
+    const p = probador("arreglar");
+    assert.equal(p.q("[data-siguiente]").disabled, true);
+    assert.match(p.q("[role=status]").textContent, /Escribí tu predicción/);
+    p.predecir("14");
+    p.q("[data-siguiente]").click();
+    assert.equal(p.q("[data-prediccion]").readOnly, true, "la predicción no se cambia a mitad de camino");
+    p.ejecutarTodo();
+    const valores = [...p.raiz.querySelectorAll("tbody tr:not(.fila-inicial) td")].map((td) => td.textContent.trim());
+    assert.deepEqual(valores, ["8", "11", "11"]);
+    assert.equal(p.q("tfoot td").textContent.trim(), "11");
+    assert.match(p.devolucion(), /La pantalla mostró 11; tu predicción era 14/);
+    assert.match(p.devolucion(), /primera fila/);
+    assert.match(p.devolucion(), /Cuando se ejecutó «Duplicar PUNTOS», PUNTOS valía 4\./);
+    assert.match(p.q("[data-desafio]").textContent, /Pendiente/);
+  });
+
+  it("cambiar el orden reinicia la ejecución; al arreglarlo se logra el desafío y el historial compara", () => {
+    const { probador } = pagina();
+    const p = probador("arreglar");
+    p.predecir("11");
+    p.ejecutarTodo();
+    assert.match(p.devolucion(), /coincide con tu predicción/);
+    p.mover("Sumarle 3", "subir");
+    assert.deepEqual(p.orden(), ["Sumarle 3 a PUNTOS.", "Duplicar PUNTOS.", "Mostrar PUNTOS."]);
+    assert.equal(p.q("[data-prediccion]").value, "", "un programa nuevo pide una predicción nueva");
+    assert.equal(p.q("tfoot td").textContent.trim(), "");
+    assert.match(p.raiz.querySelector("tbody tr:nth-child(2) th").textContent, /Sumarle 3 a PUNTOS/);
+    p.predecir("14");
+    p.ejecutarTodo();
+    assert.match(p.devolucion(), /PUNTOS valía 7\./);
+    assert.match(p.devolucion(), /Los 2 órdenes que probaste no mostraron lo mismo/);
+    assert.match(p.q("[data-desafio]").className, /cumplido/);
+    assert.deepEqual(p.historial(), [
+      "Duplicar PUNTOS · Sumarle 3 a PUNTOS · Mostrar PUNTOS → mostró 11",
+      "Sumarle 3 a PUNTOS · Duplicar PUNTOS · Mostrar PUNTOS → mostró 14",
+    ]);
+  });
+
+  it("con dos sumas, los dos órdenes muestran lo mismo", () => {
+    const { probador } = pagina();
+    const p = probador("siempre-cambia");
+    p.predecir("8");
+    p.ejecutarTodo();
+    p.mover("Sumarle 1", "subir");
+    p.predecir("8");
+    p.ejecutarTodo();
+    assert.match(p.devolucion(), /Los 2 órdenes que probaste mostraron lo mismo/);
+    assert.equal(p.historial().length, 2);
+  });
+
+  it("para seguir: mover «Mostrar» separa lo que se ve de lo que queda en PUNTOS", () => {
+    const { probador } = pagina();
+    const p = probador("dos-casilleros");
+    p.mover("Mostrar PUNTOS", "subir");
+    p.predecir("7");
+    p.ejecutarTodo();
+    assert.equal(p.q("tfoot td").textContent.trim(), "7");
+    assert.match(p.historial()[0], /mostró 7 \(al final, PUNTOS = 14, MONEDAS = 0\)/);
+    const desafios = [...p.raiz.querySelectorAll("[data-desafio]")];
+    assert.match(desafios[2].className, /cumplido/);
+    assert.doesNotMatch(desafios[0].className, /cumplido/);
+  });
+
+  it("sin JavaScript explica que hace falta y muestra el programa, sin controles inactivos", () => {
+    const { document } = new JSDOM(html()).window;
+    for (const raiz of document.querySelectorAll("[data-probador]")) {
+      assert.equal(raiz.querySelector("[data-sin-js]").hidden, false);
+      assert.ok([...raiz.querySelectorAll("[data-con-js]")].every((e) => e.hidden));
+      assert.ok(raiz.querySelectorAll(".orden-texto").length >= 3);
+    }
   });
 });
 
@@ -227,9 +377,31 @@ describe("Cuándo importa el orden: pizarrón", () => {
     const referencia = document.querySelector(".referencia").textContent;
     for (const paso of rutina) assert.ok(referencia.includes(paso));
     assert.match(referencia, /después/);
-    assert.match(referencia, /carpeta/);
+    assert.doesNotMatch(document.querySelector("main, body").textContent, /En la carpeta/, "la carpeta se explica en la hoja");
     assert.ok(document.querySelector('.continuar a[href="/cuando-importa-el-orden/"]'));
     assert.ok(!document.body.textContent.includes(conclusion), "deja la síntesis en la guía");
+  });
+
+  it("cierra la comparación con lo que mostró cada programa y por qué", () => {
+    const { document } = new JSDOM(html()).window;
+    const cierre = normalizar(document.querySelector("[data-comparacion]").textContent);
+    assert.ok(cierre.includes(`Primero sumar → muestra ${mostro(ejemplo.primero)} (duplica ${valorAntesDe(ejemplo.primero, "Duplicar")})`));
+    assert.ok(cierre.includes(`Primero duplicar → muestra ${mostro(ejemplo.segundo)} (duplica ${valorAntesDe(ejemplo.segundo, "Duplicar")})`));
+    assert.match(cierre, /«Duplicar» usa el valor que hay en ese momento\./);
+    assert.match(cierre, /El orden de las instrucciones puede cambiar lo que se muestra\./);
+    assert.doesNotMatch(cierre, /siempre|nunca/i);
+  });
+
+  it("lo que no es control de la web se puede copiar al pizarrón: líneas breves", () => {
+    const { document } = new JSDOM(html()).window;
+    const contenido = document.querySelector(".ejecuciones").closest("article, main, body");
+    const bloques = [...contenido.querySelectorAll("p, li, dd")]
+      .filter((el) => !el.closest(".controles, .continuar, .leyenda, nav, header, footer"));
+    assert.ok(bloques.length > 10);
+    for (const el of bloques) {
+      const texto = normalizar(el.textContent);
+      assert.ok(texto.length <= 90, `demasiado largo para copiar: «${texto}»`);
+    }
   });
 
   it("la pantalla no es una columna: va aparte, en la última fila", () => {

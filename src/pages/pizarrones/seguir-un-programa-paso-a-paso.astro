@@ -3,16 +3,25 @@ import TablaSeguimiento from "../../components/TablaSeguimiento.astro";
 import {
   casoEjemplo,
   ejemplo,
+  formatear,
+  mostro,
   preguntaInicial,
   rutina,
   seguir,
+  valorAntesDe,
   verbos,
 } from "../../data/actividad-cuando-importa-el-orden";
 import PizarronLayout from "../../layouts/PizarronLayout.astro";
 
+/*
+  Lo que no es control de la web (ejecutar, volver a empezar, el paso actual)
+  es lo que se escribe en el pizarrón y se copia en la carpeta: líneas breves.
+  Los nombres son los del ejemplo resuelto de la hoja; «A» y «B» son, en la
+  hoja, los programas que se resuelven después.
+*/
 const ejecuciones = [
-  { titulo: "Primero sumar, después duplicar", programa: ejemplo.primero },
-  { titulo: "Primero duplicar, después sumar", programa: ejemplo.segundo },
+  { titulo: "Primero sumar", programa: ejemplo.primero },
+  { titulo: "Primero duplicar", programa: ejemplo.segundo },
 ];
 ---
 
@@ -24,7 +33,6 @@ const ejecuciones = [
 >
   <p class="pregunta">{preguntaInicial}</p>
   <p class="caso">{casoEjemplo}</p>
-  <p class="prediccion">¿Los dos programas van a mostrar lo mismo? ¿Qué va a mostrar cada uno?</p>
 
   <noscript>
     <style is:inline>
@@ -52,9 +60,22 @@ const ejecuciones = [
     ))}
   </div>
 
-  <p class="comparacion" data-comparacion>
-    Compará las tablas: ¿qué número se duplica en cada programa? ¿Por qué no es el mismo?
-  </p>
+  <p class="leyenda" hidden>Los valores subrayados cambiaron en el último paso.</p>
+
+  <section class="comparacion" data-comparacion aria-labelledby="comparacion-titulo">
+    <h2 id="comparacion-titulo">Al comparar</h2>
+    <ul class="resultados">
+      {ejecuciones.map(({ titulo, programa }) => (
+        <li>
+          {titulo} → muestra {formatear(mostro(programa)!)}{" "}
+          <span class="duplica">(duplica {formatear(valorAntesDe(programa, "Duplicar"))})</span>
+        </li>
+      ))}
+    </ul>
+    <p>Mismo valor inicial y mismas instrucciones, en distinto orden.</p>
+    <p>«Duplicar» usa el valor que hay en ese momento.</p>
+    <p class="conclusion">El orden de las instrucciones puede cambiar lo que se muestra.</p>
+  </section>
 
   <section class="referencia" aria-labelledby="tabla-titulo">
     <h2 id="tabla-titulo">Cómo seguir un programa</h2>
@@ -66,16 +87,11 @@ const ejecuciones = [
         <div><dt>{verbo}</dt><dd>{explicacion}</dd></div>
       ))}
     </dl>
-    <p>
-      En la <strong>tabla de seguimiento</strong>, cada fila muestra cómo queda la memoria{" "}
-      <strong>después</strong> de ejecutar una instrucción, aunque no cambie. La última fila
-      es la pantalla: lo que se mostró queda ahí aunque la memoria siga cambiando.{" "}
-      <span class="leyenda" hidden>Los valores subrayados cambiaron en el último paso.</span>
-    </p>
-    <p>
-      En la carpeta alcanza con anotar el número de cada instrucción y cómo queda el
-      casillero, sin copiar el texto de la instrucción.
-    </p>
+    <h3>La tabla de seguimiento</h3>
+    <ul class="tabla-claves">
+      <li>Cada fila: cuánto vale PUNTOS después de esa instrucción.</li>
+      <li>Abajo: lo que mostró la pantalla.</li>
+    </ul>
   </section>
 
   <p class="continuar">
@@ -98,8 +114,7 @@ const ejecuciones = [
     line-height: 1.35;
   }
 
-  .caso { margin: 0 0 0.6rem; }
-  .prediccion { margin: 0 0 1.4rem; font-weight: 700; }
+  .caso { margin: 0 0 1.4rem; }
 
   .ejecuciones {
     display: grid;
@@ -134,12 +149,19 @@ const ejecuciones = [
   .ejecucion :global(tr.actual) { background: color-mix(in srgb, var(--accent) 10%, var(--board)); }
   .ejecucion :global(tr.actual th) { box-shadow: inset 3px 0 var(--accent); }
   .ejecucion :global(tr.actual td[data-cambio] .valor) { text-decoration: underline; text-underline-offset: 0.2em; }
-  .comparacion { margin: 1.5rem 0; padding-left: 1rem; border-left: 4px solid var(--emphasis); font-weight: 700; }
+  .leyenda { margin: 0.9rem 0 0; color: var(--muted); font-size: 0.9em; }
+  .comparacion { margin: 1.5rem 0; padding: 0.2rem 0 0.2rem 1rem; border-left: 4px solid var(--emphasis); }
+  .comparacion p, .resultados { margin: 0.45rem 0; }
+  .resultados { padding-left: 1.3rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .comparacion .conclusion { font-weight: 700; }
+  .duplica { font-weight: 400; }
   .comparacion[hidden] { display: none; }
 
   .referencia { margin-top: 1.5rem; padding-top: 1rem; border-top: 2px solid var(--line); }
   .referencia p { margin: 0.6rem 0; }
   .rutina { margin: 0.6rem 0; padding-left: 1.6rem; }
+  h3 { margin: 1.1rem 0 0.4rem; font-size: 1em; }
+  .tabla-claves { margin: 0.4rem 0; padding-left: 1.3rem; }
   dl { display: grid; gap: 0.4rem; margin: 1rem 0; }
   dl > div { display: flex; flex-wrap: wrap; gap: 0 0.4rem; }
   dt { font-weight: 700; }
