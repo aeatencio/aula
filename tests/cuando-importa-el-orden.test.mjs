@@ -595,19 +595,19 @@ describe("recorrido Gabriela Mistral · 4.º bimestre 2026: secuencia y orden", 
 
   it("suma el pizarrón y la hoja después del primer tramo", () => {
     assert.deepEqual(
-      recorrido.materiales.slice(3).map((material) => material.href),
+      recorrido.materiales.slice(3, 5).map((material) => material.href),
       ["/pizarrones/seguir-un-programa-paso-a-paso/", "/cuando-importa-el-orden/"],
     );
   });
 
-  it("el pizarrón es el paso 4 y la hoja el 5, el último", () => {
+  it("el pizarrón es el paso 4 y la hoja el 5; después sigue Repetir", () => {
     const piz = nav(readDist("pizarrones", "seguir-un-programa-paso-a-paso", "index.html"));
-    assert.match(piz, /Paso 4 de 5/);
+    assert.match(piz, /Paso 4 de 6/);
     assert.match(piz, /href="\/lo-que-queriamos-y-lo-que-paso\/probar\/\?recorrido=gm-2026-4b"[^>]+rel="prev"/);
     assert.match(piz, /href="\/cuando-importa-el-orden\/\?recorrido=gm-2026-4b"[^>]+rel="next"/);
     const hoja = nav(readDist("cuando-importa-el-orden", "index.html"));
-    assert.match(hoja, /Paso 5 de 5/);
-    assert.doesNotMatch(hoja, /rel="next"/);
+    assert.match(hoja, /Paso 5 de 6/);
+    assert.match(hoja, /href="\/repetir\/\?recorrido=gm-2026-4b"[^>]+rel="next"/);
   });
 
   it("los materiales no quedan atados a la escuela: sin el recorrido no muestran navegación", () => {

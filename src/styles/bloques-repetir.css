@@ -1,0 +1,152 @@
+/*
+  Bloques y dibujos de «Repetir» (src/scripts/dibujos-repetir.ts). Archivo
+  aparte porque el mismo HTML se arma al construir la página y en el
+  navegador. Blanco y negro, para que también sirva impreso.
+*/
+
+.prog {
+  display: inline-block;
+  min-width: 0;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.prog-nombre {
+  margin: 0 0 0.25em;
+  font-weight: 800;
+}
+
+.prog-inicio {
+  margin: 0 0 0.3em;
+  font-weight: 600;
+}
+
+.prog-cuerpo {
+  display: grid;
+  gap: 0.16em;
+  justify-items: start;
+}
+
+.linea {
+  padding: 0.04em 0.45em;
+  border: 1.2px solid currentColor;
+  border-radius: 0.3em;
+  background: #fff;
+  white-space: nowrap;
+}
+
+.linea--flecha {
+  min-width: 1.9em;
+  text-align: center;
+}
+
+/* «Repetir»: una pinza. La barra izquierda abraza lo que se repite. */
+.rep {
+  display: grid;
+  grid-template-columns: 0.75em auto;
+  border-radius: 0.3em;
+}
+
+.rep-cab {
+  grid-column: 1 / -1;
+  justify-self: start;
+  padding: 0.04em 0.5em;
+  border: 1.6px solid currentColor;
+  border-bottom: 0;
+  border-radius: 0.3em 0.3em 0 0;
+  background: #e6e6e6;
+}
+
+.rep-cuerpo {
+  grid-row: 2;
+  grid-column: 2;
+  display: grid;
+  gap: 0.16em;
+  justify-items: start;
+  padding: 0.16em 0 0.16em 0.3em;
+}
+
+.rep::before {
+  content: "";
+  grid-row: 2;
+  grid-column: 1;
+  background: #e6e6e6;
+  border-left: 1.6px solid currentColor;
+  border-right: 1.6px solid currentColor;
+}
+
+.rep-pie {
+  grid-row: 3;
+  grid-column: 1 / -1;
+  height: 0.35em;
+  width: 3.2em;
+  border: 1.6px solid currentColor;
+  border-top: 0;
+  border-radius: 0 0 0.3em 0.3em;
+  background: #e6e6e6;
+}
+
+/* Con flechas, lo de adentro del «Repetir» va en una fila. */
+.prog--flechas .rep-cuerpo {
+  display: flex;
+  gap: 0.25em;
+}
+
+/* El bloque que se está ejecutando. */
+.linea.actual {
+  outline: 3px solid var(--accent);
+  outline-offset: 1px;
+  background: color-mix(in srgb, var(--accent) 14%, #fff);
+}
+
+.rep-vuelta {
+  margin-left: 0.5em;
+  color: var(--accent);
+  font-weight: 800;
+}
+
+.rep-vuelta:empty {
+  display: none;
+}
+
+/* Tableros y dibujos */
+.tablero .casilla { fill: #fff; stroke: #777; stroke-width: 0.6; }
+.tablero .obst { fill: #9a9a9a; stroke: #777; stroke-width: 0.6; }
+.tablero .pers,
+.coty .pers,
+.camino .pers { fill: #000; }
+.tablero .obj,
+.camino .obj { font: 700 9px "Segoe UI", system-ui, sans-serif; text-anchor: middle; fill: #000; }
+.coty .punto { fill: #888; }
+.coty .esperado { fill: none; stroke: #8c8c8c; stroke-width: 2.5; stroke-dasharray: 4 2.5; }
+.camino .casilla { fill: #fff; stroke: #c9c9c9; stroke-width: 0.8; }
+.camino .visitada { fill: color-mix(in srgb, var(--accent) 18%, #fff); }
+.camino .recorrido { fill: none; stroke: var(--accent); stroke-width: 2.5; stroke-linejoin: round; }
+
+.leyenda {
+  display: block;
+  font-size: 0.82em;
+  font-weight: 400;
+}
+
+.ley-pers,
+.ley-obst {
+  display: inline-block;
+  width: 0.8em;
+  height: 0.8em;
+  vertical-align: -0.08em;
+}
+
+.ley-pers { border-radius: 50%; background: #000; }
+.ley-obst { background: #9a9a9a; border: 0.5px solid #777; }
+
+@media print {
+  .rep-cab,
+  .rep-pie,
+  .rep::before,
+  .tablero,
+  .coty {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+}

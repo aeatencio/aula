@@ -1,0 +1,337 @@
+---
+import { serieRepetir } from "../../data/serie-repetir";
+import { anotaciones, cierrePapelito } from "../../data/recorrido-repetir";
+import MaterialLayout from "../../layouts/MaterialLayout.astro";
+import { campos } from "../../scripts/dibujos-repetir";
+
+/*
+  Cuatro papelitos por A4 (210 × 74 mm), para cortar. Es lo único que se
+  escribe y se entrega. Cada fila es un rótulo inequívoco; la consigna completa
+  está en la página (izquierda, Pilas Bloques) o en el dorso de la hoja
+  (derecha, cierre). Una sola convención: los casilleros se escriben; los ☐ se
+  marcan con una X. Las filas salen de recorrido-repetir.ts, igual que las
+  indicaciones de la página. Los nombres de los desafíos sirven además de
+  itinerario si la página no abre.
+*/
+
+const pdf = "/materiales/repetir/repetir-papelitos-a4.pdf";
+const PAPELITOS = 4;
+
+/** «Paso 3 · Corregimos 1»: corto, para que entre en el renglón. */
+const CORTO: Record<string, string> = { "Más churrascos para Duba": "Más churrascos", "Corregimos los programas": "Corregimos" };
+---
+
+<MaterialLayout
+  title="Papelitos"
+  description="Papelitos de «Repetir», cuatro por A4: lo que cada estudiante anota en los desafíos de Pilas Bloques —antes de ejecutar y, en uno, después de corregir— y las respuestas del cierre, sin pantalla."
+  tipo="Para imprimir"
+  bajada="Lo único que se escribe y se entrega"
+  serie={serieRepetir}
+  tituloPizarrones="Para recuperar"
+  imprimirPie={false}
+>
+  <p class="aviso">
+    Cuatro por hoja A4, para cortar por la línea punteada. Uno por estudiante.{" "}
+    <a href={pdf} type="application/pdf" target="_blank" rel="noopener">Papelitos en PDF<span class="solo-lectores"> (se abre en otra pestaña)</span></a>
+  </p>
+
+  <div class="hoja" aria-label="Papelito de respuestas">
+    {Array.from({ length: PAPELITOS }, () => (
+      <section class="papelito">
+        <div class="cab">
+          <p class="titulo">Repetir · papelito</p>
+          <p class="campo"><span>Nombre</span><span class="linea"></span></p>
+          <p class="campo"><span>Curso</span><span class="linea"></span></p>
+          <p class="campo"><span>Fecha</span><span class="linea"></span></p>
+        </div>
+        <p class="indicacion">
+          Casillero: escribí. <span class="campo-cuadro"></span>: marcá con una X.{" "}
+          Si te equivocás, tachá y escribí al lado.
+        </p>
+        <div class="columnas">
+          <div>
+            <p class="col-titulo">Pilas Bloques</p>
+            {anotaciones.map(({ etapa, antes, despues }) => (
+              <section class="paso-papelito">
+                <h3 class="paso-titulo"><span>Paso {etapa.marca}</span> · {CORTO[etapa.pb.desafio.grupo] ?? etapa.pb.desafio.grupo} {etapa.pb.desafio.nombre.replace("Desafío ", "")}</h3>
+                <p class="respuesta">
+                  <Fragment set:html={campos(antes.campos)} />
+                </p>
+                {despues && (
+                  <p class="respuesta">
+                    <span class="cuando">Cuando funcione:</span>
+                    <Fragment set:html={campos(despues.campos)} />
+                  </p>
+                )}
+              </section>
+            ))}
+          </div>
+          <div>
+            <p class="col-titulo">Cierre · dorso de la hoja</p>
+            {cierrePapelito.map((grupo) => (
+              <>
+                {grupo.titulo && <p class="sub">{grupo.titulo}</p>}
+                {grupo.filas.map((f) => (
+                  <p class="fila"><span class="n">{f.numero}</span><Fragment set:html={campos(f.campos)} /></p>
+                ))}
+              </>
+            ))}
+          </div>
+        </div>
+      </section>
+    ))}
+  </div>
+</MaterialLayout>
+
+<style>
+  .aviso {
+    margin: 0 0 1.5rem;
+    color: var(--muted);
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  .solo-lectores {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .aviso a {
+    color: var(--ink);
+    font-weight: 700;
+    text-decoration: none;
+    border-bottom: 2px solid var(--accent);
+  }
+
+  /* Medidas físicas de las cuatro copias para imprimir. */
+  .hoja {
+    width: 210mm;
+    max-width: 100%;
+    overflow-x: auto;
+    border-top: 0.75pt dashed #000;
+    background: #fff;
+    color: #000;
+  }
+
+  .papelito {
+    box-sizing: border-box;
+    display: grid;
+    grid-template-rows: auto auto 1fr;
+    gap: 1mm;
+    width: 210mm;
+    height: 74.25mm;
+    padding: 3mm 8mm 2mm;
+    border-bottom: 0.75pt dashed #000;
+    font-size: 9.5pt;
+    line-height: 1.2;
+  }
+
+  .papelito p {
+    margin: 0;
+  }
+
+  .cab {
+    display: grid;
+    grid-template-columns: auto 1fr 26mm 24mm;
+    gap: 4mm;
+    align-items: end;
+  }
+
+  .titulo {
+    font-size: 10.5pt;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+
+  .campo {
+    display: flex;
+    gap: 1.5mm;
+    align-items: end;
+    font-size: 8pt;
+  }
+
+  .linea {
+    flex: 1;
+    height: 4.5mm;
+    border-bottom: 0.75pt solid #000;
+  }
+
+  .indicacion {
+    font-size: 8.5pt;
+  }
+
+  .columnas {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6mm;
+  }
+
+  .col-titulo {
+    margin-bottom: 0.8mm !important;
+    padding-bottom: 0.6mm;
+    border-bottom: 1pt solid #000;
+    font-size: 8.5pt;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .sub {
+    margin-top: 0.6mm !important;
+    font-size: 7.5pt;
+    font-weight: 700;
+  }
+
+  .fila {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.8mm 1.8mm;
+    min-height: 5.9mm;
+    padding: 0.2mm 0;
+    border-bottom: 0.4pt solid #bbb;
+  }
+
+  .n {
+    width: 5mm;
+    font-weight: 800;
+  }
+
+  .paso-papelito {
+    padding: 0.5mm 0;
+    border-bottom: 0.4pt solid #bbb;
+  }
+
+  .paso-titulo {
+    margin: 0;
+    font-size: 8pt;
+    line-height: 1.2;
+    font-weight: 700;
+  }
+
+  .respuesta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5mm 1.8mm;
+    min-height: 5.9mm;
+  }
+
+  .cuando {
+    flex-basis: 100%;
+    font-size: 7.5pt;
+    font-weight: 700;
+  }
+
+  .papelito :global(.campo-texto) {
+    font-size: 8pt;
+  }
+
+  .papelito :global(.campo-casillero) {
+    display: inline-block;
+    width: 9mm;
+    height: 4.8mm;
+    border: 0.9pt solid #000;
+    vertical-align: middle;
+  }
+
+  .papelito :global(.campo-casillero--largo) {
+    width: 18mm;
+  }
+
+  .papelito :global(.campo-opcion) {
+    margin-right: 1.6mm;
+    font-size: 8pt;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .papelito :global(.campo-cuadro) {
+    display: inline-block;
+    width: 3.2mm;
+    height: 3.2mm;
+    margin-right: 0.6mm;
+    border: 0.8pt solid #000;
+    vertical-align: -0.6mm;
+  }
+
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  @media screen {
+    .hoja {
+      width: 100%;
+      overflow: visible;
+    }
+
+    .papelito {
+      width: 100%;
+      height: auto;
+      grid-template-rows: auto auto auto;
+      padding: 1rem;
+      gap: 1rem;
+      font-size: 1rem;
+    }
+
+    .papelito ~ .papelito {
+      display: none;
+    }
+
+    .cab {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .titulo {
+      grid-column: 1 / -1;
+    }
+
+    .columnas {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .indicacion,
+    .campo,
+    .col-titulo,
+    .sub,
+    .paso-titulo,
+    .cuando,
+    .papelito :global(.campo-texto),
+    .papelito :global(.campo-opcion) {
+      font-size: inherit;
+    }
+  }
+
+  @media screen and (max-width: 48rem) {
+    .columnas,
+    .cab {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media print {
+    :global(.material > .apertura),
+    .aviso {
+      display: none;
+    }
+
+    :global(.material) {
+      max-width: none;
+    }
+
+    .hoja {
+      max-width: none;
+      overflow: visible;
+      border-top: 0;
+    }
+
+    .papelito {
+      break-inside: avoid;
+    }
+  }
+</style>

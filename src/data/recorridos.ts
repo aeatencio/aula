@@ -108,6 +108,11 @@ export const recorridos: Recorrido[] = [
         title: "Cuándo importa el orden",
         tipo: "Actividad",
       },
+      {
+        href: "/repetir/",
+        title: "Repetir",
+        tipo: "Actividad",
+      },
     ],
   },
   {

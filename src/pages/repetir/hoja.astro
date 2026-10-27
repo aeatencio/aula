@@ -1,0 +1,619 @@
+---
+import {
+  FLECHA,
+  cierre,
+  desplegar,
+  ejecutarCamino,
+  ejecutarPuntos,
+  ejemplo,
+  ejemploFlechas,
+  mirar,
+  texto,
+  type Instruccion,
+} from "../../data/actividad-repetir";
+import { serieRepetir } from "../../data/serie-repetir";
+import MaterialLayout from "../../layouts/MaterialLayout.astro";
+import { camino, programa, tablero } from "../../scripts/dibujos-repetir";
+import "../../styles/bloques-repetir.css";
+
+/*
+  La hoja del folio: A4 doble faz, blanco y negro, no se escribe.
+  Frente: referencia para tener a mano mientras se trabaja en la página y en
+  Pilas Bloques. Dorso: el cierre individual, sin pantalla (también el camino
+  sin computadora). No repite el recorrido: eso lo hace la página.
+*/
+
+const pdf = "/materiales/repetir/repetir-hoja-a4.pdf";
+
+const flechas = (cuerpo: readonly Instruccion[]) =>
+  desplegar(cuerpo).map((p) => (p.instr.tipo === "mover" ? FLECHA[p.instr.dir] : "")).join(" ");
+
+const corridaEjemplo = ejecutarPuntos(ejemplo);
+const duplicados = corridaEjemplo.pasos.filter((p) => p.instr.tipo === "duplicar").map((p) => p.puntos);
+const muestras = (p: Parameters<typeof ejecutarPuntos>[0]) => ejecutarPuntos(p).muestras;
+/** «6 y después 11»: lo que aparece en la pantalla, en orden. */
+const enOrden = (valores: number[]) =>
+  valores.length > 1 ? `${valores.slice(0, -1).join(", ")} y después ${valores.at(-1)}` : String(valores[0]);
+
+const prog = (cuerpo: readonly Instruccion[], opciones: Parameters<typeof programa>[1] = {}) => programa(cuerpo, opciones).html;
+const { P, Q, R, S, W, X, Y, filaY } = cierre;
+---
+
+<MaterialLayout
+  title="Cómo leer un «Repetir» y cierre"
+  description="Hoja A4 doble faz de «Repetir», para un folio: al frente, cómo leer un programa con «Repetir» (vuelta, adentro, afuera, desplegar, un ejemplo resuelto y tres cosas para mirar); al dorso, el cierre individual sin pantalla."
+  tipo="Para imprimir"
+  bajada="La hoja del folio: referencia al frente, cierre al dorso"
+  serie={serieRepetir}
+  tituloPizarrones="Para recuperar"
+  imprimirPie={false}
+>
+  <p class="aviso">
+    Una hoja por estudiante o por puesto, dentro de un folio: no se escribe y sirve para el curso siguiente.
+    Las respuestas van en los <a href="/repetir/papelitos/">papelitos</a>.{" "}
+    <a href={pdf} type="application/pdf" target="_blank" rel="noopener">Hoja en PDF<span class="solo-lectores"> (se abre en otra pestaña)</span></a> (A4 doble faz).
+  </p>
+
+  <div class="hojas">
+    <section class="pagina" id="frente" aria-label="Frente: cómo leer un «Repetir»">
+      <header class="cabecera">
+        <div>
+          <p class="ubicacion-hoja">Pensamiento Computacional · Repetir</p>
+          <p class="titulo">Cómo leer un «Repetir»</p>
+        </div>
+        <p class="cara">Frente · Para tener a mano</p>
+      </header>
+
+      <p class="consigna-hoja">Esta hoja no se escribe y se devuelve. Qué hacer y en qué orden: aula.andresatencio.com/repetir. Las respuestas van en el papelito.</p>
+
+      <div class="idea">
+        <div>
+          <p><strong>«Repetir 3 veces» ejecuta lo que tiene adentro 3 veces seguidas, en el orden en que está.</strong> Cada vuelta empieza donde terminó la anterior. Lo que está afuera se ejecuta una sola vez.</p>
+          <p>La máquina sigue ejecutando una instrucción por vez: «Repetir» es una forma más corta de escribir una secuencia.</p>
+        </div>
+        <div class="igual">
+          <Fragment set:html={prog(ejemploFlechas.cuerpo, { flechas: true })} />
+          <span>=</span>
+          <span><span class="desplegado-hoja">{flechas(ejemploFlechas.cuerpo)}</span><span class="nota-hoja">6 movimientos: 3 vueltas de 2</span></span>
+          <Fragment set:html={camino(ejecutarCamino(ejemploFlechas).casillas, { paso: 15 })} />
+        </div>
+      </div>
+
+      <div class="bloque">
+        <h2>Cuatro palabras</h2>
+        <dl class="palabras">
+          <div><dt>Vuelta</dt><dd>Una ejecución completa de lo que está adentro del «Repetir».</dd></div>
+          <div><dt>Adentro</dt><dd>Se ejecuta en cada vuelta: con «Repetir 3», 3 veces.</dd></div>
+          <div><dt>Afuera</dt><dd>Se ejecuta una sola vez, antes o después de las vueltas.</dd></div>
+          <div><dt>Desplegar</dt><dd>Escribir, en orden, cada instrucción que se ejecuta.</dd></div>
+        </dl>
+      </div>
+
+      <div class="bloque">
+        <h2>Seguir un programa con «Repetir»: una fila por cada instrucción que se ejecuta</h2>
+        <div class="ejemplo">
+          <Fragment set:html={prog(ejemplo.cuerpo, { inicio: ejemplo.inicio })} />
+          <table class="seguir">
+            <thead><tr><th>Se ejecuta</th><th>PUNTOS</th></tr></thead>
+            <tbody>
+              <tr><th>Al empezar</th><td>{ejemplo.inicio}</td></tr>
+              {corridaEjemplo.pasos.map((p) => {
+                const v = p.vueltas.at(-1);
+                return <tr><th>{v && <span class="vuelta">vuelta {v.vuelta}</span>}{texto(p.instr)}</th><td>{p.puntos}</td></tr>;
+              })}
+            </tbody>
+            <tfoot><tr><th>La pantalla mostró</th><td>{corridaEjemplo.muestras.join(" ")}</td></tr></tfoot>
+          </table>
+          <div class="notas">
+            <p>«Duplicar» y «Mostrar» están escritos una vez cada uno, pero entre los dos se ejecutan {corridaEjemplo.pasos.length} veces: la tabla tiene una fila por cada ejecución.</p>
+            <p>«Duplicar» usa cada vez el valor de ese momento: {duplicados.join(", ")}; no 2, 2, 2.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bloque">
+        <h2>Tres cosas para mirar</h2>
+        <div class="mirar">
+          <article>
+            <p class="frase"><span class="n">1</span>Contá movimientos, no casillas.</p>
+            <div class="par"><Fragment set:html={tablero(mirar.fila, { celda: 18 })} /></div>
+            <p class="da">4 casillas, pero Duba ya está en la primera: se mueve <strong>3</strong> veces. «Repetir 3 veces».</p>
+          </article>
+          <article>
+            <p class="frase"><span class="n">2</span>Adentro: en cada vuelta. Afuera: una vez.</p>
+            <div class="par">
+              <Fragment set:html={prog(mirar.adentro.cuerpo, { inicio: mirar.adentro.inicio })} />
+              <Fragment set:html={prog(mirar.afuera.cuerpo, { inicio: mirar.afuera.inicio })} />
+            </div>
+            <p class="da">El primero muestra <strong>{enOrden(muestras(mirar.adentro))}</strong>; el segundo, sólo <strong>{enOrden(muestras(mirar.afuera))}</strong>.</p>
+          </article>
+          <article>
+            <p class="frase"><span class="n">3</span>Mismas instrucciones, otro orden: puede dar otra cosa.</p>
+            <div class="par">
+              <Fragment set:html={prog(mirar.ordenA.cuerpo, { inicio: mirar.ordenA.inicio })} />
+              <Fragment set:html={prog(mirar.ordenB.cuerpo, { inicio: mirar.ordenB.inicio })} />
+            </div>
+            <p class="da">El primero muestra <strong>{enOrden(muestras(mirar.ordenA))}</strong>; el segundo, <strong>{enOrden(muestras(mirar.ordenB))}</strong>.</p>
+          </article>
+        </div>
+      </div>
+
+      <div class="bloque respaldo">
+        <p><strong>Si Aula no abre:</strong> entrá a pilasbloques.program.ar/online › Nivel Principiante › Repetición y hacé los desafíos en el orden del papelito.</p>
+        <p><strong>Sin computadora:</strong> leé este frente y resolvé el dorso.</p>
+      </div>
+
+      <footer class="pie">
+        <span>Repetir · hoja reutilizable · A4 doble faz</span>
+        <span>aula.andresatencio.com/repetir</span>
+      </footer>
+    </section>
+
+    <section class="pagina" id="dorso" aria-label="Dorso: cierre">
+      <header class="cabecera">
+        <div>
+          <p class="ubicacion-hoja">Pensamiento Computacional · Repetir</p>
+          <p class="titulo">Cierre</p>
+        </div>
+        <p class="cara">Dorso · Sin pantalla</p>
+      </header>
+
+      <p class="consigna-hoja">Resolvé solo y sin mirar la pantalla; podés mirar el frente. Las respuestas van en el papelito, columna «Cierre»: escribí en los casilleros y marcá con una X la opción que elijas.</p>
+
+      <div class="referencia">
+        <dl>
+          <div><dt>Sumarle</dt><dd>agrega al valor que hay ahora.</dd></div>
+          <div><dt>Duplicar</dt><dd>deja el doble del valor que hay ahora.</dd></div>
+          <div><dt>Mostrar</dt><dd>pone el valor en la pantalla; PUNTOS no cambia.</dd></div>
+        </dl>
+        <dl>
+          <div><dt>→ ← ↑ ↓</dt><dd>mover una casilla a la derecha, a la izquierda, arriba, abajo.</dd></div>
+        </dl>
+      </div>
+
+      <h2 class="tramo">Para todos · después del paso 3</h2>
+      <div class="items">
+        <article class="item">
+          <div class="pares">
+            <Fragment set:html={prog(P.cuerpo, { inicio: P.inicio, nombre: P.nombre })} />
+            <Fragment set:html={prog(Q.cuerpo, { inicio: Q.inicio, nombre: Q.nombre })} />
+          </div>
+          <ol class="preguntas">
+            <li><span class="num">1</span><span>¿Cuántas veces se ejecuta «Mostrar PUNTOS» en P? ¿Y en Q?</span></li>
+            <li><span class="num">2</span><span>¿Qué números aparecen en la pantalla con P? ¿Y con Q? Escribilos en orden.</span></li>
+          </ol>
+        </article>
+        <article class="item">
+          <div class="pares">
+            <Fragment set:html={prog(R.cuerpo, { inicio: R.inicio, nombre: R.nombre })} />
+          </div>
+          <ol class="preguntas">
+            <li><span class="num">3</span><span>Seguí R. ¿Qué número muestra la pantalla?</span></li>
+          </ol>
+          <div class="pares pares--fila">
+            <Fragment set:html={prog(Y.cuerpo, { nombre: Y.nombre })} />
+            <div><Fragment set:html={tablero(filaY, { celda: 17 })} /><span class="leyenda">Una fila de 6 casillas · ● Duba · C churrasco</span></div>
+          </div>
+          <ol class="preguntas">
+            <li><span class="num">4</span><span>Seguí Y. ¿En qué vuelta falla? ¿Cuántas veces tiene que repetir para que Duba coma?</span></li>
+          </ol>
+        </article>
+      </div>
+
+      <h2 class="tramo">Si hiciste los pasos 4 y 5</h2>
+      <div class="items">
+        <article class="item">
+          <div class="pares"><Fragment set:html={prog(W.cuerpo, { nombre: W.nombre, flechas: true })} /></div>
+          <ol class="preguntas">
+            <li><span class="num">5</span><span>Después del paso 4. ¿Cuántas veces se ejecuta → en W? ¿Cuántos movimientos hace W en total?</span></li>
+          </ol>
+        </article>
+        <article class="item">
+          <div class="pares"><Fragment set:html={prog(S.cuerpo, { inicio: S.inicio, nombre: S.nombre })} /></div>
+          <ol class="preguntas">
+            <li><span class="num">6</span><span>Después del paso 5. S tiene las mismas instrucciones que R, las mismas veces. ¿Muestra lo mismo que R?</span></li>
+          </ol>
+        </article>
+      </div>
+
+      <h2 class="tramo">Para ir más lejos</h2>
+      <div class="items">
+        <article class="item item--ancho">
+          <p class="secuencia-nombre">X, escrito sin «Repetir»: <span class="secuencia">{flechas(X.cuerpo)}</span></p>
+          <ol class="preguntas">
+            <li><span class="num">7</span><span>Escribí X con un solo «Repetir» y nada afuera: ¿cuántas veces repite y qué flechas van adentro?</span></li>
+          </ol>
+        </article>
+      </div>
+
+      <footer class="pie">
+        <span>Repetir · cierre · las respuestas van en el papelito</span>
+        <span>Para practicar con otros números: aula.andresatencio.com/repetir</span>
+      </footer>
+    </section>
+  </div>
+</MaterialLayout>
+
+<style>
+  .aviso {
+    margin: 0 0 1.5rem;
+    color: var(--muted);
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  .solo-lectores {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .aviso a {
+    color: var(--ink);
+    font-weight: 700;
+    text-decoration: none;
+    border-bottom: 2px solid var(--accent);
+  }
+
+  /* La hoja usa medidas físicas para que pantalla e impresión coincidan. */
+  .hojas {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  .pagina {
+    position: relative;
+    box-sizing: border-box;
+    width: 210mm;
+    height: 297mm;
+    margin: 0 0 1.5rem;
+    padding: 10mm 12mm 9mm;
+    overflow: hidden;
+    border: 1px solid var(--hairline);
+    background: #fff;
+    color: #000;
+    font-size: 10.5pt;
+    line-height: 1.3;
+  }
+
+  .pagina p {
+    margin: 0;
+  }
+
+  .pagina h2 {
+    margin: 0 0 1.2mm;
+    font-size: 10pt;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .cabecera {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 6mm;
+    padding-bottom: 1.5mm;
+    border-bottom: 1.5pt solid #000;
+  }
+
+  .ubicacion-hoja {
+    font-size: 8pt;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .titulo {
+    margin-top: 0.5mm !important;
+    font-size: 17pt;
+    font-weight: 800;
+    line-height: 1.1;
+  }
+
+  .cara {
+    font-size: 9pt;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .consigna-hoja {
+    margin: 2mm 0 3.5mm !important;
+    font-weight: 700;
+  }
+
+  .idea {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 3mm 6mm;
+    align-items: center;
+    padding: 3mm 4mm;
+    border: 1.2pt solid #000;
+  }
+
+  .idea p + p {
+    margin-top: 1.5mm;
+  }
+
+  .igual {
+    display: flex;
+    align-items: center;
+    gap: 3mm;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .desplegado-hoja {
+    display: block;
+    font-size: 13pt;
+    letter-spacing: 0.08em;
+  }
+
+  .nota-hoja {
+    display: block;
+    font-size: 8.5pt;
+    font-weight: 400;
+  }
+
+  .bloque {
+    margin-top: 3.6mm;
+  }
+
+  .palabras {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 3mm;
+    margin: 0;
+  }
+
+  .palabras div {
+    padding: 2mm 2.5mm;
+    border: 0.8pt solid #000;
+  }
+
+  .palabras dt {
+    font-weight: 800;
+  }
+
+  .palabras dd {
+    margin: 0.5mm 0 0;
+    font-size: 9.5pt;
+  }
+
+  .ejemplo {
+    display: grid;
+    grid-template-columns: auto auto 1fr;
+    gap: 3mm 6mm;
+    align-items: start;
+  }
+
+  .seguir {
+    border-collapse: collapse;
+    font-size: 9.5pt;
+  }
+
+  .seguir th,
+  .seguir td {
+    padding: 0.4mm 2mm;
+    border: 0.8pt solid #000;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  .seguir td {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+  }
+
+  .seguir .vuelta {
+    margin-right: 1.5mm;
+    color: #333;
+    font-weight: 400;
+  }
+
+  .notas p {
+    padding-left: 2.5mm;
+    border-left: 2pt solid #000;
+    font-weight: 700;
+  }
+
+  .notas p + p {
+    margin-top: 2.5mm;
+  }
+
+  .mirar {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 3.5mm;
+  }
+
+  .mirar article {
+    padding: 2.5mm 3mm;
+    border: 1pt solid #000;
+  }
+
+  .frase {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 2mm !important;
+    font-weight: 800;
+  }
+
+  .n {
+    flex: none;
+    display: inline-grid;
+    place-items: center;
+    width: 5.5mm;
+    height: 5.5mm;
+    margin-right: 1.5mm;
+    border: 1.2pt solid #000;
+    border-radius: 50%;
+    font-size: 9pt;
+    font-weight: 800;
+  }
+
+  .par {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2mm 3mm;
+    align-items: flex-start;
+    margin-bottom: 1.5mm;
+    font-size: 9pt;
+  }
+
+  .da {
+    font-size: 9pt;
+  }
+
+  .respaldo {
+    padding: 2mm 3.5mm;
+    border: 1pt dashed #000;
+    font-size: 9.5pt;
+  }
+
+  .respaldo p + p {
+    margin-top: 1mm;
+  }
+
+  /* Dorso */
+  .referencia {
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    gap: 5mm;
+    margin: 0 0 3mm;
+    padding: 2mm 3.5mm;
+    border: 1pt solid #000;
+    font-size: 9.5pt;
+  }
+
+  .referencia dl {
+    display: grid;
+    gap: 0.3mm;
+    margin: 0;
+  }
+
+  .referencia dt {
+    display: inline;
+    font-weight: 700;
+  }
+
+  .referencia dt::after {
+    content: ": ";
+  }
+
+  .referencia dd {
+    display: inline;
+    margin: 0;
+  }
+
+  .tramo {
+    margin: 3.5mm 0 1.5mm !important;
+    padding-top: 1.5mm;
+    border-top: 1pt solid #000;
+  }
+
+  .items {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3.5mm 4mm;
+  }
+
+  .item {
+    padding: 2.5mm 3mm;
+    border: 1pt solid #000;
+  }
+
+  .item--ancho {
+    grid-column: 1 / -1;
+  }
+
+  .pares {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3mm 8mm;
+    align-items: flex-start;
+    margin-bottom: 2mm;
+    font-size: 9.5pt;
+  }
+
+  .pares--fila {
+    margin-top: 3mm;
+  }
+
+  .preguntas {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .preguntas li {
+    display: flex;
+    gap: 1.5mm;
+  }
+
+  .preguntas li + li {
+    margin-top: 1mm;
+  }
+
+  .num {
+    flex: none;
+    min-width: 5.5mm;
+    font-weight: 800;
+  }
+
+  .secuencia-nombre {
+    margin-bottom: 1.5mm !important;
+    font-weight: 800;
+  }
+
+  .secuencia {
+    margin-left: 2mm;
+    font-size: 13pt;
+    letter-spacing: 0.12em;
+  }
+
+  .pie {
+    position: absolute;
+    left: 12mm;
+    right: 12mm;
+    bottom: 6mm;
+    display: flex;
+    justify-content: space-between;
+    padding-top: 1mm;
+    border-top: 0.5pt solid #000;
+    font-size: 7.5pt;
+  }
+
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  @media print {
+    :global(.material > .apertura),
+    .aviso {
+      display: none;
+    }
+
+    :global(.material) {
+      max-width: none;
+    }
+
+    .hojas {
+      overflow: visible;
+    }
+
+    .pagina {
+      margin: 0;
+      border: 0;
+      break-after: page;
+    }
+
+    .pagina:last-child {
+      break-after: auto;
+    }
+  }
+</style>
