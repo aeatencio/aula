@@ -319,6 +319,7 @@ describe("recorrido Gabriela Mistral · 4.º bimestre 2026", () => {
         "/lo-que-queriamos-y-lo-que-paso/probar/",
         "/pizarrones/seguir-un-programa-paso-a-paso/",
         "/cuando-importa-el-orden/",
+        "/repetir/",
       ],
     );
     assert.ok(!existsSync(join(dist, "escuelas", "gabriela-mistral", "4-bimestre-2026", "la-maquina-obedece-exactamente")));
@@ -333,6 +334,7 @@ describe("recorrido Gabriela Mistral · 4.º bimestre 2026", () => {
       "/lo-que-queriamos-y-lo-que-paso/probar/?recorrido=gm-2026-4b",
       "/pizarrones/seguir-un-programa-paso-a-paso/?recorrido=gm-2026-4b",
       "/cuando-importa-el-orden/?recorrido=gm-2026-4b",
+      "/repetir/?recorrido=gm-2026-4b",
     ]);
     assert.match(readDist("escuelas", "index.html"), /href="\/escuelas\/gabriela-mistral\/4-bimestre-2026\/"/);
     assert.match(readDist("index.html"), /href="\/escuelas\/gabriela-mistral\/4-bimestre-2026\/"/);
@@ -346,21 +348,21 @@ describe("recorrido Gabriela Mistral · 4.º bimestre 2026", () => {
 
   it("el pizarrón es el paso 1 y lleva a la actividad", () => {
     const n = nav(readDist("pizarrones", "la-maquina-obedece-exactamente", "index.html"));
-    assert.match(n, /Paso 1 de 5/);
+    assert.match(n, /Paso 1 de 6/);
     assert.doesNotMatch(n, /rel="prev"/);
     assert.match(n, /href="\/lo-que-queriamos-y-lo-que-paso\/\?recorrido=gm-2026-4b"[^>]+rel="next"/);
   });
 
   it("la hoja es el paso 2, entre el pizarrón y la práctica en pantalla", () => {
     const n = nav(readDist("lo-que-queriamos-y-lo-que-paso", "index.html"));
-    assert.match(n, /Paso 2 de 5/);
+    assert.match(n, /Paso 2 de 6/);
     assert.match(n, /href="\/pizarrones\/la-maquina-obedece-exactamente\/\?recorrido=gm-2026-4b"[^>]+rel="prev"/);
     assert.match(n, /href="\/lo-que-queriamos-y-lo-que-paso\/probar\/\?recorrido=gm-2026-4b"[^>]+rel="next"/);
   });
 
   it("la práctica en pantalla es el paso 3, vuelve a la hoja y sigue con secuencia y orden", () => {
     const n = nav(readDist("lo-que-queriamos-y-lo-que-paso", "probar", "index.html"));
-    assert.match(n, /Paso 3 de 5/);
+    assert.match(n, /Paso 3 de 6/);
     assert.match(n, /href="\/lo-que-queriamos-y-lo-que-paso\/\?recorrido=gm-2026-4b"[^>]+rel="prev"/);
     assert.match(n, /href="\/pizarrones\/seguir-un-programa-paso-a-paso\/\?recorrido=gm-2026-4b"[^>]+rel="next"/);
   });

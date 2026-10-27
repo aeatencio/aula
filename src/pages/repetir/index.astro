@@ -1,0 +1,983 @@
+---
+import { serieRepetir } from "../../data/serie-repetir";
+import { etapas, grupos, masLejos, type Anotacion, type Etapa, type Grupo } from "../../data/recorrido-repetir";
+import type { Desafio } from "../../data/actividad-repetir";
+import MaterialLayout from "../../layouts/MaterialLayout.astro";
+import { campos, coty, gesto, leyenda, programa, tablero } from "../../scripts/dibujos-repetir";
+import "../../styles/bloques-repetir.css";
+
+const pdfHoja = "/materiales/repetir/repetir-hoja-a4.pdf";
+const pdfPapelitos = "/materiales/repetir/repetir-papelitos-a4.pdf";
+
+const enGrupo = (grupo: Grupo) => etapas.filter((e) => e.grupo === grupo);
+/** El cierre no lleva número: su título ya lo nombra. */
+const nombrePaso = (e: Etapa) => (e.id === "cierre" ? "" : `Paso ${e.marca}`);
+
+/** Lo que sigue después de cada etapa. */
+function siguiente(e: Etapa) {
+  const i = etapas.indexOf(e);
+  const sig = etapas[i + 1];
+  if (e.id === "cierre") {
+    return { href: `#${sig.id}`, texto: `Si queda tiempo: paso ${sig.marca}, ${sig.titulo}`, nota: "Si no, entregá el papelito." };
+  }
+  if (!sig) return { href: "#mas", texto: "Para ir más lejos: más desafíos y práctica" };
+  return { href: `#${sig.id}`, texto: sig.id === "cierre" ? "Seguir con el cierre, en papel" : `Seguir con el paso ${sig.marca}: ${sig.titulo}` };
+}
+
+/** Qué anotar y dónde: la fila del papelito tal como se ve, y el gesto que pide. */
+const anotacion = (a: Anotacion) =>
+  `En el papelito: <strong>${a.letra}</strong> <span class="momento-mini">${a.momento === "antes" ? "antes" : "después"}</span> ` +
+  `${campos(a.campos)} <span class="gesto">(${gesto(a.campos)})</span>`;
+
+/** Programa y tablero, por si Pilas Bloques no carga. */
+function respaldo(d: Desafio) {
+  const prog = d.programa
+    ? programa(d.programa).html
+    : `<p class="respaldo-armar">Hay que armarlo: «Repetir» con «Mover a la derecha» adentro, y «Comer churrasco» abajo.</p>`;
+  const figura = d.escena.personaje === "Coty" ? coty(d.escena, { paso: 20 }) : tablero(d.escena, { celda: 20 }) + leyenda(d.escena.personaje);
+  return `<div class="respaldo-cuerpo">${prog}<div>${figura}</div></div>`;
+}
+---
+
+<MaterialLayout
+  title="Repetir"
+  description="Actividad de Pensamiento Computacional para hacer en computadora: la página conduce la clase entre Pilas Bloques, una hoja de referencia y un papelito, para leer programas con «Repetir»: qué se repite, cuántas veces y qué pasa en cada vuelta."
+  tipo="Actividad"
+  bajada="Qué se repite y cuántas veces"
+  serie={serieRepetir}
+  tituloPizarrones="Para recuperar"
+  imprimirPie={false}
+>
+  {/* tabindex="-1": un clic en cualquier parte deja el foco adentro, y las
+      flechas del teclado no cambian de material en medio de un paso. */}
+  <div class="recorrido-repetir" data-recorrido-repetir data-navegacion-recorrido-excluir tabindex="-1">
+    <section class="empezar" aria-label="Para empezar">
+      <p><strong>Hoy leemos programas con «Repetir».</strong> Seguí los pasos de esta página: desde acá abrís Pilas Bloques.</p>
+      <p class="idea">«Repetir 3 veces» ejecuta lo de adentro 3 veces seguidas. Cada vuelta empieza donde terminó la anterior.</p>
+      {/*
+        Hoja y papelito, en la misma pestaña: son parte de esta experiencia y
+        «atrás» vuelve al paso en el que estabas (está en la dirección). Los PDF
+        se abren aparte, para imprimir o guardar sin perder la clase.
+      */}
+      <div class="recursos" role="group" aria-label="Hoja y papelito">
+        <p class="recursos-titulo">Tené a mano:</p>
+        <p class="recurso">
+          <span class="recurso-nombre"><strong>La hoja del folio</strong> <span class="nota">no se escribe</span></span>
+          <a href="/repetir/hoja/">Ver hoja</a>
+          <a href={pdfHoja} type="application/pdf" target="_blank" rel="noopener">PDF para imprimir<span class="solo-lectores"> (se abre en otra pestaña)</span></a>
+        </p>
+        <p class="recurso">
+          <span class="recurso-nombre"><strong>El papelito</strong> <span class="nota">con tu nombre; se entrega</span></span>
+          <a href="/repetir/papelitos/">Ver papelito</a>
+          <a href={pdfPapelitos} type="application/pdf" target="_blank" rel="noopener">PDF para imprimir<span class="solo-lectores"> (se abre en otra pestaña)</span></a>
+        </p>
+      </div>
+    </section>
+
+    <nav class="mapa" data-mapa aria-label="Pasos del recorrido">
+      {(["todos", "tiempo"] as const).map((grupo) => (
+        <div class:list={["mapa-grupo", `mapa-grupo--${grupo}`]}>
+          <p class="mapa-titulo">{grupos[grupo]}</p>
+          <ol>
+            {enGrupo(grupo).map((e) => (
+              <li>
+                <a href={`#${e.id}`}>
+                  <span class="mapa-marca">{e.marca}</span>
+                  <span class="mapa-nombre">{e.titulo}</span>
+                </a>
+              </li>
+            ))}
+          </ol>
+        </div>
+      ))}
+      <div class="mapa-grupo mapa-grupo--lejos">
+        <p class="mapa-titulo">{grupos.lejos}</p>
+        <ol>
+          <li><a href="#mas"><span class="mapa-marca">+</span><span class="mapa-nombre">Más desafíos y práctica</span></a></li>
+        </ol>
+      </div>
+    </nav>
+
+    {etapas.map((e) => {
+      const sig = siguiente(e);
+      let n = 0;
+      return (
+        <section class="etapa" id={e.id} data-etapa aria-labelledby={`${e.id}-titulo`}>
+          <header class="etapa-cab">
+            <p class="etapa-ubicacion">
+              <span class:list={["grupo", `grupo--${e.grupo}`]}>{grupos[e.grupo]}</span>
+              {nombrePaso(e) && <span>{nombrePaso(e)}</span>}
+            </p>
+            <h2 id={`${e.id}-titulo`}>{e.titulo}</h2>
+          </header>
+
+          <ol class="acciones">
+            <li class="accion">
+              <span class="accion-n" aria-hidden="true">{++n}</span>
+              <div class="accion-cuerpo">
+                <h3>{e.pb ? "Antes de ejecutar" : e.medio === "Papel" ? "En papel" : "Mirá la hoja"}</h3>
+                <p>{e.antes.texto}</p>
+                {e.antes.papelito && <p class="anota"><Fragment set:html={anotacion(e.antes.papelito)} /></p>}
+                {e.medio === "Papel" && <p class="anota">En el papelito, columna «Cierre»: del <strong>1</strong> al <strong>4</strong>.</p>}
+                {e.id === "cierre" && <p class="nota">Cuando termines, entregá el papelito.</p>}
+                {!e.pb && e.medio === "Aula" && <p class="recurso-cerca"><a href="/repetir/hoja/#frente">Ver el frente de la hoja</a></p>}
+                {e.medio === "Papel" && (
+                  <p class="recurso-cerca">
+                    <a href="/repetir/hoja/#dorso">Ver el dorso de la hoja</a>
+                    <a href="/repetir/papelitos/">Ver papelito</a>
+                  </p>
+                )}
+              </div>
+            </li>
+
+            {e.pb && (
+              <li class="accion accion--pb" data-pb={e.pb.desafio.enlace} data-nombre={`${e.pb.desafio.grupo} · ${e.pb.desafio.nombre}`}>
+                <span class="accion-n" aria-hidden="true">{++n}</span>
+                <div class="accion-cuerpo">
+                  <h3><span class="pb-marca">Pilas Bloques</span> {e.pb.desafio.grupo} · {e.pb.desafio.nombre}</h3>
+                  <p class="pb-botones">
+                    <button type="button" class="boton boton--pb" data-incrustar hidden>Abrir acá</button>
+                    <a class="boton boton--pb boton--secundario" href={e.pb.desafio.enlace} target="_blank" rel="noopener">En otra pestaña<span class="solo-lectores"> (Pilas Bloques)</span></a>
+                  </p>
+                  <ul class="hacer">{e.pb.hacer.map((h) => <li>{h}</li>)}</ul>
+                  {e.pb.despues && <p class="anota">Cuando funcione · <Fragment set:html={anotacion(e.pb.despues)} /></p>}
+                  <p class="volver">Cuando funcione, volvé acá. No sigas con el desafío siguiente de Pilas Bloques.</p>
+                  <div class="pb-marco" data-marco hidden>
+                    <div class="pb-mientras">
+                      <span>{e.pb.mientras}</span>
+                      <button type="button" data-ya>Ya funciona: volver a Aula</button>
+                    </div>
+                  </div>
+                  <details class="pb-respaldo">
+                    <summary>Si Pilas Bloques no carga</summary>
+                    <p>Pensalo con el programa y el tablero, sin ejecutar, y anotá igual en el papelito.</p>
+                    <Fragment set:html={respaldo(e.pb.desafio)} />
+                  </details>
+                </div>
+              </li>
+            )}
+
+            {e.despues && (
+              <li class="accion" data-despues>
+                <span class="accion-n" aria-hidden="true">{++n}</span>
+                <div class="accion-cuerpo">
+                  <h3>{e.pb ? "Volvé acá: mirá qué pasó" : "Probá acá"}</h3>
+                  {e.pb && (
+                    <p data-compuerta hidden>
+                      <button type="button" class="boton boton--secundario">Ya lo hice en Pilas Bloques</button>
+                    </p>
+                  )}
+                  <div data-despues-cuerpo>
+                    {e.despues.texto && <p>{e.despues.texto}</p>}
+                    {e.despues.ejecutores && <div data-ejecutores={e.id}></div>}
+                    {e.despues.textoEjercicios && <p>{e.despues.textoEjercicios}</p>}
+                    {e.despues.ejercicios && <div data-ejercicios={e.id}></div>}
+                    <noscript><p class="nota">Para ejecutar y comprobar acá hace falta JavaScript.</p></noscript>
+                    {e.despues.papel && (
+                      <p>
+                        <span class="anota">Ahora respondé en el papelito la <strong>{e.despues.papel}</strong> del dorso de la hoja.</span>{" "}
+                        <span class="recurso-cerca"><a href="/repetir/hoja/#dorso">Ver el dorso de la hoja</a></span>
+                      </p>
+                    )}
+                    <p class="llevarte"><strong>Para llevarte:</strong> {e.despues.llevarte}</p>
+                    {e.despues.enlace && <p class="nota">Para volver a mirar: <a href={e.despues.enlace.href}>{e.despues.enlace.texto}</a></p>}
+                  </div>
+                </div>
+              </li>
+            )}
+          </ol>
+
+          <footer class="etapa-pie">
+            <p class="siguiente"><a href={sig.href}>{sig.texto} →</a>{sig.nota && <span class="nota"> {sig.nota}</span>}</p>
+            {e.grupo === "todos" && e.id !== "cierre" && (
+              <p class="corte">¿Quedan pocos minutos de clase? <a href="#cierre">Andá al cierre</a>.</p>
+            )}
+          </footer>
+        </section>
+      );
+    })}
+
+    <section class="etapa" id="mas" data-etapa aria-labelledby="mas-titulo">
+      <header class="etapa-cab">
+        <p class="etapa-ubicacion"><span class="grupo grupo--lejos">{grupos.lejos}</span></p>
+        <h2 id="mas-titulo">Más desafíos y práctica</h2>
+      </header>
+      <ol class="acciones">
+        <li class="accion accion--pb" data-pb={masLejos.lita.desafio.enlace} data-nombre={`${masLejos.lita.desafio.grupo} · ${masLejos.lita.desafio.nombre}`}>
+          <span class="accion-n" aria-hidden="true">1</span>
+          <div class="accion-cuerpo">
+            <h3><span class="pb-marca">Pilas Bloques</span> {masLejos.lita.desafio.grupo} · {masLejos.lita.desafio.nombre}</h3>
+            <p>{masLejos.lita.pregunta}</p>
+            <p class="pb-botones">
+              <button type="button" class="boton boton--pb" data-incrustar hidden>Abrir acá</button>
+              <a class="boton boton--pb boton--secundario" href={masLejos.lita.desafio.enlace} target="_blank" rel="noopener">En otra pestaña<span class="solo-lectores"> (Pilas Bloques)</span></a>
+            </p>
+            <div class="pb-marco" data-marco hidden>
+              <div class="pb-mientras"><span>¿Adentro o afuera? Pensalo antes de ejecutar.</span></div>
+            </div>
+          </div>
+        </li>
+        <li class="accion">
+          <span class="accion-n" aria-hidden="true">2</span>
+          <div class="accion-cuerpo">
+            <h3>Otros desafíos de Pilas Bloques <span class="nota">(se abren en otra pestaña)</span></h3>
+            <ul class="mas-lista">
+              {masLejos.desafios.map((d) => (
+                <li>
+                  <a href={d.enlace} target="_blank" rel="noopener">{d.grupo} · {d.nombre}</a>
+                  <span class="nota"> {d.consigna}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </li>
+        <li class="accion">
+          <span class="accion-n" aria-hidden="true">3</span>
+          <div class="accion-cuerpo">
+            <h3>Practicar con otros números</h3>
+            <p>Ejercicios como los del cierre, con otros programas. También sirven para estudiar. Nada se guarda.</p>
+            <div data-practica></div>
+            <noscript><p class="nota">Para practicar acá hace falta JavaScript.</p></noscript>
+          </div>
+        </li>
+      </ol>
+    </section>
+  </div>
+
+  <p class="atribucion">Desafíos: Pilas Bloques, de Program.AR y Fundación Sadosky.</p>
+</MaterialLayout>
+
+<script>
+  import { iniciarRepetir } from "../../scripts/repetir";
+  iniciarRepetir();
+</script>
+
+<style is:global>
+  .recorrido-repetir:focus {
+    outline: none;
+  }
+
+  .recorrido-repetir [hidden] {
+    display: none !important;
+  }
+
+  .recorrido-repetir .nota {
+    color: var(--muted);
+    font-size: 0.92em;
+  }
+
+  /* Para empezar */
+  .recorrido-repetir .empezar {
+    margin: 0 0 1.25rem;
+    padding: 0.85rem 1.1rem;
+    border: 2px solid var(--line);
+    background: var(--board);
+  }
+
+  .recorrido-repetir .empezar p {
+    margin: 0 0 0.5rem;
+  }
+
+  .recorrido-repetir .empezar p:last-child {
+    margin: 0;
+  }
+
+  /* Hoja y papelito: enlaces de contorno y chicos, para no competir con los pasos. */
+  .recorrido-repetir .recursos {
+    display: grid;
+    gap: 0.35rem;
+  }
+
+  .recorrido-repetir .recursos-titulo {
+    margin: 0 !important;
+  }
+
+  .recorrido-repetir .recurso {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    gap: 0.4rem 0.5rem;
+    align-items: center;
+    margin: 0 !important;
+  }
+
+  .recorrido-repetir .recurso a,
+  .recorrido-repetir .recurso-cerca a {
+    display: inline-block;
+    padding: 0.15rem 0.6rem;
+    border: 1.5px solid var(--accent);
+    color: var(--accent);
+    font-size: 0.92em;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .recorrido-repetir .recurso a:hover,
+  .recorrido-repetir .recurso-cerca a:hover {
+    background: var(--accent);
+    color: var(--board);
+  }
+
+  .recorrido-repetir .recurso-cerca a + a {
+    margin-left: 0.4rem;
+  }
+
+  .recorrido-repetir .solo-lectores {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .recorrido-repetir .empezar .idea {
+    padding-left: 0.8rem;
+    border-left: 4px solid var(--emphasis);
+    font-weight: 700;
+  }
+
+  /* Mapa del recorrido */
+  .recorrido-repetir .mapa {
+    display: grid;
+    grid-template-columns: 1.6fr 1.15fr 0.85fr;
+    gap: 0.6rem 1.25rem;
+    margin: 0 0 1.75rem;
+    padding: 0.75rem 0 0.9rem;
+    border-bottom: 2px solid var(--line);
+    scroll-margin-top: 0.5rem;
+  }
+
+  .recorrido-repetir .mapa-titulo {
+    margin: 0 0 0.3rem;
+    color: var(--muted);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .recorrido-repetir .mapa ol {
+    display: grid;
+    gap: 0.25rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .recorrido-repetir .mapa a {
+    display: flex;
+    gap: 0.5rem;
+    align-items: baseline;
+    padding: 0.2rem 0.45rem;
+    border: 2px solid transparent;
+    color: var(--ink);
+    font-size: 0.92rem;
+    line-height: 1.3;
+    text-decoration: none;
+  }
+
+  .recorrido-repetir .mapa a:hover .mapa-nombre {
+    text-decoration: underline;
+  }
+
+  .recorrido-repetir .mapa-marca {
+    flex: none;
+    min-width: 1.5em;
+    color: var(--accent);
+    font-weight: 800;
+  }
+
+  .recorrido-repetir .mapa-grupo--tiempo .mapa-marca,
+  .recorrido-repetir .mapa-grupo--lejos .mapa-marca {
+    color: var(--muted);
+  }
+
+  .recorrido-repetir .mapa a[aria-current="step"] {
+    border-color: var(--accent);
+    background: var(--board);
+    font-weight: 700;
+  }
+
+  /* Una etapa */
+  .recorrido-repetir .etapa {
+    scroll-margin-top: 0.5rem;
+  }
+
+  .recorrido-repetir:not(.un-paso) .etapa + .etapa {
+    margin-top: 2.75rem;
+    padding-top: 1.5rem;
+    border-top: 2px solid var(--line);
+  }
+
+  .recorrido-repetir .etapa-ubicacion {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem 0.7rem;
+    align-items: center;
+    margin: 0 0 0.25rem;
+    color: var(--muted);
+    font-size: 0.92rem;
+    font-weight: 700;
+  }
+
+  .recorrido-repetir .grupo {
+    padding: 0.05rem 0.55rem;
+    border-radius: 1rem;
+    font-size: 0.8rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+  }
+
+  .recorrido-repetir .grupo--todos {
+    background: var(--accent);
+    color: var(--board);
+  }
+
+  .recorrido-repetir .grupo--tiempo,
+  .recorrido-repetir .grupo--lejos {
+    border: 1.5px solid var(--muted);
+    color: var(--ink);
+  }
+
+  .recorrido-repetir .etapa h2 {
+    margin: 0 0 1rem;
+    font-size: clamp(1.3rem, 0.5vw + 1.15rem, 1.6rem);
+    line-height: 1.25;
+  }
+
+  .recorrido-repetir .acciones {
+    display: grid;
+    gap: 0.9rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .recorrido-repetir .accion {
+    display: grid;
+    grid-template-columns: 2.1rem minmax(0, 1fr);
+    gap: 0.75rem;
+    padding: 0.8rem 1rem 0.9rem 0.8rem;
+    border: 2px solid var(--hairline);
+    background: var(--board);
+  }
+
+  .recorrido-repetir .accion--pb {
+    border-color: color-mix(in srgb, var(--accent) 55%, var(--hairline));
+    background: #fff;
+  }
+
+  .recorrido-repetir .accion-n {
+    display: inline-grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: var(--ink);
+    color: var(--board);
+    font-weight: 800;
+  }
+
+  .recorrido-repetir .accion-cuerpo {
+    min-width: 0;
+  }
+
+  .recorrido-repetir .accion h3 {
+    margin: 0.2rem 0 0.45rem;
+    font-size: 1.05em;
+    line-height: 1.3;
+  }
+
+  .recorrido-repetir .accion p {
+    margin: 0 0 0.6rem;
+  }
+
+  .recorrido-repetir .accion-cuerpo > :last-child,
+  .recorrido-repetir [data-despues-cuerpo] > :last-child {
+    margin-bottom: 0;
+  }
+
+  .recorrido-repetir .anota {
+    display: inline-block;
+    padding: 0.15rem 0.6rem;
+    border: 1.5px dashed var(--ink);
+    background: #fff;
+  }
+
+  /* La fila del papelito, en miniatura: casilleros para escribir y ☐ para marcar con una X. */
+  .recorrido-repetir .momento-mini {
+    padding: 0 0.3rem;
+    border: 1px solid var(--ink);
+    font-size: 0.72em;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .recorrido-repetir .anota .campo-casillero {
+    display: inline-block;
+    width: 1.8em;
+    height: 1.2em;
+    border: 1.5px solid var(--ink);
+    background: #fff;
+    vertical-align: -0.2em;
+  }
+
+  .recorrido-repetir .anota .campo-casillero--largo {
+    width: 4em;
+  }
+
+  .recorrido-repetir .anota .campo-opcion {
+    margin-right: 0.45em;
+    white-space: nowrap;
+  }
+
+  .recorrido-repetir .anota .campo-cuadro {
+    display: inline-block;
+    width: 0.85em;
+    height: 0.85em;
+    margin-right: 0.2em;
+    border: 1.5px solid var(--ink);
+    vertical-align: -0.08em;
+  }
+
+  .recorrido-repetir .anota .gesto {
+    color: var(--muted);
+  }
+
+  .recorrido-repetir .pb-marca {
+    display: inline-block;
+    margin-right: 0.35rem;
+    padding: 0.05rem 0.55rem;
+    border: 1.5px solid var(--ink);
+    border-radius: 1rem;
+    color: var(--ink);
+    font-size: 0.78em;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    vertical-align: 0.1em;
+  }
+
+  .recorrido-repetir .pb-botones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .recorrido-repetir .hacer {
+    margin: 0 0 0.5rem;
+    padding-left: 1.3rem;
+  }
+
+  .recorrido-repetir .volver {
+    color: var(--muted);
+    font-size: 0.92em;
+  }
+
+  /* Botones */
+  .recorrido-repetir .boton {
+    display: inline-block;
+    min-height: 2.6rem;
+    padding: 0.4rem 0.85rem;
+    border: 2px solid var(--accent);
+    border-radius: 0;
+    background: var(--accent);
+    color: var(--board);
+    font: inherit;
+    font-size: 0.92em;
+    font-weight: 700;
+    line-height: 1.4;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .recorrido-repetir .boton--secundario {
+    background: transparent;
+    color: var(--accent);
+  }
+
+  .recorrido-repetir .boton:disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
+
+  /* Pilas Bloques incrustado: la franja repite qué anotar y lleva de vuelta. */
+  .recorrido-repetir .pb-marco {
+    margin: 0.4rem 0 0.6rem;
+  }
+
+  .recorrido-repetir .pb-mientras {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 0.8rem;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.45rem 0.7rem;
+    background: var(--ink);
+    color: var(--board);
+    font-size: 0.92em;
+    font-weight: 600;
+  }
+
+  .recorrido-repetir .pb-mientras button {
+    min-height: 2.2rem;
+    padding: 0.2rem 0.7rem;
+    border: 2px solid var(--board);
+    background: var(--board);
+    color: var(--ink);
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .recorrido-repetir .pb-marco iframe {
+    display: block;
+    width: 100%;
+    height: clamp(480px, calc(100vh - 6rem), 720px);
+    border: 2px solid var(--ink);
+    border-top: 0;
+    background: #fff;
+  }
+
+  .recorrido-repetir .pb-respaldo {
+    margin-top: 0.6rem;
+    font-size: 0.92em;
+  }
+
+  .recorrido-repetir .pb-respaldo summary {
+    color: var(--muted);
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .recorrido-repetir .pb-respaldo > p {
+    margin: 0.5rem 0;
+  }
+
+  .recorrido-repetir .respaldo-cuerpo {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem 2rem;
+    align-items: flex-start;
+  }
+
+  .recorrido-repetir .respaldo-armar {
+    max-width: 18rem;
+  }
+
+  .recorrido-repetir .llevarte {
+    margin-top: 1rem !important;
+    padding: 0.55rem 0.8rem;
+    border-left: 4px solid var(--emphasis);
+    background: #fff;
+  }
+
+  /* Ejecutor */
+  .recorrido-repetir .ejecutores {
+    display: grid;
+    grid-template-columns: repeat(var(--columnas, 1), minmax(0, 1fr));
+    gap: 1rem;
+    margin: 0.4rem 0 0.8rem;
+  }
+
+  .recorrido-repetir .ejecutor {
+    min-width: 0;
+    padding: 0.75rem 0.85rem 0.85rem;
+    border: 2px solid var(--line);
+    background: #fff;
+    font-size: 0.95em;
+  }
+
+  .recorrido-repetir .ejecutor-titulo {
+    margin: 0 0 0.5rem !important;
+    font-weight: 800;
+  }
+
+  .recorrido-repetir .ejecutor-cuerpo {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem 1.5rem;
+    align-items: flex-start;
+  }
+
+  .recorrido-repetir .ejecutor-estado {
+    margin: 0.6rem 0 0.4rem !important;
+    font-size: 0.92em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .recorrido-repetir .ejecutor-botones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+  }
+
+  .recorrido-repetir .prediccion {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem 0.6rem;
+    margin: 0 0 0.8rem;
+    font-weight: 600;
+  }
+
+  .recorrido-repetir .desplegado {
+    margin: 0.5rem 0 0 !important;
+    font-size: 0.92em;
+  }
+
+  .recorrido-repetir .ficha {
+    display: inline-block;
+    min-width: 1.6em;
+    margin: 0 0.15em 0.2em 0;
+    padding: 0 0.3em;
+    border: 1.5px solid var(--hairline);
+    font-weight: 700;
+    text-align: center;
+  }
+
+  .recorrido-repetir .ficha.ultima {
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 14%, #fff);
+  }
+
+  .recorrido-repetir .seguimiento-repetir {
+    border-collapse: collapse;
+    font-size: 0.92em;
+  }
+
+  .recorrido-repetir .seguimiento-repetir th,
+  .recorrido-repetir .seguimiento-repetir td {
+    padding: 0.25rem 0.55rem;
+    border: 1.5px solid var(--line);
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  .recorrido-repetir .seguimiento-repetir td {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+  }
+
+  .recorrido-repetir .seguimiento-repetir .vuelta {
+    margin-right: 0.4em;
+    color: var(--muted);
+    font-weight: 400;
+  }
+
+  .recorrido-repetir .seguimiento-repetir tr.ultima {
+    background: color-mix(in srgb, var(--accent) 12%, #fff);
+  }
+
+  .recorrido-repetir .comparar {
+    margin: 0.6rem 0 0 !important;
+    font-weight: 600;
+  }
+
+  .recorrido-repetir input[type="text"] {
+    width: 7em;
+    min-height: 2.5rem;
+    padding: 0.3rem 0.5rem;
+    border: 2px solid var(--line);
+    background: #fff;
+    color: var(--ink);
+    font: inherit;
+  }
+
+  .recorrido-repetir input.ancho {
+    width: 12em;
+  }
+
+  .recorrido-repetir input.corto {
+    width: 4em;
+  }
+
+  /* Ejercicio con devolución */
+  .recorrido-repetir .ejercicio {
+    margin: 0.6rem 0 0.8rem;
+    padding: 0.75rem 0.85rem;
+    border: 1.5px solid var(--hairline);
+    background: #fff;
+  }
+
+  .recorrido-repetir .consigna {
+    font-weight: 700;
+  }
+
+  .recorrido-repetir .programas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem 2rem;
+    margin: 0 0 0.9rem;
+  }
+
+  .recorrido-repetir .secuencia {
+    font-size: 1.5em;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+  }
+
+  .recorrido-repetir .responder {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 0.8rem;
+    align-items: center;
+    margin: 0 0 0.6rem;
+  }
+
+  .recorrido-repetir .sino label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.3rem 0.8rem;
+    border: 2px solid var(--hairline);
+    background: #fff;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .recorrido-repetir .sino label:has(input:checked) {
+    border-color: var(--ink);
+    background: color-mix(in srgb, var(--accent) 12%, #fff);
+  }
+
+  .recorrido-repetir .plegar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .recorrido-repetir .cuerpo-armado {
+    min-width: 6em;
+    min-height: 2.5rem;
+    padding: 0.25rem 0.6rem;
+    border: 2px dashed var(--line);
+    background: #fff;
+    font-size: 1.2em;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+  }
+
+  .recorrido-repetir .flechas {
+    display: inline-flex;
+    gap: 0.3rem;
+  }
+
+  .recorrido-repetir .flechas .boton {
+    min-width: 2.6rem;
+    padding: 0.3rem 0.5rem;
+    font-size: 1.1em;
+  }
+
+  .recorrido-repetir .devolucion {
+    padding: 0.5rem 0.8rem;
+    border-left: 4px solid var(--emphasis);
+  }
+
+  .recorrido-repetir .devolucion--ok {
+    border-left-color: var(--accent);
+  }
+
+  .recorrido-repetir .devolucion:empty {
+    display: none;
+  }
+
+  .recorrido-repetir .practica-barra select {
+    min-height: 2.4rem;
+    border: 2px solid var(--line);
+    background: #fff;
+    color: var(--ink);
+    font: inherit;
+  }
+
+  .recorrido-repetir .mas-lista {
+    display: grid;
+    gap: 0.4rem;
+    margin: 0;
+    padding-left: 1.2rem;
+  }
+
+  .recorrido-repetir .mas-lista a {
+    color: var(--ink);
+    font-weight: 700;
+  }
+
+  /* Pie de cada etapa: el próximo movimiento */
+  .recorrido-repetir .etapa-pie {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1.5rem;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-top: 1rem;
+  }
+
+  .recorrido-repetir .etapa-pie p {
+    margin: 0;
+  }
+
+  .recorrido-repetir .siguiente a {
+    display: inline-block;
+    padding: 0.45rem 0.9rem;
+    border: 2px solid var(--accent);
+    background: var(--accent);
+    color: var(--board);
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .recorrido-repetir .corte {
+    color: var(--muted);
+    font-size: 0.92em;
+  }
+
+  .recorrido-repetir .corte a {
+    color: var(--ink);
+    font-weight: 700;
+  }
+
+  .atribucion {
+    margin: 2.5rem 0 0;
+    padding-top: 1rem;
+    border-top: 1px solid var(--hairline);
+    color: var(--muted);
+    font-size: 0.92rem;
+  }
+
+  /* Pilas Bloques incrustado necesita unos 800 px: en pantallas angostas, sólo otra pestaña. */
+  @media (max-width: 60rem) {
+    .recorrido-repetir [data-incrustar] {
+      display: none !important;
+    }
+  }
+
+  @media (max-width: 44rem) {
+    .recorrido-repetir .mapa {
+      grid-template-columns: 1fr;
+    }
+
+    .recorrido-repetir .recurso {
+      grid-template-columns: auto auto;
+      justify-content: start;
+    }
+
+    .recorrido-repetir .recurso-nombre {
+      grid-column: 1 / -1;
+    }
+
+    .recorrido-repetir .ejecutores {
+      grid-template-columns: 1fr;
+    }
+
+    .recorrido-repetir .accion {
+      grid-template-columns: 1fr;
+      gap: 0.4rem;
+    }
+  }
+</style>

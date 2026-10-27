@@ -1,0 +1,234 @@
+---
+import { clave } from "../../data/actividad-repetir";
+import { etapas, grupos } from "../../data/recorrido-repetir";
+import { serieRepetir } from "../../data/serie-repetir";
+import MaterialLayout from "../../layouts/MaterialLayout.astro";
+
+const k = clave();
+const minutos = (grupo: keyof typeof grupos) => etapas.filter((e) => e.grupo === grupo).reduce((s, e) => s + e.minutos, 0);
+const respuestaEjercicio = (id: string) =>
+  etapas.find((e) => e.id === id)?.despues?.ejercicios?.map((ej) => ej.respuestaTexto).join(" / ") ?? "";
+
+const frecuentes = [
+  { si: `A o B: Repetir ${k.A + 1} o ${k.B + 1} veces · 4: Repetir ${k[4].numero + 1} veces`, sugiere: "Cuenta casillas en lugar de movimientos." },
+  { si: "C: vuelta 1", sugiere: "Cree que un programa con error falla enseguida; no lo siguió." },
+  { si: "C: afuera ↓", sugiere: "Corrigió la forma, no la ejecución: no siguió la última vuelta." },
+  { si: "D: Sí", sugiere: "«Mismos bloques, mismas veces» = mismo resultado: no mira el orden." },
+  { si: "1: P 1", sugiere: "Cree que lo de adentro se ejecuta una vez." },
+  { si: "1: Q 3", sugiere: "Cree que lo de afuera también se repite." },
+  { si: "2: P 6", sugiere: "Sólo mira el final, aunque «Mostrar» esté adentro." },
+  { si: "2: P 2 2 2", sugiere: "Cada vuelta empieza de cero: no conserva el estado." },
+  { si: "3: 4", sugiere: "Hizo una sola vuelta." },
+  { si: `4: vuelta ${(k[4].vuelta ?? 0) - 1}`, sugiere: "Cree que falla al llegar a la última casilla: no siguió el movimiento siguiente, el que sale de la fila." },
+  { si: "4: vuelta 1", sugiere: "Cree que un programa con error falla enseguida; no lo siguió vuelta por vuelta." },
+  { si: "3: 8", sugiere: "En la segunda vuelta no sumó." },
+  { si: "5: 3, 5 u 8", sugiere: "Bloques escritos; vueltas más lo de afuera; o se olvidó de lo de afuera." },
+  { si: "6: Sí", sugiere: "Igual que D: las mismas instrucciones no garantizan el mismo resultado." },
+  { si: "7: 9 · →", sugiere: "Una flecha por movimiento: no encontró el grupo que se repite." },
+];
+---
+
+<MaterialLayout
+  title="Guía para la clase"
+  description="Guía docente de «Repetir»: cómo está armado el recorrido que conduce la página, qué decir al empezar, qué hacer si algo falla, cómo leer los papelitos y clave."
+  tipo="Guía docente"
+  bajada="Para acompañar la clase y mirar los papelitos"
+  serie={serieRepetir}
+  tituloPizarrones="Para recuperar"
+  imprimirPie={false}
+>
+  <section class="bloque" aria-labelledby="g-minimo">
+    <h2 id="g-minimo">Qué tiene que poder hacer cada uno</h2>
+    <ul class="lista">
+      <li>Decir cuántas veces se ejecuta una instrucción, según esté adentro o afuera de un «Repetir».</li>
+      <li>Seguir un programa con «Repetir», vuelta por vuelta, y decir qué muestra o dónde falla.</li>
+      <li>Si llega a la continuación: reconocer que las mismas instrucciones en otro orden pueden dar otro resultado, o sólo otro camino.</li>
+    </ul>
+  </section>
+
+  <section class="bloque" aria-labelledby="g-armado">
+    <h2 id="g-armado">Cómo está armado</h2>
+    <p>
+      La página <a href="/repetir/">Repetir</a> conduce la clase: muestra un paso por vez y en cada uno dice qué
+      hacer antes, qué desafío abrir en Pilas Bloques y qué mirar al volver. No guarda nada; el paso visible
+      sale de la dirección.
+    </p>
+    <ul class="lista">
+      <li>
+        <strong>{grupos.todos}</strong>: pasos 1 a 3 y el cierre en papel. Unos {minutos("todos")} minutos, como
+        referencia. El cierre va antes de la continuación para que la clase se pueda cortar en cualquier momento.
+      </li>
+      <li>
+        <strong>{grupos.tiempo}</strong>: pasos 4 y 5, unos {minutos("tiempo")} minutos. Cada uno suma una
+        pregunta del dorso (5 y 6).
+      </li>
+      <li><strong>{grupos.lejos}</strong>: más desafíos de Pilas Bloques y práctica sorteada, sin fin.</li>
+    </ul>
+    <p>Nadie tiene que llegar a todo. Cada paso dice, al pie, cómo ir directo al cierre si queda poco tiempo.</p>
+  </section>
+
+  <section class="bloque" aria-labelledby="g-necesita">
+    <h2 id="g-necesita">Qué se necesita</h2>
+    <ul class="lista">
+      <li><a href="/repetir/hoja/">La hoja</a> en un folio, una por estudiante o por puesto. No se escribe; sirve para el curso siguiente.</li>
+      <li>Un <a href="/repetir/papelitos/">papelito</a> por estudiante (cuatro por A4).</li>
+      <li>Computadoras con acceso a la página y a Pilas Bloques en línea.</li>
+    </ul>
+    <p>
+      <strong>Antes</strong>, en una sola computadora: abrir la página, ir al paso 3 y tocar «Abrir acá». Si Pilas
+      Bloques aparece adentro, apretar PASO y probar si la rueda del mouse sobre los bloques deja seguir bajando por
+      la página. Probar también «En otra pestaña». Si nada abre, ver si está Pilas Bloques de escritorio.
+    </p>
+  </section>
+
+  <section class="bloque" aria-labelledby="g-clase">
+    <h2 id="g-clase">En la clase</h2>
+    <p><strong>Al empezar</strong>, una sola consigna:</p>
+    <blockquote>
+      Entren a aula.andresatencio.com/repetir y sigan los pasos: la página les dice cuándo ir a Pilas Bloques y
+      cuándo volver. La hoja del folio no se escribe; el papelito sí, con nombre, y se entrega.
+    </blockquote>
+    <p><strong>Si se puede circular</strong>, tres preguntas que ayudan sin resolver:</p>
+    <ul class="lista">
+      <li>«¿Qué anotaste antes de ejecutar?»</li>
+      <li>«¿Cuántas veces se va a ejecutar esto?», señalando un bloque adentro de un «Repetir».</li>
+      <li>«¿Esto se hace una vez o en cada vuelta?»</li>
+    </ul>
+    <p><strong>Al final</strong>: juntar papelitos y folios.</p>
+  </section>
+
+  <section class="bloque" aria-labelledby="g-falla">
+    <h2 id="g-falla">Si algo falla</h2>
+    <ul class="lista">
+      <li><strong>Pilas Bloques no carga</strong>: cada paso tiene «Si Pilas Bloques no carga», con el programa y el tablero. Se predice igual; lo que se hace en la página sigue andando.</li>
+      <li><strong>No anda incrustado</strong>: «En otra pestaña».</li>
+      <li><strong>La página no carga</strong>: el frente de la hoja trae la ruta de Pilas Bloques, y el papelito el orden de los desafíos.</li>
+      <li><strong>Sin computadoras</strong>: frente y dorso de la hoja.</li>
+    </ul>
+  </section>
+
+  <section class="bloque" aria-labelledby="g-papelitos">
+    <h2 id="g-papelitos">Después: mirar los papelitos</h2>
+    <p>
+      Alcanza con la columna derecha, del 1 al 4. Sirve para decidir qué retomar, no para calificar. Cada
+      pregunta mira algo distinto:
+    </p>
+    <ul class="lista">
+      <li>
+        <strong>1</strong>: adentro o afuera, si «Mostrar» se ejecuta en cada vuelta o una sola vez. Retomar con
+        «Tres cosas para mirar», la 2.
+      </li>
+      <li>
+        <strong>2 y 3</strong>: seguir el valor vuelta por vuelta, porque cada vuelta parte de lo que dejó la
+        anterior (en la 2, además, adentro o afuera). Retomar con la tabla del frente de la hoja.
+      </li>
+      <li>
+        <strong>4</strong>: seguir la ejecución hasta la vuelta en que falla y contar movimientos, no casillas.
+        Retomar con «Tres cosas para mirar», la 1, y el paso 3.
+      </li>
+    </ul>
+    <p>
+      En la columna izquierda, lo marcado «antes» muestra cómo predijeron: tachado y corregido es buena señal;
+      todo bien y sin una tachadura puede haberse completado después de ejecutar. Lo marcado «después», en C, se
+      completa al corregir: muestra si llegaron a hacer funcionar el programa.
+    </p>
+  </section>
+
+  <section class="bloque clave" aria-labelledby="g-clave">
+    <h2 id="g-clave">Clave</h2>
+    <h3>Pilas Bloques (izquierda del papelito)</h3>
+    <ul class="lista lista--compacta">
+      <li><strong>A.</strong> {k.A}: en una fila de 8 casillas, Duba se mueve {k.A} veces.</li>
+      <li><strong>B.</strong> {k.B}: con el número original, Duba queda una casilla antes.</li>
+      <li><strong>C.</strong> Antes: se rompe en la vuelta {k.C.vuelta}. Después de corregir: {k.C.numero}, y {k.C.afuera} afuera (antes o después del «Repetir»).</li>
+      <li><strong>D.</strong> {k.D}: dibuja una L, no la escalera.</li>
+    </ul>
+    <h3>Cierre (derecha del papelito)</h3>
+    <ul class="lista lista--compacta">
+      <li><strong>1.</strong> P {k[1].P} · Q {k[1].Q}</li>
+      <li><strong>2.</strong> P {k[2].P} · Q {k[2].Q}</li>
+      <li><strong>3.</strong> {k[3]}</li>
+      <li><strong>4.</strong> Falla en la vuelta {k[4].vuelta}; número {k[4].numero}.</li>
+      <li><strong>5.</strong> → {k[5].flecha} veces; {k[5].total} movimientos.</li>
+      <li><strong>6.</strong> {k[6]}.</li>
+      <li><strong>7.</strong> Repetir {k[7].veces} veces: {k[7].cuerpo}</li>
+    </ul>
+    <h3>Ejercicios de la página (se corrigen en pantalla; no van al papelito)</h3>
+    <ul class="lista lista--compacta">
+      <li><strong>Paso 2.</strong> {respuestaEjercicio("paso-2")}</li>
+      <li><strong>Paso 3.</strong> {respuestaEjercicio("paso-3")}</li>
+      <li><strong>Paso 4.</strong> {respuestaEjercicio("paso-4")}</li>
+      <li><strong>Paso 5.</strong> {respuestaEjercicio("paso-5")}</li>
+    </ul>
+  </section>
+
+  <section class="bloque" aria-labelledby="g-frecuentes">
+    <h2 id="g-frecuentes">Respuestas frecuentes y qué sugieren</h2>
+    <table class="errores">
+      <tbody>
+        {frecuentes.map(({ si, sugiere }) => <tr><th scope="row">{si}</th><td>{sugiere}</td></tr>)}
+      </tbody>
+    </table>
+  </section>
+</MaterialLayout>
+
+<style>
+  .bloque + .bloque {
+    margin-top: 2rem;
+  }
+
+  h2 {
+    margin: 0 0 0.6rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 2px solid var(--line);
+    font-size: clamp(1.15rem, 0.35vw + 1.05rem, 1.35rem);
+  }
+
+  h3 {
+    margin: 1rem 0 0.4rem;
+    font-size: 1rem;
+  }
+
+  p {
+    margin: 0 0 0.7rem;
+  }
+
+  .lista {
+    margin: 0 0 0.7rem;
+    padding-left: 1.4rem;
+  }
+
+  .lista li + li {
+    margin-top: 0.35rem;
+  }
+
+  .lista--compacta li + li {
+    margin-top: 0.15rem;
+  }
+
+  blockquote {
+    margin: 0 0 0.9rem;
+    padding: 0.6rem 0.9rem;
+    border-left: 4px solid var(--accent);
+    background: var(--board);
+    font-weight: 600;
+  }
+
+  .errores {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95em;
+  }
+
+  .errores th,
+  .errores td {
+    padding: 0.35rem 0.55rem;
+    border: 1px solid var(--hairline);
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .errores th {
+    white-space: nowrap;
+  }
+</style>

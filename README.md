@@ -56,6 +56,7 @@ Un tema reúne varios materiales que se usan juntos.
 - [El sistema operativo](/sistema-operativo/) · Sistemas Informáticos. Ficha de síntesis, guía gradual, práctica escrita e interactiva, pizarrones relacionados y recursos docentes.
 - [Lo que queríamos y lo que pasó](/lo-que-queriamos-y-lo-que-paso/) · Pensamiento Computacional. Hoja para resolver en papel, práctica en pantalla para predecir, ejecutar y ajustar un programa, y guía docente con clave, alrededor del pizarrón *La máquina obedece exactamente*.
 - [Cuándo importa el orden](/cuando-importa-el-orden/) · Pensamiento Computacional. Actividad en pantalla para predecir, ejecutar y cambiar el orden de programas cortos; hoja doble faz para leer en un folio —un frente común y un dorso «Para seguir»— que se resuelve en la carpeta; papelito de cierre individual y guía docente con clave, alrededor del pizarrón *Seguir un programa paso a paso*.
+- [Repetir](/repetir/) · Pensamiento Computacional. Página que conduce una clase en computadora, paso a paso: antes de ejecutar, un desafío de Pilas Bloques, y de vuelta en Aula, ver vuelta por vuelta lo que se ejecutó y resolver ejercicios con devolución. Lo común para todos va primero y termina en un cierre en papel; la continuación y la ampliación quedan después. Hoja A4 para un folio —referencia al frente, cierre al dorso—, papelitos y guía docente con clave.
 - [Hilos, agentes y arneses](/hilos-agentes-y-arneses/) · Pensamiento Computacional. Lectura breve que combina los pizarrones *Hilos y agentes* y *Agentes y arneses*.
 
 La relación entre los materiales de un tema se declara en `src/data/`, junto a los recorridos. No hay un sistema general de formatos ni un índice de tipos: cada tema describe su propio conjunto.
@@ -152,3 +153,13 @@ Para servir localmente el build de producción:
 ```bash
 npm run preview
 ```
+
+## PDF de materiales
+
+Los PDF de `public/materiales/` se versionan junto con el material. Los de *Repetir* (la hoja del folio y los papelitos) se regeneran desde las páginas construidas:
+
+```bash
+npm run pdf:repetir
+```
+
+El comando construye el sitio, mide que nada desborde la hoja A4 ni los papelitos (si algo desborda, no escribe el PDF) y comprueba la cantidad de páginas. Usa Chrome o Edge sin interfaz: el de Windows si se trabaja desde WSL, uno local, o el que indique la variable `CHROME`. Las medidas suponen la fuente Segoe UI, que viene con Windows.
