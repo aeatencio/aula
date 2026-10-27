@@ -112,10 +112,10 @@ describe("Repetir: el recorrido", () => {
   it("cada paso con Pilas Bloques tiene antes, qué hacer, franja y después", () => {
     for (const e of etapas.filter((x) => x.pb)) {
       assert.ok(e.antes.texto && e.antes.papelito, e.id);
-      assert.ok(e.pb.hacer.length > 0 && e.pb.mientras.includes(` en ${e.antes.papelito.letra},`), e.id);
+      assert.ok(e.pb.hacer.length > 0 && e.pb.mientras, e.id);
       assert.ok(e.despues?.llevarte, e.id);
     }
-    assert.deepEqual(anotaciones.map((p) => p.letra), ["A", "B", "C", "D"]);
+    assert.deepEqual(anotaciones.map((p) => p.etapa.marca), ["1", "3", "4", "5"]);
   });
 
   it("los ejercicios de los pasos tienen las respuestas de la guía", () => {
@@ -215,13 +215,40 @@ describe("Repetir: la página", () => {
   it("cada paso dice en qué renglón del papelito anotar, con la misma forma y el gesto", () => {
     const { document } = new JSDOM(html()).window;
     const anota = (sel) => [...document.querySelectorAll(sel)].map((p) => p.textContent.replace(/\s+/g, " ").trim());
-    assert.deepEqual(anota("#paso-1 .anota"), ["En el papelito: A antes Repetir veces (escribí el número)"]);
-    assert.deepEqual(anota("#paso-3 .anota"), ["En el papelito: B antes Repetir veces (escribí el número)"]);
+    assert.deepEqual(anota("#paso-1 .anota"), ["En el papelito, Paso 1: Repetir veces (escribí el número)"]);
+    assert.deepEqual(anota("#paso-3 .anota"), ["En el papelito, Paso 3: Repetir veces (escribí el número)"]);
     assert.deepEqual(anota("#paso-4 .accion-cuerpo > .anota"), [
-      "En el papelito: C antes se rompe en la vuelta (escribí el número)",
-      "Cuando funcione · En el papelito: C después Repetir veces · afuera: ↑︎↓︎←︎→︎ (escribí el número y marcá con una X)",
+      "En el papelito, Paso 4: Se rompe en la vuelta (escribí el número)",
+      "Cuando funcione: En el papelito, Paso 4: Repetir veces · afuera: ↑︎↓︎←︎→︎ (escribí el número y marcá con una X)",
     ]);
-    assert.deepEqual(anota("#paso-5 .accion-cuerpo > .anota"), ["En el papelito: D antes ¿dibuja la escalera? SíNo (marcá con una X)"]);
+    assert.deepEqual(anota("#paso-5 .accion-cuerpo > .anota"), ["En el papelito, Paso 5: ¿Dibuja la escalera? SíNo (marcá con una X)"]);
+  });
+
+  it("Aula indica cuándo responder y las referencias al papelito sólo dicen qué completar y cómo", () => {
+    const { document } = new JSDOM(html()).window;
+    for (const id of ["paso-1", "paso-3", "paso-4", "paso-5"]) {
+      const accion = document.querySelector(`#${id} .accion`);
+      assert.equal(accion.querySelector("h3").textContent, "Antes de ejecutar", id);
+      assert.ok(accion.querySelector(".anota"), id);
+    }
+    for (const p of document.querySelectorAll(".anota")) {
+      assert.doesNotMatch(p.textContent, /antes|después/i);
+    }
+    const c = document.querySelectorAll("#paso-4 .accion-cuerpo > .anota");
+    assert.equal(c.length, 2);
+    assert.match(c[1].textContent, /^Cuando funcione:/);
+    assert.equal(c[0].querySelectorAll(".campo-casillero").length, 1);
+    assert.equal(c[1].querySelectorAll(".campo-casillero").length, 1);
+    assert.equal(c[1].querySelectorAll(".campo-cuadro").length, 4);
+  });
+
+  it("las superficies de estudiantes no muestran etiquetas de respuesta ANTES o DESPUÉS", () => {
+    for (const ruta of [["repetir", "index.html"], ["repetir", "papelitos", "index.html"], ["repetir", "hoja", "index.html"]]) {
+      const { document } = new JSDOM(readDist(...ruta)).window;
+      for (const el of document.querySelectorAll("body *:not(script):not(style)")) {
+        assert.doesNotMatch(el.textContent.trim(), /^(antes|después)$/i, ruta.join("/"));
+      }
+    }
   });
 
   it("los pasos para todos llevan al cierre si queda poco tiempo", () => {
@@ -367,50 +394,70 @@ describe("Repetir: hoja, papelitos y guía", () => {
     assert.ok(texto.includes("«Duplicar» y «Mostrar» están escritos una vez cada uno, pero entre los dos se ejecutan 4 veces"));
   });
 
-  it("cuatro papelitos por hoja, con A a D (antes y después) y el cierre 1 a 7, en orden", () => {
+  it("Aula y los cuatro papelitos se ubican por Paso 1, 3, 4 y 5, con los mismos campos", () => {
     const { document } = new JSDOM(readDist("repetir", "papelitos", "index.html")).window;
+    const aula = new JSDOM(readDist("repetir", "index.html")).window.document;
     const papelitos = document.querySelectorAll(".papelito");
     assert.equal(papelitos.length, 4);
-    const primero = papelitos[0].textContent.replace(/\s+/g, " ");
-    // El nombre corto del desafío sirve de itinerario si la página no abre.
-    for (const [letra, donde] of [["A", "Paso 1 · Más churrascos 1"], ["B", "Paso 3 · Corregimos 1"], ["C", "Paso 4 · Corregimos 2"], ["D", "Paso 5 · Corregimos 3"]]) {
-      assert.ok(primero.includes(donde), letra);
+    const titulos = ["Paso 1 · Más churrascos 1", "Paso 3 · Corregimos 1", "Paso 4 · Corregimos 2", "Paso 5 · Corregimos 3"];
+    const normalizar = (el) => el.textContent.replace(/\s+/g, " ").trim();
+    const campos = (el) => [...el.querySelectorAll(".campo-texto, .campo-opcion")].map(normalizar);
+    for (const papelito of papelitos) {
+      assert.doesNotMatch(papelito.textContent, /antes|después/i);
+      assert.match(papelito.querySelector(".indicacion").textContent, /Casillero: escribí.*marcá con una X.*tachá y escribí al lado/s);
+      const pasos = [...papelito.querySelectorAll(".paso-papelito")];
+      assert.deepEqual(pasos.map((p) => normalizar(p.querySelector("h3"))), titulos);
+      for (const [i, numero] of ["1", "3", "4", "5"].entries()) {
+        const paso = pasos[i];
+        const etapa = aula.querySelector(`#paso-${numero}`);
+        const identificador = normalizar(paso.querySelector("h3 span"));
+        assert.equal(identificador, `Paso ${numero}`);
+        assert.equal(normalizar(etapa.querySelector(".etapa-ubicacion > span:last-child")), identificador);
+        const indicaciones = [...etapa.querySelectorAll(".accion-cuerpo > .anota")];
+        const respuestas = [...paso.querySelectorAll(".respuesta")];
+        assert.equal(respuestas.length, numero === "4" ? 2 : 1);
+        for (const [j, respuesta] of respuestas.entries()) {
+          assert.match(normalizar(indicaciones[j]), new RegExp(`En el papelito, ${identificador}:`));
+          assert.deepEqual(campos(respuesta), campos(indicaciones[j]));
+          for (const selector of [".campo-casillero", ".campo-cuadro"]) {
+            assert.equal(respuesta.querySelectorAll(selector).length, indicaciones[j].querySelectorAll(selector).length);
+          }
+        }
+        assert.match(normalizar(etapa.querySelector(".pb-mientras")), new RegExp(`papelito, ${identificador}, antes de ejecutar`));
+        assert.doesNotMatch(paso.textContent, /\b[A-D]\b/);
+        assert.doesNotMatch(etapa.textContent, /(?:En el papelito:|Anotalo en|Marcá Sí o No en)\s*[A-D]\b/);
+      }
+      // Paso 4 reúne la predicción y la corrección bajo un mismo encabezado.
+      const respuestas = [...papelito.querySelectorAll(".respuesta")];
+      assert.deepEqual(respuestas.map((f) => f.textContent.replace(/\s+/g, "")), [
+        "Repetirveces", "Repetirveces", "Serompeenlavuelta",
+        "Cuandofuncione:Repetirveces·afuera:↑︎↓︎←︎→︎", "¿Dibujalaescalera?SíNo",
+      ]);
+      assert.equal(pasos[2].querySelectorAll(".cuando").length, 1);
+      assert.equal(respuestas[2].nextElementSibling, respuestas[3]);
+      assert.match(normalizar(respuestas[3]), /^Cuando funcione:/);
+      assert.equal(respuestas[3].querySelectorAll(".campo-cuadro").length, 4);
+      assert.equal(respuestas[4].querySelectorAll(".campo-cuadro").length, 2);
+      for (const opcion of papelito.querySelectorAll(".campo-opcion")) {
+        assert.equal(opcion.querySelectorAll(".campo-cuadro").length, 1);
+      }
+      // El cierre conserva su numeración, sus campos y su orden.
+      assert.deepEqual([...papelito.querySelectorAll(".n")].map(normalizar), ["1", "2", "3", "4", "5", "6", "7"]);
+      const derecha = [...papelito.querySelectorAll(".columnas > div:last-child .fila")].map((f) => f.textContent.replace(/\s+/g, ""));
+      assert.deepEqual(derecha, [
+        "1«Mostrar»seejecuta:Pveces·Qveces", "2enlapantalla,enorden:PQ", "3Rmuestra",
+        "4Yfallaenlavuelta·Repetirveces", "5enW,→veces·entotalmovimientos",
+        "6¿SmuestralomismoqueR?SíNo", "7Repetirveces·adentro:",
+      ]);
     }
-    assert.equal(anotaciones.length, 4);
-    assert.deepEqual([...papelitos[0].querySelectorAll(".n")].map((n) => n.textContent), ["A", "B", "C", "D", "1", "2", "3", "4", "5", "6", "7"]);
-    // Cada desafío dice cuándo se completa; en C, la corrección va en su propio renglón, después.
-    const filas = [...papelitos[0].querySelectorAll(".columnas > div:first-child .fila")];
-    assert.deepEqual(filas.map((f) => [...f.querySelectorAll(".momento")].map((m) => m.textContent)), [["antes"], ["antes"], ["antes"], ["después"], ["antes"]]);
-    // Ningún casillero queda sin decir qué dato lleva (comparado sin espacios: entre elementos no hay).
-    const filaDe = (f) => f.textContent.replace(/\s+/g, "");
-    const izquierda = filas.map(filaDe);
-    assert.deepEqual(izquierda.map((f) => f.replace(/Paso.*$/, "")), [
-      "AantesRepetirveces",
-      "BantesRepetirveces",
-      "Cantesserompeenlavuelta",
-      "despuésRepetirveces·afuera:↑︎↓︎←︎→︎",
-      "Dantes¿dibujalaescalera?SíNo",
-    ]);
-    const derecha = [...papelitos[0].querySelectorAll(".columnas > div:last-child .fila")].map(filaDe);
-    assert.deepEqual(derecha, [
-      "1«Mostrar»seejecuta:Pveces·Qveces",
-      "2enlapantalla,enorden:PQ",
-      "3Rmuestra",
-      "4Yfallaenlavuelta·Repetirveces",
-      "5enW,→veces·entotalmovimientos",
-      "6¿SmuestralomismoqueR?SíNo",
-      "7Repetirveces·adentro:",
-    ]);
-    // Opciones: un cuadrito por opción, para marcar con una X.
-    assert.equal(filas[3].querySelectorAll(".campo-cuadro").length, 4);
-    assert.equal(filas[4].querySelectorAll(".campo-cuadro").length, 2);
-    assert.doesNotMatch(papelitos[0].textContent, /Lo de la izquierda se anota antes/);
   });
 
   it("la guía trae la clave calculada y los minutos como referencia", () => {
     const texto = textoVisible(readDist("repetir", "guia", "index.html"));
     const k = clave();
     assert.ok(texto.includes(`Antes: se rompe en la vuelta ${k.C.vuelta}. Después de corregir: ${k.C.numero}`));
+    assert.ok(texto.includes("Aula indica cuándo completar cada respuesta"));
+    assert.doesNotMatch(texto, /lo marcado «(?:antes|después)»/i);
     assert.doesNotMatch(texto, /Antes de ejecutar \(izquierda del papelito\)/);
     // La pregunta 4 se diagnostica por seguir la ejecución y contar movimientos, no por adentro/afuera.
     assert.match(texto, /4\s*: seguir la ejecución hasta la vuelta en que falla y contar movimientos, no casillas/);

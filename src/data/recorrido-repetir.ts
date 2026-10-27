@@ -47,7 +47,7 @@ export type ProgramaVista = ProgramaEjercicio & { titulo?: string };
   no puedan desencontrarse.
 */
 export type Campo = string | { casillero: "corto" | "largo" } | { opciones: string[] };
-export type Anotacion = { letra: string; momento: "antes" | "despues"; campos: Campo[] };
+export type Anotacion = { campos: Campo[] };
 
 const casillero: Campo = { casillero: "corto" };
 const largo: Campo = { casillero: "largo" };
@@ -90,7 +90,7 @@ export const etapas: readonly Etapa[] = [
     minutos: 8,
     antes: {
       texto: "Duba tiene que llegar al churrasco con un solo «Mover a la derecha» adentro de un «Repetir». Abrí el desafío y contá en el tablero: ¿cuántas veces tiene que repetir?",
-      papelito: { letra: "A", momento: "antes", campos: ["Repetir", casillero, "veces"] },
+      papelito: { campos: ["Repetir", casillero, "veces"] },
     },
     pb: {
       desafio: desafioPorLetra("A"),
@@ -98,7 +98,7 @@ export const etapas: readonly Etapa[] = [
         "Armá el programa: «Repetir» con «Mover a la derecha» adentro, y «Comer churrasco» abajo.",
         "Poné el número y ejecutá.",
       ],
-      mientras: "¿Cuántas veces tiene que repetir? Anotalo en A, antes de ejecutar.",
+      mientras: "¿Cuántas veces tiene que repetir?",
     },
     despues: {
       texto: "Tu programa, de a una instrucción:",
@@ -141,12 +141,12 @@ export const etapas: readonly Etapa[] = [
     minutos: 8,
     antes: {
       texto: "Duba no llega a comer. Abrí el desafío y mirá el programa sin ejecutarlo. Cambiando sólo el número del «Repetir»: ¿cuántas veces tiene que repetir?",
-      papelito: { letra: "B", momento: "antes", campos: ["Repetir", casillero, "veces"] },
+      papelito: { campos: ["Repetir", casillero, "veces"] },
     },
     pb: {
       desafio: desafioPorLetra("B"),
       hacer: ["Ejecutá con PASO y mirá dónde queda Duba.", "Cambiá el número hasta que coma."],
-      mientras: "¿Cuántas veces tiene que repetir? Anotalo en B, antes de ejecutar.",
+      mientras: "¿Cuántas veces tiene que repetir?",
     },
     despues: {
       ejercicios: [armar.fila({ k: 9, m: 9 })],
@@ -173,7 +173,7 @@ export const etapas: readonly Etapa[] = [
     minutos: 10,
     antes: {
       texto: "Duba se choca antes de comer. Abrí el desafío y seguí el programa con el dedo en el tablero, vuelta por vuelta: ¿en qué vuelta se rompe?",
-      papelito: { letra: "C", momento: "antes", campos: ["se rompe en la vuelta", casillero] },
+      papelito: { campos: ["Se rompe en la vuelta", casillero] },
     },
     pb: {
       desafio: desafioPorLetra("C"),
@@ -181,8 +181,8 @@ export const etapas: readonly Etapa[] = [
         "Ejecutá con PASO. Cada vez que vuelve a «Mover a la derecha» empieza otra vuelta.",
         "Corregilo: cambiá el número y agregá un bloque afuera del «Repetir».",
       ],
-      mientras: "¿En qué vuelta se rompe? Anotalo en C, antes de ejecutar.",
-      despues: { letra: "C", momento: "despues", campos: ["Repetir", casillero, "veces · afuera:", opciones(...FLECHAS)] },
+      mientras: "¿En qué vuelta se rompe?",
+      despues: { campos: ["Repetir", casillero, "veces · afuera:", opciones(...FLECHAS)] },
     },
     despues: {
       ejercicios: [armar.movimientos({ n: 3, patron: ["derecha", "abajo"], despues: ["derecha"] })],
@@ -199,12 +199,12 @@ export const etapas: readonly Etapa[] = [
     minutos: 10,
     antes: {
       texto: "Coty tiene que dibujar una escalera. Abrí el desafío y, sin ejecutar: ¿este programa la dibuja?",
-      papelito: { letra: "D", momento: "antes", campos: ["¿dibuja la escalera?", opciones("Sí", "No")] },
+      papelito: { campos: ["¿Dibuja la escalera?", opciones("Sí", "No")] },
     },
     pb: {
       desafio: desafioPorLetra("D"),
       hacer: ["Ejecutalo y mirá qué dibuja.", "Corregilo con un solo «Repetir»."],
-      mientras: "¿Dibuja la escalera? Marcá Sí o No en D, antes de ejecutar.",
+      mientras: "¿Dibuja la escalera?",
     },
     despues: {
       texto: "Los dos programas de Coty, con flechas. ¿Cuántas veces sube cada uno? ¿Terminan en el mismo lugar?",
@@ -233,7 +233,7 @@ export const masLejos = {
 /** Lo que se anota de cada desafío de Pilas Bloques, en el orden del recorrido. */
 export const anotaciones = etapas
   .filter((e): e is Etapa & { pb: NonNullable<Etapa["pb"]>; antes: { papelito: Anotacion } } => Boolean(e.pb && e.antes.papelito))
-  .map((e) => ({ letra: e.antes.papelito.letra, etapa: e, antes: e.antes.papelito, despues: e.pb.despues }));
+  .map((e) => ({ etapa: e, antes: e.antes.papelito, despues: e.pb.despues }));
 
 /**
   El cierre en el papelito: sólo el rótulo de cada respuesta. La consigna

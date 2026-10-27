@@ -19,7 +19,6 @@ const PAPELITOS = 4;
 
 /** «Paso 3 · Corregimos 1»: corto, para que entre en el renglón. */
 const CORTO: Record<string, string> = { "Más churrascos para Duba": "Más churrascos", "Corregimos los programas": "Corregimos" };
-const donde = (marca: string, grupo: string, nombre: string) => `Paso ${marca} · ${CORTO[grupo] ?? grupo} ${nombre.replace("Desafío ", "")}`;
 ---
 
 <MaterialLayout
@@ -36,7 +35,7 @@ const donde = (marca: string, grupo: string, nombre: string) => `Paso ${marca} �
     <a href={pdf} type="application/pdf" target="_blank" rel="noopener">Papelitos en PDF<span class="solo-lectores"> (se abre en otra pestaña)</span></a>
   </p>
 
-  <div class="hoja" aria-label={`${PAPELITOS} papelitos recortables`}>
+  <div class="hoja" aria-label="Papelito de respuestas">
     {Array.from({ length: PAPELITOS }, () => (
       <section class="papelito">
         <div class="cab">
@@ -47,27 +46,24 @@ const donde = (marca: string, grupo: string, nombre: string) => `Paso ${marca} �
         </div>
         <p class="indicacion">
           Casillero: escribí. <span class="campo-cuadro"></span>: marcá con una X.{" "}
-          <strong>ANTES</strong>: antes de ejecutar.{" "}
-          <strong>DESPUÉS</strong>: cuando funciona. Si te equivocás, tachá y escribí al lado.
+          Si te equivocás, tachá y escribí al lado.
         </p>
         <div class="columnas">
           <div>
             <p class="col-titulo">Pilas Bloques</p>
-            {anotaciones.map(({ letra, etapa, antes, despues }) => (
-              <>
-                <p class="fila">
-                  <span class="n">{letra}</span>
-                  <span class="momento">antes</span>
+            {anotaciones.map(({ etapa, antes, despues }) => (
+              <section class="paso-papelito">
+                <h3 class="paso-titulo"><span>Paso {etapa.marca}</span> · {CORTO[etapa.pb.desafio.grupo] ?? etapa.pb.desafio.grupo} {etapa.pb.desafio.nombre.replace("Desafío ", "")}</h3>
+                <p class="respuesta">
                   <Fragment set:html={campos(antes.campos)} />
-                  <span class="donde">{donde(etapa.marca, etapa.pb.desafio.grupo, etapa.pb.desafio.nombre)}</span>
                 </p>
                 {despues && (
-                  <p class="fila fila--sigue">
-                    <span class="momento momento--despues">después</span>
+                  <p class="respuesta">
+                    <span class="cuando">Cuando funcione:</span>
                     <Fragment set:html={campos(despues.campos)} />
                   </p>
                 )}
-              </>
+              </section>
             ))}
           </div>
           <div>
@@ -111,7 +107,7 @@ const donde = (marca: string, grupo: string, nombre: string) => `Paso ${marca} �
     border-bottom: 2px solid var(--accent);
   }
 
-  /* Medidas físicas, para que pantalla e impresión coincidan. */
+  /* Medidas físicas de las cuatro copias para imprimir. */
   .hoja {
     width: 210mm;
     max-width: 100%;
@@ -205,33 +201,30 @@ const donde = (marca: string, grupo: string, nombre: string) => `Paso ${marca} �
     font-weight: 800;
   }
 
-  /* «antes» y «después»: cuándo se completa cada respuesta. */
-  .momento {
-    padding: 0 1mm;
-    border: 0.5pt solid #000;
-    font-size: 6.5pt;
+  .paso-papelito {
+    padding: 0.5mm 0;
+    border-bottom: 0.4pt solid #bbb;
+  }
+
+  .paso-titulo {
+    margin: 0;
+    font-size: 8pt;
+    line-height: 1.2;
     font-weight: 700;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
   }
 
-  .momento--despues {
-    margin-left: 1.5mm;
-    background: #e6e6e6;
-    print-color-adjust: exact;
-    -webkit-print-color-adjust: exact;
+  .respuesta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5mm 1.8mm;
+    min-height: 5.9mm;
   }
 
-  .donde {
-    margin-left: auto;
-    color: #333;
-    font-size: 7pt;
-    white-space: nowrap;
-  }
-
-  /* «después» de C: el mismo desafío, sangrado bajo la letra. */
-  .fila--sigue {
-    padding-left: 5mm;
+  .cuando {
+    flex-basis: 100%;
+    font-size: 7.5pt;
+    font-weight: 700;
   }
 
   .papelito :global(.campo-texto) {
@@ -269,6 +262,56 @@ const donde = (marca: string, grupo: string, nombre: string) => `Paso ${marca} �
   @page {
     size: A4;
     margin: 0;
+  }
+
+  @media screen {
+    .hoja {
+      width: 100%;
+      overflow: visible;
+    }
+
+    .papelito {
+      width: 100%;
+      height: auto;
+      grid-template-rows: auto auto auto;
+      padding: 1rem;
+      gap: 1rem;
+      font-size: 1rem;
+    }
+
+    .papelito ~ .papelito {
+      display: none;
+    }
+
+    .cab {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .titulo {
+      grid-column: 1 / -1;
+    }
+
+    .columnas {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .indicacion,
+    .campo,
+    .col-titulo,
+    .sub,
+    .paso-titulo,
+    .cuando,
+    .papelito :global(.campo-texto),
+    .papelito :global(.campo-opcion) {
+      font-size: inherit;
+    }
+  }
+
+  @media screen and (max-width: 48rem) {
+    .columnas,
+    .cab {
+      grid-template-columns: 1fr;
+    }
   }
 
   @media print {

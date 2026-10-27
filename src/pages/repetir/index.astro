@@ -25,8 +25,8 @@ function siguiente(e: Etapa) {
 }
 
 /** Qué anotar y dónde: la fila del papelito tal como se ve, y el gesto que pide. */
-const anotacion = (a: Anotacion) =>
-  `En el papelito: <strong>${a.letra}</strong> <span class="momento-mini">${a.momento === "antes" ? "antes" : "después"}</span> ` +
+const anotacion = (e: Etapa, a: Anotacion) =>
+  `En el papelito, <strong>Paso ${e.marca}</strong>: ` +
   `${campos(a.campos)} <span class="gesto">(${gesto(a.campos)})</span>`;
 
 /** Programa y tablero, por si Pilas Bloques no carga. */
@@ -117,7 +117,7 @@ function respaldo(d: Desafio) {
               <div class="accion-cuerpo">
                 <h3>{e.pb ? "Antes de ejecutar" : e.medio === "Papel" ? "En papel" : "Mirá la hoja"}</h3>
                 <p>{e.antes.texto}</p>
-                {e.antes.papelito && <p class="anota"><Fragment set:html={anotacion(e.antes.papelito)} /></p>}
+                {e.antes.papelito && <p class="anota"><Fragment set:html={anotacion(e, e.antes.papelito)} /></p>}
                 {e.medio === "Papel" && <p class="anota">En el papelito, columna «Cierre»: del <strong>1</strong> al <strong>4</strong>.</p>}
                 {e.id === "cierre" && <p class="nota">Cuando termines, entregá el papelito.</p>}
                 {!e.pb && e.medio === "Aula" && <p class="recurso-cerca"><a href="/repetir/hoja/#frente">Ver el frente de la hoja</a></p>}
@@ -140,11 +140,11 @@ function respaldo(d: Desafio) {
                     <a class="boton boton--pb boton--secundario" href={e.pb.desafio.enlace} target="_blank" rel="noopener">En otra pestaña<span class="solo-lectores"> (Pilas Bloques)</span></a>
                   </p>
                   <ul class="hacer">{e.pb.hacer.map((h) => <li>{h}</li>)}</ul>
-                  {e.pb.despues && <p class="anota">Cuando funcione · <Fragment set:html={anotacion(e.pb.despues)} /></p>}
+                  {e.pb.despues && <p class="anota">Cuando funcione: <Fragment set:html={anotacion(e, e.pb.despues)} /></p>}
                   <p class="volver">Cuando funcione, volvé acá. No sigas con el desafío siguiente de Pilas Bloques.</p>
                   <div class="pb-marco" data-marco hidden>
                     <div class="pb-mientras">
-                      <span>{e.pb.mientras}</span>
+                      <span>{e.pb.mientras} Respondé en el papelito, Paso {e.marca}, antes de ejecutar.</span>
                       <button type="button" data-ya>Ya funciona: volver a Aula</button>
                     </div>
                   </div>
@@ -506,15 +506,6 @@ function respaldo(d: Desafio) {
   }
 
   /* La fila del papelito, en miniatura: casilleros para escribir y ☐ para marcar con una X. */
-  .recorrido-repetir .momento-mini {
-    padding: 0 0.3rem;
-    border: 1px solid var(--ink);
-    font-size: 0.72em;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-  }
-
   .recorrido-repetir .anota .campo-casillero {
     display: inline-block;
     width: 1.8em;

@@ -10,10 +10,10 @@ const respuestaEjercicio = (id: string) =>
   etapas.find((e) => e.id === id)?.despues?.ejercicios?.map((ej) => ej.respuestaTexto).join(" / ") ?? "";
 
 const frecuentes = [
-  { si: `A o B: Repetir ${k.A + 1} o ${k.B + 1} veces · 4: Repetir ${k[4].numero + 1} veces`, sugiere: "Cuenta casillas en lugar de movimientos." },
-  { si: "C: vuelta 1", sugiere: "Cree que un programa con error falla enseguida; no lo siguió." },
-  { si: "C: afuera ↓", sugiere: "Corrigió la forma, no la ejecución: no siguió la última vuelta." },
-  { si: "D: Sí", sugiere: "«Mismos bloques, mismas veces» = mismo resultado: no mira el orden." },
+  { si: `Pasos 1 o 3: Repetir ${k.A + 1} o ${k.B + 1} veces · 4: Repetir ${k[4].numero + 1} veces`, sugiere: "Cuenta casillas en lugar de movimientos." },
+  { si: "Paso 4: vuelta 1", sugiere: "Cree que un programa con error falla enseguida; no lo siguió." },
+  { si: "Paso 4: afuera ↓", sugiere: "Corrigió la forma, no la ejecución: no siguió la última vuelta." },
+  { si: "Paso 5: Sí", sugiere: "«Mismos bloques, mismas veces» = mismo resultado: no mira el orden." },
   { si: "1: P 1", sugiere: "Cree que lo de adentro se ejecuta una vez." },
   { si: "1: Q 3", sugiere: "Cree que lo de afuera también se repite." },
   { si: "2: P 6", sugiere: "Sólo mira el final, aunque «Mostrar» esté adentro." },
@@ -23,7 +23,7 @@ const frecuentes = [
   { si: "4: vuelta 1", sugiere: "Cree que un programa con error falla enseguida; no lo siguió vuelta por vuelta." },
   { si: "3: 8", sugiere: "En la segunda vuelta no sumó." },
   { si: "5: 3, 5 u 8", sugiere: "Bloques escritos; vueltas más lo de afuera; o se olvidó de lo de afuera." },
-  { si: "6: Sí", sugiere: "Igual que D: las mismas instrucciones no garantizan el mismo resultado." },
+  { si: "6: Sí", sugiere: "Igual que en el Paso 5: las mismas instrucciones no garantizan el mismo resultado." },
   { si: "7: 9 · →", sugiere: "Una flecha por movimiento: no encontró el grupo que se repite." },
 ];
 ---
@@ -128,9 +128,10 @@ const frecuentes = [
       </li>
     </ul>
     <p>
-      En la columna izquierda, lo marcado «antes» muestra cómo predijeron: tachado y corregido es buena señal;
-      todo bien y sin una tachadura puede haberse completado después de ejecutar. Lo marcado «después», en C, se
-      completa al corregir: muestra si llegaron a hacer funcionar el programa.
+      Aula indica cuándo completar cada respuesta de la columna izquierda. Las predicciones muestran cómo
+      pensaron el programa: tachado y corregido es buena señal; todo bien y sin una tachadura puede haberse
+      completado después de ejecutar. La segunda respuesta del Paso 4 se completa cuando el programa funciona:
+      muestra si llegaron a corregirlo.
     </p>
   </section>
 
@@ -138,10 +139,10 @@ const frecuentes = [
     <h2 id="g-clave">Clave</h2>
     <h3>Pilas Bloques (izquierda del papelito)</h3>
     <ul class="lista lista--compacta">
-      <li><strong>A.</strong> {k.A}: en una fila de 8 casillas, Duba se mueve {k.A} veces.</li>
-      <li><strong>B.</strong> {k.B}: con el número original, Duba queda una casilla antes.</li>
-      <li><strong>C.</strong> Antes: se rompe en la vuelta {k.C.vuelta}. Después de corregir: {k.C.numero}, y {k.C.afuera} afuera (antes o después del «Repetir»).</li>
-      <li><strong>D.</strong> {k.D}: dibuja una L, no la escalera.</li>
+      <li><strong>Paso 1.</strong> {k.A}: en una fila de 8 casillas, Duba se mueve {k.A} veces.</li>
+      <li><strong>Paso 3.</strong> {k.B}: con el número original, Duba queda una casilla antes.</li>
+      <li><strong>Paso 4.</strong> Antes: se rompe en la vuelta {k.C.vuelta}. Después de corregir: {k.C.numero}, y {k.C.afuera} afuera (antes o después del «Repetir»).</li>
+      <li><strong>Paso 5.</strong> {k.D}: dibuja una L, no la escalera.</li>
     </ul>
     <h3>Cierre (derecha del papelito)</h3>
     <ul class="lista lista--compacta">
