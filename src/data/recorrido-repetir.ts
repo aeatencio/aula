@@ -120,10 +120,10 @@ export const etapas: readonly Etapa[] = [
     medio: "Aula",
     minutos: 8,
     antes: {
-      texto: "Mirá el ejemplo resuelto en el frente de la hoja: una fila por cada instrucción que se ejecuta.",
+      texto: "Mirá el ejemplo resuelto en el frente de la hoja del folio: una fila por cada instrucción que se ejecuta.",
     },
     despues: {
-      texto: "Escribí qué va a mostrar la pantalla. Después ejecutalo de a una instrucción.",
+      texto: "Escribí en el casillero de esta página qué va a mostrar la pantalla. Después ejecutá el programa de a una instrucción.",
       ejecutores: [{ mundo: "puntos", inicio: 2, cuerpo: [repetir(3, duplicar(), sumar(1)), mostrar()] }],
       prediccion: true,
       textoEjercicios: "Estos dos sólo cambian en dónde está «Mostrar PUNTOS».",
@@ -161,7 +161,7 @@ export const etapas: readonly Etapa[] = [
     medio: "Papel",
     minutos: 8,
     antes: {
-      texto: "Dá vuelta la hoja del folio. Resolvé del 1 al 4 solo y sin mirar la pantalla. Si querés, mirá el frente.",
+      texto: "Dá vuelta la hoja del folio. Resolvé del 1 al 4 solo y sin mirar la pantalla. Podés volver a consultar el frente de la hoja del folio mientras resolvés.",
     },
   },
   {

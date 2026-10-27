@@ -119,7 +119,7 @@ function respaldo(d: Desafio) {
                 <p>{e.antes.texto}</p>
                 {e.antes.papelito && <p class="anota"><Fragment set:html={anotacion(e, e.antes.papelito)} /></p>}
                 {e.medio === "Papel" && <p class="anota">En el papelito, columna «Cierre»: del <strong>1</strong> al <strong>4</strong>.</p>}
-                {e.id === "cierre" && <p class="nota">Cuando termines, entregá el papelito.</p>}
+                {e.id === "cierre" && <p class="nota">Si seguís con los pasos 4 y 5, conservá el papelito para completar las respuestas que faltan.</p>}
                 {!e.pb && e.medio === "Aula" && <p class="recurso-cerca"><a href="/repetir/hoja/#frente">Ver el frente de la hoja</a></p>}
                 {e.medio === "Papel" && (
                   <p class="recurso-cerca">
@@ -141,7 +141,7 @@ function respaldo(d: Desafio) {
                   </p>
                   <ul class="hacer">{e.pb.hacer.map((h) => <li>{h}</li>)}</ul>
                   {e.pb.despues && <p class="anota">Cuando funcione: <Fragment set:html={anotacion(e, e.pb.despues)} /></p>}
-                  <p class="volver">Cuando funcione, volvé acá. No sigas con el desafío siguiente de Pilas Bloques.</p>
+                  <p class="volver">Cuando funcione, volvé a esta página de Aula. No sigas con el desafío siguiente de Pilas Bloques.</p>
                   <div class="pb-marco" data-marco hidden>
                     <div class="pb-mientras">
                       <span>{e.pb.mientras} Respondé en el papelito, Paso {e.marca}, antes de ejecutar.</span>
@@ -175,7 +175,7 @@ function respaldo(d: Desafio) {
                     <noscript><p class="nota">Para ejecutar y comprobar acá hace falta JavaScript.</p></noscript>
                     {e.despues.papel && (
                       <p>
-                        <span class="anota">Ahora respondé en el papelito la <strong>{e.despues.papel}</strong> del dorso de la hoja.</span>{" "}
+                        <span class="anota">Resolvé la pregunta <strong>{e.despues.papel}</strong> del dorso de la hoja del folio. Respondé en el papelito, columna «Cierre», número <strong>{e.despues.papel}</strong>.</span>{" "}
                         <span class="recurso-cerca"><a href="/repetir/hoja/#dorso">Ver el dorso de la hoja</a></span>
                       </p>
                     )}

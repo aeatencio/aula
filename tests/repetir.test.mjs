@@ -197,6 +197,30 @@ describe("Repetir: la página", () => {
     assert.deepEqual(enlaces("paso-5"), ["/repetir/hoja/#dorso"]);
   });
 
+  it("el cierre permite consultar el frente de la hoja del folio mientras se resuelve en papel", () => {
+    const { document } = new JSDOM(html()).window;
+    const cierre = document.querySelector("#cierre");
+    const consigna = cierre.querySelector(".accion-cuerpo > p").textContent;
+    assert.match(consigna, /Resolvé del 1 al 4 solo y sin mirar la pantalla/);
+    assert.match(consigna, /Podés volver a consultar el frente de la hoja del folio mientras resolvés/);
+    assert.match(cierre.querySelector(".anota").textContent, /papelito, columna «Cierre»: del 1 al 4/);
+    assert.match(cierre.querySelector(".accion-cuerpo > .nota").textContent, /Si seguís con los pasos 4 y 5, conservá el papelito/);
+    assert.match(cierre.querySelector(".siguiente").textContent, /Si no, entregá el papelito/);
+  });
+
+  it("las preguntas 5 y 6 de la hoja se responden en los mismos números de la columna Cierre", () => {
+    const { document } = new JSDOM(html()).window;
+    const hoja = new JSDOM(readDist("repetir", "hoja", "index.html")).window.document;
+    const papelito = new JSDOM(readDist("repetir", "papelitos", "index.html")).window.document;
+    for (const [paso, numero] of [[4, 5], [5, 6]]) {
+      const indicacion = document.querySelector(`#paso-${paso} [data-despues-cuerpo] .anota`).textContent;
+      assert.match(indicacion, new RegExp(`pregunta ${numero} del dorso de la hoja del folio`));
+      assert.match(indicacion, new RegExp(`papelito, columna «Cierre», número ${numero}`));
+      assert.ok([...hoja.querySelectorAll("#dorso .preguntas .num")].some((n) => n.textContent === String(numero)));
+      assert.ok([...papelito.querySelectorAll(".columnas > div:last-child .n")].some((n) => n.textContent === String(numero)));
+    }
+  });
+
   it("pestaña nueva sólo para Pilas Bloques y los PDF; lo de Aula, en la misma", () => {
     for (const ruta of [["repetir", "index.html"], ["repetir", "hoja", "index.html"], ["repetir", "papelitos", "index.html"]]) {
       const { document } = new JSDOM(readDist(...ruta)).window;
