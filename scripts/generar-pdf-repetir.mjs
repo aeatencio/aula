@@ -82,6 +82,14 @@ const chrome = async (args) =>
 
 const MEDIR = `<script>
 addEventListener("load", () => setTimeout(() => {
+  // Medir la composición de impresión, aunque la vista web muestre una sola copia.
+  for (const hoja of document.styleSheets) {
+    for (const regla of hoja.cssRules) {
+      if (!(regla instanceof CSSMediaRule)) continue;
+      if (regla.media.mediaText.includes("screen")) regla.media.mediaText = "not all";
+      else if (regla.media.mediaText === "print") regla.media.mediaText = "all";
+    }
+  }
   const mm = 96 / 25.4;
   const medidas = [...document.querySelectorAll(".pagina, .papelito")].map((p, i) => {
     const r = p.getBoundingClientRect();
